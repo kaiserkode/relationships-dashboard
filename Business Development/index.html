@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>My World</title>
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="My World">
+<meta name="theme-color" content="#6366f1">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%236366f1'/%3E%3Cpath d='M90 55a22 22 0 1 0 0 44 22 22 0 0 0 0-44zm-42 74c0-18 18-30 42-30s42 12 42 30' stroke='white' stroke-width='8' stroke-linecap='round' fill='none'/%3E%3C/svg%3E">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --surface2: #232636;
+  --border: #2e3149;
+  --text: #e8eaf0;
+  --text-muted: #6b7280;
+  --text-dim: #9ca3af;
+  --accent: #6366f1;
+  --accent-light: #818cf8;
+  --green: #10b981;
+  --yellow: #f59e0b;
+  --red: #ef4444;
+  --orange: #f97316;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --nav-height: 56px;
+  --app-tab-height: 44px;
+  --bottom-nav-height: 60px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; font-size: 14px; line-height: 1.5;
+  overscroll-behavior: none;
+}
+
+.app { display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
+
+/* ── Top header ────────────────────────────────────────────── */
+header {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding-top: var(--safe-top); flex-shrink: 0; z-index: 50;
+}
+
+.header-top {
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 16px; height: var(--nav-height);
+}
+
+/* App-level tabs (Relationships / Places) */
+.app-tabs {
+  display: flex; gap: 4px; flex: 1;
+}
+.app-tab {
+  padding: 6px 14px; border-radius: 20px; font-size: 14px; font-weight: 600;
+  cursor: pointer; border: none; background: transparent; color: var(--text-muted);
+  transition: all 0.15s; -webkit-tap-highlight-color: transparent;
+}
+.app-tab.active { background: var(--accent); color: #fff; }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  border: none; transition: all 0.15s; white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:active { opacity: 0.85; }
+.btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+.btn-ghost:active { background: var(--surface2); }
+.btn-danger { background: #7f1d1d; color: #fca5a5; border: none; }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-icon { padding: 8px; }
+
+/* ── Screens ───────────────────────────────────────────────── */
+.screen { display: flex; flex: 1; overflow: hidden; flex-direction: column; }
+.screen.hidden { display: none; }
+
+/* ── Sidebar ───────────────────────────────────────────────── */
+.screen-inner { display: flex; flex: 1; overflow: hidden; }
+
+.sidebar {
+  width: 280px; flex-shrink: 0;
+  background: var(--surface); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow-y: auto; padding: 14px; gap: 12px;
+}
+
+/* ── Content pane ──────────────────────────────────────────── */
+.content { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
+/* ── Toolbar ───────────────────────────────────────────────── */
+.toolbar {
+  padding: 10px 14px; border-bottom: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;
+}
+.toolbar-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.search-wrap { position: relative; flex: 1; min-width: 150px; }
+.search-wrap svg { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
+.search-input {
+  width: 100%; padding: 9px 10px 9px 30px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text); font-size: 14px;
+  outline: none; -webkit-appearance: none;
+}
+.search-input:focus { border-color: var(--accent); }
+.search-input::placeholder { color: var(--text-muted); }
+
+.filter-chips-wrap { display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.filter-chip {
+  padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 500;
+  cursor: pointer; border: 1px solid var(--border);
+  background: var(--surface2); color: var(--text-muted);
+  flex-shrink: 0; transition: all 0.15s; -webkit-tap-highlight-color: transparent;
+}
+.filter-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+.sort-select, .loc-select {
+  padding: 8px 28px 8px 10px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text-dim); font-size: 13px;
+  outline: none; cursor: pointer; -webkit-appearance: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 8px center;
+}
+.loc-select { min-width: 120px; }
+
+/* ── Card grid ─────────────────────────────────────────────── */
+.card-area { flex: 1; overflow-y: auto; padding: 12px 14px; -webkit-overflow-scrolling: touch; }
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 11px;
+}
+
+/* ── Contact card ──────────────────────────────────────────── */
+.contact-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 15px; cursor: pointer;
+  position: relative; overflow: hidden;
+  -webkit-tap-highlight-color: transparent; transition: border-color 0.15s;
+}
+.contact-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.contact-card:active { border-color: var(--accent); }
+
+.card-header { display: flex; align-items: flex-start; gap: 11px; margin-bottom: 9px; }
+.avatar {
+  width: 42px; height: 42px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700; flex-shrink: 0;
+}
+.card-name { font-size: 15px; font-weight: 600; }
+.card-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.warmth-bar { display: flex; gap: 3px; margin-top: 4px; }
+.warmth-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--surface2); border: 1px solid var(--border); }
+.warmth-dot.filled { border-color: transparent; }
+
+.card-meta { display: flex; flex-direction: column; gap: 4px; margin-bottom: 9px; font-size: 12px; }
+.meta-row { display: flex; align-items: center; gap: 5px; color: var(--text-muted); }
+.meta-row.overdue { color: var(--red); }
+.meta-row.soon { color: var(--yellow); }
+
+.card-snippet {
+  font-size: 12px; color: var(--text-muted); font-style: italic;
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; margin-bottom: 9px; line-height: 1.55;
+}
+.card-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.tag {
+  padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500;
+  background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border);
+}
+.type-badge {
+  padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: auto; flex-shrink: 0;
+}
+
+/* ── Place card ────────────────────────────────────────────── */
+.place-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 15px; cursor: pointer;
+  position: relative; overflow: hidden;
+  -webkit-tap-highlight-color: transparent; transition: border-color 0.15s;
+}
+.place-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.place-card:active { border-color: var(--accent); }
+
+.place-icon {
+  width: 42px; height: 42px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.place-name { font-size: 15px; font-weight: 600; }
+.place-loc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+.star-row { display: flex; gap: 2px; margin-top: 4px; }
+.star { font-size: 13px; color: var(--border); }
+.star.filled { color: var(--yellow); }
+
+.visited-badge {
+  font-size: 10px; font-weight: 600; padding: 2px 7px;
+  border-radius: 10px; margin-left: auto; flex-shrink: 0;
+}
+.visited-yes { background: #064e3b; color: #34d399; }
+.visited-no  { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); }
+
+/* ── Widgets ───────────────────────────────────────────────── */
+.widget { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 13px; }
+.widget-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 9px; }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; }
+.stat-value { font-size: 22px; font-weight: 700; }
+.stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.followup-list { display: flex; flex-direction: column; gap: 6px; }
+.followup-item {
+  display: flex; align-items: center; gap: 9px; padding: 8px 10px;
+  background: var(--surface); border-radius: var(--radius-sm);
+  border: 1px solid var(--border); cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.followup-item:active { border-color: var(--accent); }
+.followup-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dot-overdue { background: var(--red); }
+.dot-soon { background: var(--yellow); }
+.dot-ok { background: var(--green); }
+.followup-name { font-size: 13px; font-weight: 500; flex: 1; }
+.followup-date { font-size: 11px; color: var(--text-muted); }
+.type-bars { display: flex; flex-direction: column; gap: 7px; }
+.type-bar-row { display: flex; align-items: center; gap: 7px; }
+.type-bar-label { font-size: 12px; color: var(--text-dim); width: 90px; flex-shrink: 0; }
+.type-bar-track { flex: 1; height: 6px; background: var(--surface); border-radius: 3px; overflow: hidden; }
+.type-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+.type-bar-count { font-size: 12px; color: var(--text-muted); width: 18px; text-align: right; }
+
+/* ── Empty state ───────────────────────────────────────────── */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 60px 24px; gap: 12px; color: var(--text-muted); text-align: center; grid-column: 1/-1;
+}
+.empty-state svg { opacity: 0.3; }
+.empty-state h3 { font-size: 17px; color: var(--text-dim); }
+
+/* ── Modal ─────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+  display: flex; align-items: flex-end; justify-content: center; z-index: 200;
+}
+.modal-overlay.hidden { display: none; }
+.modal {
+  background: var(--surface); border-radius: 20px 20px 0 0;
+  width: 100%; max-height: 92dvh; overflow-y: auto;
+  padding: 20px 20px calc(20px + var(--safe-bottom));
+  -webkit-overflow-scrolling: touch;
+}
+.modal-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 16px; }
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.modal-title { font-size: 18px; font-weight: 700; }
+.modal-close { background: var(--surface2); border: none; color: var(--text-muted); cursor: pointer; font-size: 18px; padding: 5px 10px; border-radius: var(--radius-sm); }
+.modal-footer { display: flex; gap: 10px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+.form-full { grid-column: 1/-1; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-label { font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
+.form-opt { color: var(--text-muted); font-weight: 400; text-transform: none; font-size: 10px; }
+.form-input, .form-select, .form-textarea {
+  padding: 11px 12px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text); font-size: 16px;
+  outline: none; font-family: inherit; -webkit-appearance: none; appearance: none;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+.form-textarea { resize: vertical; min-height: 75px; }
+.form-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
+}
+.section-div { grid-column: 1/-1; border-top: 1px solid var(--border); padding-top: 13px; margin-top: 2px; }
+.section-div-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 8px; }
+
+.warmth-picker { display: flex; gap: 5px; }
+.warmth-btn {
+  flex: 1; height: 38px; border-radius: var(--radius-sm); border: 2px solid var(--border);
+  cursor: pointer; font-size: 13px; font-weight: 700;
+  background: var(--surface2); color: var(--text-muted);
+  -webkit-tap-highlight-color: transparent; transition: all 0.15s;
+}
+.warmth-btn.selected { border-color: transparent; color: #fff; }
+
+.star-picker { display: flex; gap: 6px; }
+.star-pick-btn {
+  font-size: 24px; cursor: pointer; background: none; border: none;
+  -webkit-tap-highlight-color: transparent; opacity: 0.3; transition: opacity 0.15s;
+}
+.star-pick-btn.selected { opacity: 1; }
+
+.toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; }
+.toggle-label { font-size: 14px; color: var(--text); }
+.toggle {
+  width: 44px; height: 26px; border-radius: 13px; background: var(--border);
+  position: relative; cursor: pointer; border: none; transition: background 0.2s;
+  -webkit-tap-highlight-color: transparent; flex-shrink: 0;
+}
+.toggle.on { background: var(--green); }
+.toggle::after {
+  content: ''; position: absolute; top: 3px; left: 3px;
+  width: 20px; height: 20px; border-radius: 50%; background: #fff;
+  transition: transform 0.2s;
+}
+.toggle.on::after { transform: translateX(18px); }
+
+/* ── Detail panel ──────────────────────────────────────────── */
+.detail-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 199; }
+.detail-overlay.hidden { display: none; }
+.detail-panel {
+  position: fixed; left: 0; right: 0; bottom: 0;
+  background: var(--surface); border-radius: 20px 20px 0 0;
+  border-top: 1px solid var(--border);
+  max-height: 92dvh; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding-bottom: var(--safe-bottom);
+}
+.detail-panel.hidden { display: none; }
+.detail-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 0; }
+.detail-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; gap: 13px; }
+.detail-avatar { width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 21px; font-weight: 700; flex-shrink: 0; }
+.detail-place-icon { width: 54px; height: 54px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 28px; flex-shrink: 0; }
+.detail-name { font-size: 19px; font-weight: 700; }
+.detail-sub { color: var(--text-muted); font-size: 13px; margin-top: 2px; }
+.detail-body { padding: 16px 18px; display: flex; flex-direction: column; gap: 16px; }
+.detail-section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 7px; }
+.detail-field { display: flex; flex-direction: column; gap: 3px; }
+.detail-field-label { font-size: 11px; color: var(--text-muted); }
+.detail-field-value { font-size: 14px; color: var(--text); }
+.warmth-display { display: flex; gap: 4px; align-items: center; margin-top: 2px; }
+.warmth-display-dot { width: 13px; height: 13px; border-radius: 50%; background: var(--surface2); border: 1px solid var(--border); }
+.warmth-display-dot.filled { border: none; }
+.detail-notes-text {
+  font-size: 14px; color: var(--text-dim); line-height: 1.7;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 11px;
+}
+.detail-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.detail-footer { padding: 13px 18px; border-top: 1px solid var(--border); display: flex; gap: 10px; }
+
+/* ── Bottom nav ────────────────────────────────────────────── */
+.bottom-nav { display: none; background: var(--surface); border-top: 1px solid var(--border); padding-bottom: var(--safe-bottom); flex-shrink: 0; }
+.bottom-nav-inner { display: flex; height: var(--bottom-nav-height); }
+.nav-tab {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 3px; cursor: pointer; border: none;
+  background: transparent; color: var(--text-muted); font-size: 10px; font-weight: 500;
+  -webkit-tap-highlight-color: transparent; transition: color 0.15s;
+}
+.nav-tab.active { color: var(--accent-light); }
+
+/* ── Type colors ───────────────────────────────────────────── */
+.contact-card.type-professional::before { background: #3b82f6; }
+.contact-card.type-personal::before     { background: #10b981; }
+.contact-card.type-lead::before         { background: #f59e0b; }
+.contact-card.type-investor::before     { background: #a855f7; }
+.type-badge.type-professional { background: #1e3a5f; color: #60a5fa; }
+.type-badge.type-personal     { background: #064e3b; color: #34d399; }
+.type-badge.type-lead         { background: #78350f; color: #fbbf24; }
+.type-badge.type-investor     { background: #4c1d95; color: #c084fc; }
+
+/* Place category colors */
+.place-card.cat-restaurant::before { background: #f97316; }
+.place-card.cat-activity::before   { background: #10b981; }
+.place-card.cat-hotel::before      { background: #3b82f6; }
+.place-card.cat-other::before      { background: #a855f7; }
+.cat-badge.cat-restaurant { background: #431407; color: #fb923c; }
+.cat-badge.cat-activity   { background: #064e3b; color: #34d399; }
+.cat-badge.cat-hotel      { background: #1e3a5f; color: #60a5fa; }
+.cat-badge.cat-other      { background: #4c1d95; color: #c084fc; }
+
+.w1{background:#374151}.w2{background:#b45309}.w3{background:#d97706}.w4{background:#f59e0b}.w5{background:#10b981}
+
+.scroll-hidden { scrollbar-width: none; }
+.scroll-hidden::-webkit-scrollbar { display: none; }
+
+/* ── Desktop overrides ─────────────────────────────────────── */
+@media (min-width: 768px) {
+  .modal-overlay { align-items: center; }
+  .modal { border-radius: var(--radius); max-width: 580px; padding: 26px; }
+  .modal-handle { display: none; }
+  .detail-panel {
+    position: fixed; top: 0; right: 0; bottom: 0; left: auto;
+    width: 440px; border-radius: 0; border-left: 1px solid var(--border);
+    border-top: none; max-height: 100%;
+  }
+  .detail-handle { display: none; }
+  .contact-card:hover, .place-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+}
+
+/* ── Mobile overrides ──────────────────────────────────────── */
+@media (max-width: 767px) {
+  .sidebar { display: none; }
+  .sidebar.mobile-open {
+    display: flex; position: fixed; inset: 0; width: 100%; z-index: 150;
+    overflow-y: auto; padding: 8px 14px;
+    padding-top: calc(var(--nav-height) + var(--app-tab-height) + var(--safe-top) + 8px);
+    padding-bottom: calc(var(--bottom-nav-height) + var(--safe-bottom));
+  }
+  .bottom-nav { display: block; }
+  .cards-grid { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-full, .section-div { grid-column: 1; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ══ Header ═══════════════════════════════════════════════ -->
+<header>
+  <div class="header-top">
+    <div class="app-tabs">
+      <button class="app-tab active" id="apptab-relationships" onclick="switchAppTab('relationships')">Relationships</button>
+      <button class="app-tab" id="apptab-places" onclick="switchAppTab('places')">Places</button>
+    </div>
+    <button class="btn btn-primary" id="header-add-btn" onclick="openAddModal()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span id="header-add-label">Add</span>
+    </button>
+  </div>
+</header>
+
+<!-- ══ Relationships Screen ══════════════════════════════════ -->
+<div class="screen" id="screen-relationships">
+  <div class="screen-inner">
+
+    <aside class="sidebar scroll-hidden" id="rel-sidebar">
+      <div class="widget">
+        <div class="widget-title">Overview</div>
+        <div class="stat-grid">
+          <div class="stat"><div class="stat-value" id="stat-total">0</div><div class="stat-label">Contacts</div></div>
+          <div class="stat"><div class="stat-value" id="stat-overdue" style="color:var(--red)">0</div><div class="stat-label">Follow-ups due</div></div>
+          <div class="stat"><div class="stat-value" id="stat-strong" style="color:var(--green)">0</div><div class="stat-label">Strong ties</div></div>
+          <div class="stat"><div class="stat-value" id="stat-added" style="color:var(--accent-light)">0</div><div class="stat-label">This month</div></div>
+        </div>
+      </div>
+      <div class="widget">
+        <div class="widget-title">Needs Attention</div>
+        <div class="followup-list" id="followup-list">
+          <div style="font-size:12px;color:var(--text-muted);text-align:center;padding:10px 0">No contacts yet</div>
+        </div>
+      </div>
+      <div class="widget">
+        <div class="widget-title">By Category</div>
+        <div class="type-bars">
+          <div class="type-bar-row"><div class="type-bar-label">Professional</div><div class="type-bar-track"><div class="type-bar-fill" id="bar-professional" style="width:0%;background:#3b82f6"></div></div><div class="type-bar-count" id="count-professional">0</div></div>
+          <div class="type-bar-row"><div class="type-bar-label">Personal</div><div class="type-bar-track"><div class="type-bar-fill" id="bar-personal" style="width:0%;background:#10b981"></div></div><div class="type-bar-count" id="count-personal">0</div></div>
+          <div class="type-bar-row"><div class="type-bar-label">Prospects</div><div class="type-bar-track"><div class="type-bar-fill" id="bar-lead" style="width:0%;background:#f59e0b"></div></div><div class="type-bar-count" id="count-lead">0</div></div>
+          <div class="type-bar-row"><div class="type-bar-label">Investors</div><div class="type-bar-track"><div class="type-bar-fill" id="bar-investor" style="width:0%;background:#a855f7"></div></div><div class="type-bar-count" id="count-investor">0</div></div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="content">
+      <div class="toolbar">
+        <div class="toolbar-row">
+          <div class="search-wrap">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input class="search-input" id="rel-search" placeholder="Search contacts…" oninput="renderContacts()">
+          </div>
+          <select class="sort-select" id="rel-sort" onchange="renderContacts()">
+            <option value="name">Name</option>
+            <option value="city">City</option>
+            <option value="state">State</option>
+            <option value="warmth">Warmth</option>
+            <option value="followup">Follow-up</option>
+            <option value="added">Recently Added</option>
+          </select>
+        </div>
+        <div class="toolbar-row filter-chips-wrap">
+          <button class="filter-chip active" data-filter="all" onclick="setRelFilter('all',this)">All</button>
+          <button class="filter-chip" data-filter="professional" onclick="setRelFilter('professional',this)">Professional</button>
+          <button class="filter-chip" data-filter="personal" onclick="setRelFilter('personal',this)">Personal</button>
+          <button class="filter-chip" data-filter="lead" onclick="setRelFilter('lead',this)">Prospects</button>
+          <button class="filter-chip" data-filter="investor" onclick="setRelFilter('investor',this)">Investors</button>
+        </div>
+        <div class="toolbar-row">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-muted);flex-shrink:0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <select class="loc-select" id="rel-filter-city" onchange="renderContacts()"><option value="">All Cities</option></select>
+          <select class="loc-select" id="rel-filter-state" onchange="renderContacts()"><option value="">All States</option></select>
+          <button class="btn btn-ghost btn-sm" id="rel-clear-loc" onclick="clearRelLocation()" style="display:none">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Clear
+          </button>
+        </div>
+        <div id="rel-loc-count" style="font-size:12px;color:var(--text-muted);display:none"></div>
+      </div>
+      <div class="card-area scroll-hidden">
+        <div class="cards-grid" id="contacts-grid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Places Screen ══════════════════════════════════════════ -->
+<div class="screen hidden" id="screen-places">
+  <div class="screen-inner">
+
+    <aside class="sidebar scroll-hidden" id="places-sidebar">
+      <div class="widget">
+        <div class="widget-title">Overview</div>
+        <div class="stat-grid">
+          <div class="stat"><div class="stat-value" id="pstat-total">0</div><div class="stat-label">Saved places</div></div>
+          <div class="stat"><div class="stat-value" id="pstat-visited" style="color:var(--green)">0</div><div class="stat-label">Visited</div></div>
+          <div class="stat"><div class="stat-value" id="pstat-cities">0</div><div class="stat-label">Cities</div></div>
+          <div class="stat"><div class="stat-value" id="pstat-toprated" style="color:var(--yellow)">0</div><div class="stat-label">5-star places</div></div>
+        </div>
+      </div>
+      <div class="widget">
+        <div class="widget-title">By Type</div>
+        <div class="type-bars">
+          <div class="type-bar-row"><div class="type-bar-label">Restaurants</div><div class="type-bar-track"><div class="type-bar-fill" id="pbar-restaurant" style="width:0%;background:#f97316"></div></div><div class="type-bar-count" id="pcount-restaurant">0</div></div>
+          <div class="type-bar-row"><div class="type-bar-label">Activities</div><div class="type-bar-track"><div class="type-bar-fill" id="pbar-activity" style="width:0%;background:#10b981"></div></div><div class="type-bar-count" id="pcount-activity">0</div></div>
+          <div class="type-bar-row"><div class="type-bar-label">Hotels</div><div class="type-bar-track"><div class="type-bar-fill" id="pbar-hotel" style="width:0%;background:#3b82f6"></div></div><div class="type-bar-count" id="pcount-hotel">0</div></div>
+          <div class="type-bar-row"><div class="type-bar-label">Other</div><div class="type-bar-track"><div class="type-bar-fill" id="pbar-other" style="width:0%;background:#a855f7"></div></div><div class="type-bar-count" id="pcount-other">0</div></div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="content">
+      <div class="toolbar">
+        <div class="toolbar-row">
+          <div class="search-wrap">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input class="search-input" id="places-search" placeholder="Search places…" oninput="renderPlaces()">
+          </div>
+          <select class="sort-select" id="places-sort" onchange="renderPlaces()">
+            <option value="name">Name</option>
+            <option value="city">City</option>
+            <option value="state">State</option>
+            <option value="rating">Rating</option>
+            <option value="added">Recently Added</option>
+          </select>
+        </div>
+        <div class="toolbar-row filter-chips-wrap">
+          <button class="filter-chip active" data-filter="all" onclick="setPlaceFilter('all',this)">All</button>
+          <button class="filter-chip" data-filter="restaurant" onclick="setPlaceFilter('restaurant',this)">Restaurants</button>
+          <button class="filter-chip" data-filter="activity" onclick="setPlaceFilter('activity',this)">Activities</button>
+          <button class="filter-chip" data-filter="hotel" onclick="setPlaceFilter('hotel',this)">Hotels</button>
+          <button class="filter-chip" data-filter="other" onclick="setPlaceFilter('other',this)">Other</button>
+        </div>
+        <div class="toolbar-row">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-muted);flex-shrink:0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <select class="loc-select" id="places-filter-city" onchange="renderPlaces()"><option value="">All Cities</option></select>
+          <select class="loc-select" id="places-filter-state" onchange="renderPlaces()"><option value="">All States</option></select>
+          <button class="btn btn-ghost btn-sm" id="places-clear-loc" onclick="clearPlaceLocation()" style="display:none">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Clear
+          </button>
+        </div>
+        <div id="places-loc-count" style="font-size:12px;color:var(--text-muted);display:none"></div>
+      </div>
+      <div class="card-area scroll-hidden">
+        <div class="cards-grid" id="places-grid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Bottom nav ════════════════════════════════════════════ -->
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <button class="nav-tab active" id="mobtab-contacts" onclick="switchMobileTab('contacts')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Contacts
+    </button>
+    <button class="nav-tab" id="mobtab-dashboard" onclick="switchMobileTab('dashboard')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </button>
+    <button class="nav-tab" onclick="openAddModal()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="var(--accent)"/><line x1="12" y1="8" x2="12" y2="16" stroke="white" stroke-width="2"/><line x1="8" y1="12" x2="16" y2="12" stroke="white" stroke-width="2"/></svg>
+      Add
+    </button>
+  </div>
+</nav>
+
+</div><!-- .app -->
+
+<!-- ══ Contact Modal ══════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="contact-modal-overlay" onclick="if(event.target===this)closeContactModal()">
+  <div class="modal scroll-hidden" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="contact-modal-title">Add Contact</div>
+      <button class="modal-close" onclick="closeContactModal()">×</button>
+    </div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">Fields marked <span style="color:#ef4444">*</span> are required</div>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">First Name <span style="color:#ef4444">*</span></label><input class="form-input" id="f-first" placeholder="Jane"></div>
+      <div class="form-group"><label class="form-label">Last Name <span class="form-opt">(optional)</span></label><input class="form-input" id="f-last" placeholder="Smith"></div>
+      <div class="form-group"><label class="form-label">City <span style="color:#ef4444">*</span></label><input class="form-input" id="f-city" placeholder="Portland"></div>
+      <div class="form-group"><label class="form-label">State <span class="form-opt">(optional)</span></label><input class="form-input" id="f-state" placeholder="OR"></div>
+      <div class="form-group form-full"><label class="form-label">How We Met <span style="color:#ef4444">*</span></label><textarea class="form-textarea" id="f-how-met" placeholder="e.g. Met at SaaStr, warm intro from Marcus…"></textarea></div>
+      <div class="section-div"><div class="section-div-label">Optional Details</div></div>
+      <div class="form-group"><label class="form-label">Organization <span class="form-opt">(optional)</span></label><input class="form-input" id="f-org" placeholder="Acme Corp"></div>
+      <div class="form-group"><label class="form-label">Role / Title <span class="form-opt">(optional)</span></label><input class="form-input" id="f-role" placeholder="CEO"></div>
+      <div class="form-group"><label class="form-label">Email <span class="form-opt">(optional)</span></label><input class="form-input" id="f-email" type="email" placeholder="jane@example.com"></div>
+      <div class="form-group"><label class="form-label">Phone <span class="form-opt">(optional)</span></label><input class="form-input" id="f-phone" type="tel" placeholder="+1 555 000 0000"></div>
+      <div class="form-group"><label class="form-label">Type <span class="form-opt">(optional)</span></label>
+        <select class="form-select" id="f-type">
+          <option value="professional">Professional</option>
+          <option value="personal">Personal</option>
+          <option value="lead">Prospect</option>
+          <option value="investor">Investor / Advisor</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Warmth <span class="form-opt">(optional)</span></label>
+        <div class="warmth-picker">
+          <button class="warmth-btn" data-v="1" onclick="setWarmth(1)">1</button>
+          <button class="warmth-btn" data-v="2" onclick="setWarmth(2)">2</button>
+          <button class="warmth-btn" data-v="3" onclick="setWarmth(3)">3</button>
+          <button class="warmth-btn" data-v="4" onclick="setWarmth(4)">4</button>
+          <button class="warmth-btn" data-v="5" onclick="setWarmth(5)">5</button>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Last Contact <span class="form-opt">(optional)</span></label><input class="form-input" id="f-last-contact" type="date"></div>
+      <div class="form-group"><label class="form-label">Next Follow-up <span class="form-opt">(optional)</span></label><input class="form-input" id="f-followup" type="date"></div>
+      <div class="form-group form-full"><label class="form-label">Tags <span class="form-opt">(optional, comma-separated)</span></label><input class="form-input" id="f-tags" placeholder="VC, mentor, close friend"></div>
+      <div class="form-group form-full"><label class="form-label">Additional Notes <span class="form-opt">(optional)</span></label><textarea class="form-textarea" id="f-notes" placeholder="Key topics, shared interests…"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeContactModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveContact()">Save Contact</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Place Modal ════════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="place-modal-overlay" onclick="if(event.target===this)closePlaceModal()">
+  <div class="modal scroll-hidden" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="place-modal-title">Add Place</div>
+      <button class="modal-close" onclick="closePlaceModal()">×</button>
+    </div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">Fields marked <span style="color:#ef4444">*</span> are required</div>
+    <div class="form-grid">
+      <div class="form-group form-full"><label class="form-label">Name <span style="color:#ef4444">*</span></label><input class="form-input" id="p-name" placeholder="Tasty Noodle House"></div>
+      <div class="form-group"><label class="form-label">City <span style="color:#ef4444">*</span></label><input class="form-input" id="p-city" placeholder="Portland"></div>
+      <div class="form-group"><label class="form-label">State <span class="form-opt">(optional)</span></label><input class="form-input" id="p-state" placeholder="OR"></div>
+      <div class="form-group form-full"><label class="form-label">Category <span style="color:#ef4444">*</span></label>
+        <select class="form-select" id="p-category">
+          <option value="restaurant">🍽️ Restaurant</option>
+          <option value="activity">🎯 Activity</option>
+          <option value="hotel">🏨 Hotel</option>
+          <option value="other">✨ Other</option>
+        </select>
+      </div>
+      <div class="section-div"><div class="section-div-label">Optional Details</div></div>
+      <div class="form-group form-full"><label class="form-label">Rating <span class="form-opt">(optional)</span></label>
+        <div class="star-picker" id="star-picker">
+          <button class="star-pick-btn" data-v="1" onclick="setStars(1)">★</button>
+          <button class="star-pick-btn" data-v="2" onclick="setStars(2)">★</button>
+          <button class="star-pick-btn" data-v="3" onclick="setStars(3)">★</button>
+          <button class="star-pick-btn" data-v="4" onclick="setStars(4)">★</button>
+          <button class="star-pick-btn" data-v="5" onclick="setStars(5)">★</button>
+        </div>
+      </div>
+      <div class="form-group form-full">
+        <div class="toggle-row">
+          <span class="toggle-label">Visited</span>
+          <button class="toggle" id="p-visited-toggle" onclick="toggleVisited()"></button>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Address <span class="form-opt">(optional)</span></label><input class="form-input" id="p-address" placeholder="123 Main St"></div>
+      <div class="form-group"><label class="form-label">Website <span class="form-opt">(optional)</span></label><input class="form-input" id="p-website" placeholder="example.com"></div>
+      <div class="form-group form-full"><label class="form-label">Tags <span class="form-opt">(optional, comma-separated)</span></label><input class="form-input" id="p-tags" placeholder="Italian, date night, cheap eats"></div>
+      <div class="form-group form-full"><label class="form-label">Notes <span class="form-opt">(optional)</span></label><textarea class="form-textarea" id="p-notes" placeholder="What to order, what to avoid, who recommended it…"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="flex:1" onclick="closePlaceModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" onclick="savePlace()">Save Place</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Detail panels ══════════════════════════════════════════ -->
+<div class="detail-overlay hidden" id="detail-overlay" onclick="closeDetail()"></div>
+<div class="detail-panel hidden" id="detail-panel">
+  <div class="detail-handle"></div>
+  <div id="detail-header"></div>
+  <div id="detail-body"></div>
+  <div id="detail-footer"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+let contacts = JSON.parse(localStorage.getItem('relationships_v1') || '[]');
+let places   = JSON.parse(localStorage.getItem('places_v1') || '[]');
+let activeRelFilter   = 'all';
+let activePlaceFilter = 'all';
+let selectedWarmth = 3;
+let selectedStars  = 0;
+let placeVisited   = false;
+let editingContactId = null;
+let editingPlaceId   = null;
+let activeAppTab  = 'relationships';
+let activeMobTab  = 'contacts';
+
+const WARMTH_COLORS = ['','#374151','#b45309','#d97706','#f59e0b','#10b981'];
+const WARMTH_LABELS = ['','Cold','Lukewarm','Warm','Close','Strong'];
+const TYPE_LABELS   = { professional:'Professional', personal:'Personal', lead:'Prospect', investor:'Investor/Advisor' };
+const CAT_LABELS    = { restaurant:'Restaurant', activity:'Activity', hotel:'Hotel', other:'Other' };
+const CAT_ICONS     = { restaurant:'🍽️', activity:'🎯', hotel:'🏨', other:'✨' };
+const CAT_BG        = { restaurant:'#431407', activity:'#064e3b', hotel:'#1e3a5f', other:'#4c1d95' };
+
+// ═══════════════════════════════════════════════════════════════
+// PERSISTENCE
+// ═══════════════════════════════════════════════════════════════
+function saveContacts() { localStorage.setItem('relationships_v1', JSON.stringify(contacts)); }
+function savePlaces()   { localStorage.setItem('places_v1', JSON.stringify(places)); }
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+// ═══════════════════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════════════════
+function initials(c) { return ((c.first||'?')[0]+(c.last?c.last[0]:'')).toUpperCase(); }
+function avatarColor(name) {
+  const cols = ['#6366f1','#3b82f6','#10b981','#f59e0b','#ef4444','#a855f7','#ec4899','#14b8a6'];
+  let h=0; for(let i=0;i<name.length;i++) h=(h<<5)-h+name.charCodeAt(i);
+  return cols[Math.abs(h)%cols.length];
+}
+function daysDiff(ds) {
+  if(!ds) return null;
+  const d=new Date(ds), now=new Date();
+  now.setHours(0,0,0,0); d.setHours(0,0,0,0);
+  return Math.round((d-now)/86400000);
+}
+function formatDate(ds) {
+  if(!ds) return '—';
+  return new Date(ds).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+function relativeDate(days) {
+  if(days===null) return '';
+  if(days<0) return `${Math.abs(days)}d overdue`;
+  if(days===0) return 'Today';
+  if(days===1) return 'Tomorrow';
+  return `In ${days}d`;
+}
+function warmthDots(w) {
+  return '<div class="warmth-bar">'+[1,2,3,4,5].map(i=>`<div class="warmth-dot${i<=w?' filled w'+w:''}"></div>`).join('')+'</div>';
+}
+function starRow(r, size='sm') {
+  return '<div class="star-row">'+[1,2,3,4,5].map(i=>`<span class="star${i<=r?' filled':''}">★</span>`).join('')+'</div>';
+}
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function locTag(city, state) {
+  const loc = [city,state].filter(Boolean).join(', ');
+  return loc ? `<span class="tag" style="border-color:#6366f133;color:#818cf8">📍 ${escHtml(loc)}</span>` : '';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// APP TAB SWITCHING
+// ═══════════════════════════════════════════════════════════════
+function switchAppTab(tab) {
+  activeAppTab = tab;
+  document.getElementById('screen-relationships').classList.toggle('hidden', tab !== 'relationships');
+  document.getElementById('screen-places').classList.toggle('hidden', tab !== 'places');
+  document.getElementById('apptab-relationships').classList.toggle('active', tab === 'relationships');
+  document.getElementById('apptab-places').classList.toggle('active', tab === 'places');
+  document.getElementById('header-add-label').textContent = tab === 'places' ? 'Add Place' : 'Add Contact';
+  // reset mobile tab to contacts view when switching app tab
+  if(isMobile()) switchMobileTab('contacts');
+}
+
+function openAddModal() {
+  if(activeAppTab === 'places') openPlaceModal();
+  else openContactModal();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MOBILE TABS (within a screen)
+// ═══════════════════════════════════════════════════════════════
+function isMobile() { return window.innerWidth < 768; }
+
+function switchMobileTab(tab) {
+  activeMobTab = tab;
+  document.getElementById('mobtab-contacts').classList.toggle('active', tab === 'contacts');
+  document.getElementById('mobtab-dashboard').classList.toggle('active', tab === 'dashboard');
+  if(!isMobile()) return;
+  const relSidebar = document.getElementById('rel-sidebar');
+  const plSidebar  = document.getElementById('places-sidebar');
+  const relContent = document.querySelector('#screen-relationships .content');
+  const plContent  = document.querySelector('#screen-places .content');
+  if(tab === 'dashboard') {
+    relSidebar.classList.add('mobile-open');
+    plSidebar.classList.add('mobile-open');
+    if(relContent) relContent.style.display = 'none';
+    if(plContent)  plContent.style.display  = 'none';
+  } else {
+    relSidebar.classList.remove('mobile-open');
+    plSidebar.classList.remove('mobile-open');
+    if(relContent) relContent.style.display = '';
+    if(plContent)  plContent.style.display  = '';
+  }
+}
+
+window.addEventListener('resize', () => {
+  if(!isMobile()) {
+    [document.getElementById('rel-sidebar'), document.getElementById('places-sidebar')]
+      .forEach(s => s.classList.remove('mobile-open'));
+    document.querySelectorAll('.content').forEach(c => c.style.display = '');
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// LOCATION DROPDOWNS — RELATIONSHIPS
+// ═══════════════════════════════════════════════════════════════
+function populateRelLocation() {
+  const ce = document.getElementById('rel-filter-city');
+  const se = document.getElementById('rel-filter-state');
+  const pc = ce.value, ps = se.value;
+  const cities  = [...new Set(contacts.map(c=>c.city).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  const states  = [...new Set(contacts.map(c=>c.state).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  ce.innerHTML = '<option value="">All Cities</option>' + cities.map(c=>`<option value="${escHtml(c)}"${c===pc?' selected':''}>${escHtml(c)}</option>`).join('');
+  se.innerHTML = '<option value="">All States</option>' + states.map(s=>`<option value="${escHtml(s)}"${s===ps?' selected':''}>${escHtml(s)}</option>`).join('');
+}
+function clearRelLocation() {
+  document.getElementById('rel-filter-city').value = '';
+  document.getElementById('rel-filter-state').value = '';
+  renderContacts();
+}
+function updateRelLocUI(count) {
+  const cf = document.getElementById('rel-filter-city').value;
+  const sf = document.getElementById('rel-filter-state').value;
+  const active = cf||sf;
+  document.getElementById('rel-clear-loc').style.display = active ? '' : 'none';
+  const el = document.getElementById('rel-loc-count');
+  if(active) { el.textContent=`${count} contact${count!==1?'s':''} in ${[cf,sf].filter(Boolean).join(', ')}`; el.style.display=''; }
+  else el.style.display='none';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LOCATION DROPDOWNS — PLACES
+// ═══════════════════════════════════════════════════════════════
+function populatePlaceLocation() {
+  const ce = document.getElementById('places-filter-city');
+  const se = document.getElementById('places-filter-state');
+  const pc = ce.value, ps = se.value;
+  const cities = [...new Set(places.map(p=>p.city).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  const states = [...new Set(places.map(p=>p.state).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  ce.innerHTML = '<option value="">All Cities</option>' + cities.map(c=>`<option value="${escHtml(c)}"${c===pc?' selected':''}>${escHtml(c)}</option>`).join('');
+  se.innerHTML = '<option value="">All States</option>' + states.map(s=>`<option value="${escHtml(s)}"${s===ps?' selected':''}>${escHtml(s)}</option>`).join('');
+}
+function clearPlaceLocation() {
+  document.getElementById('places-filter-city').value = '';
+  document.getElementById('places-filter-state').value = '';
+  renderPlaces();
+}
+function updatePlaceLocUI(count) {
+  const cf = document.getElementById('places-filter-city').value;
+  const sf = document.getElementById('places-filter-state').value;
+  const active = cf||sf;
+  document.getElementById('places-clear-loc').style.display = active ? '' : 'none';
+  const el = document.getElementById('places-loc-count');
+  if(active) { el.textContent=`${count} place${count!==1?'s':''} in ${[cf,sf].filter(Boolean).join(', ')}`; el.style.display=''; }
+  else el.style.display='none';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RELATIONSHIPS — FILTER & RENDER
+// ═══════════════════════════════════════════════════════════════
+function setRelFilter(val, btn) {
+  activeRelFilter = val;
+  document.querySelectorAll('#screen-relationships .filter-chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  renderContacts();
+}
+
+function renderContacts() {
+  populateRelLocation();
+  const q    = document.getElementById('rel-search').value.toLowerCase();
+  const sort = document.getElementById('rel-sort').value;
+  const cf   = document.getElementById('rel-filter-city').value;
+  const sf   = document.getElementById('rel-filter-state').value;
+
+  let list = contacts.filter(c => {
+    if(activeRelFilter !== 'all' && c.type !== activeRelFilter) return false;
+    if(cf && (c.city||'').toLowerCase() !== cf.toLowerCase()) return false;
+    if(sf && (c.state||'').toLowerCase() !== sf.toLowerCase()) return false;
+    if(q) {
+      const s = `${c.first} ${c.last} ${c.org} ${c.role} ${c.city} ${c.state} ${c.tags} ${c.howMet} ${c.notes}`.toLowerCase();
+      if(!s.includes(q)) return false;
+    }
+    return true;
+  });
+
+  list.sort((a,b) => {
+    if(sort==='name')    return `${a.first} ${a.last}`.localeCompare(`${b.first} ${b.last}`);
+    if(sort==='city')    return (a.city||'').localeCompare(b.city||'');
+    if(sort==='state')   return (a.state||'').localeCompare(b.state||'');
+    if(sort==='warmth')  return (b.warmth||0)-(a.warmth||0);
+    if(sort==='followup') return (a.followup?new Date(a.followup):new Date('9999'))-(b.followup?new Date(b.followup):new Date('9999'));
+    if(sort==='added')   return new Date(b.added)-new Date(a.added);
+    return 0;
+  });
+
+  updateRelLocUI(list.length);
+  const grid = document.getElementById('contacts-grid');
+
+  if(!list.length) {
+    grid.innerHTML = `<div class="empty-state">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      <h3>${contacts.length===0?'No contacts yet':'No results'}</h3>
+      <p style="font-size:13px">${contacts.length===0?'Tap Add Contact to get started.':'Try a different search or filter.'}</p>
+    </div>`;
+    renderRelWidgets(); return;
+  }
+
+  grid.innerHTML = list.map(c => {
+    const days = daysDiff(c.followup);
+    const dueCls = days!==null?(days<0?'overdue':days<=7?'soon':''):'';
+    const color  = avatarColor(c.first+c.last);
+    const tags   = (c.tags||'').split(',').map(t=>t.trim()).filter(Boolean);
+    return `<div class="contact-card type-${c.type}" onclick="openContactDetail('${c.id}')">
+      <div class="card-header">
+        <div class="avatar" style="background:${color}22;color:${color}">${initials(c)}</div>
+        <div style="flex:1;min-width:0">
+          <div class="card-name">${escHtml(c.first)} ${escHtml(c.last||'')}</div>
+          <div class="card-sub">${escHtml([c.role,c.org].filter(Boolean).join(' · ')||'—')}</div>
+          ${warmthDots(c.warmth||0)}
+        </div>
+        <div class="type-badge type-${c.type}">${TYPE_LABELS[c.type]}</div>
+      </div>
+      <div class="card-meta">
+        <div class="meta-row"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Last: ${c.lastContact?formatDate(c.lastContact):'Never'}</div>
+        ${c.followup?`<div class="meta-row ${dueCls}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Follow-up: ${relativeDate(days)}</div>`:''}
+      </div>
+      ${c.howMet?`<div class="card-snippet">"${escHtml(c.howMet)}"</div>`:''}
+      <div class="card-tags">${locTag(c.city,c.state)}${tags.map(t=>`<span class="tag">${escHtml(t)}</span>`).join('')}</div>
+    </div>`;
+  }).join('');
+  renderRelWidgets();
+}
+
+function renderRelWidgets() {
+  const now = new Date();
+  document.getElementById('stat-total').textContent   = contacts.length;
+  document.getElementById('stat-overdue').textContent = contacts.filter(c=>{const d=daysDiff(c.followup);return d!==null&&d<0;}).length;
+  document.getElementById('stat-strong').textContent  = contacts.filter(c=>(c.warmth||0)>=4).length;
+  document.getElementById('stat-added').textContent   = contacts.filter(c=>{const d=new Date(c.added);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();}).length;
+
+  const attn = contacts.filter(c=>c.followup).sort((a,b)=>new Date(a.followup)-new Date(b.followup)).slice(0,6);
+  document.getElementById('followup-list').innerHTML = attn.length
+    ? attn.map(c=>{const days=daysDiff(c.followup);const dot=days<0?'dot-overdue':days<=7?'dot-soon':'dot-ok';
+        return `<div class="followup-item" onclick="openContactDetail('${c.id}')"><div class="followup-dot ${dot}"></div><div class="followup-name">${escHtml(c.first)} ${escHtml(c.last||'')}</div><div class="followup-date">${relativeDate(days)}</div></div>`;}).join('')
+    : '<div style="font-size:12px;color:var(--text-muted);text-align:center;padding:10px 0">No follow-ups scheduled</div>';
+
+  const counts={professional:0,personal:0,lead:0,investor:0};
+  contacts.forEach(c=>{if(counts[c.type]!==undefined)counts[c.type]++;});
+  const max=Math.max(...Object.values(counts),1);
+  Object.entries(counts).forEach(([t,n])=>{
+    document.getElementById(`bar-${t}`).style.width=(n/max*100)+'%';
+    document.getElementById(`count-${t}`).textContent=n;
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PLACES — FILTER & RENDER
+// ═══════════════════════════════════════════════════════════════
+function setPlaceFilter(val, btn) {
+  activePlaceFilter = val;
+  document.querySelectorAll('#screen-places .filter-chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  renderPlaces();
+}
+
+function renderPlaces() {
+  populatePlaceLocation();
+  const q    = document.getElementById('places-search').value.toLowerCase();
+  const sort = document.getElementById('places-sort').value;
+  const cf   = document.getElementById('places-filter-city').value;
+  const sf   = document.getElementById('places-filter-state').value;
+
+  let list = places.filter(p => {
+    if(activePlaceFilter !== 'all' && p.category !== activePlaceFilter) return false;
+    if(cf && (p.city||'').toLowerCase() !== cf.toLowerCase()) return false;
+    if(sf && (p.state||'').toLowerCase() !== sf.toLowerCase()) return false;
+    if(q) {
+      const s = `${p.name} ${p.city} ${p.state} ${p.tags} ${p.notes} ${p.address}`.toLowerCase();
+      if(!s.includes(q)) return false;
+    }
+    return true;
+  });
+
+  list.sort((a,b) => {
+    if(sort==='name')   return (a.name||'').localeCompare(b.name||'');
+    if(sort==='city')   return (a.city||'').localeCompare(b.city||'');
+    if(sort==='state')  return (a.state||'').localeCompare(b.state||'');
+    if(sort==='rating') return (b.rating||0)-(a.rating||0);
+    if(sort==='added')  return new Date(b.added)-new Date(a.added);
+    return 0;
+  });
+
+  updatePlaceLocUI(list.length);
+  const grid = document.getElementById('places-grid');
+
+  if(!list.length) {
+    grid.innerHTML = `<div class="empty-state">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      <h3>${places.length===0?'No places saved yet':'No results'}</h3>
+      <p style="font-size:13px">${places.length===0?'Tap Add Place to get started.':'Try a different search or filter.'}</p>
+    </div>`;
+    renderPlaceWidgets(); return;
+  }
+
+  grid.innerHTML = list.map(p => {
+    const tags = (p.tags||'').split(',').map(t=>t.trim()).filter(Boolean);
+    const bg   = CAT_BG[p.category]||'#1a1d27';
+    return `<div class="place-card cat-${p.category}" onclick="openPlaceDetail('${p.id}')">
+      <div class="card-header">
+        <div class="place-icon" style="background:${bg}">${CAT_ICONS[p.category]||'📍'}</div>
+        <div style="flex:1;min-width:0">
+          <div class="place-name">${escHtml(p.name)}</div>
+          <div class="place-loc">${escHtml([p.city,p.state].filter(Boolean).join(', ')||'—')}</div>
+          ${p.rating ? starRow(p.rating) : ''}
+        </div>
+        <span class="visited-badge ${p.visited?'visited-yes':'visited-no'}">${p.visited?'Visited':'Not yet'}</span>
+      </div>
+      ${p.notes?`<div class="card-snippet">${escHtml(p.notes)}</div>`:''}
+      <div class="card-tags">
+        <span class="tag type-badge cat-badge cat-${p.category}" style="margin-left:0">${CAT_LABELS[p.category]}</span>
+        ${tags.map(t=>`<span class="tag">${escHtml(t)}</span>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+  renderPlaceWidgets();
+}
+
+function renderPlaceWidgets() {
+  document.getElementById('pstat-total').textContent   = places.length;
+  document.getElementById('pstat-visited').textContent = places.filter(p=>p.visited).length;
+  document.getElementById('pstat-cities').textContent  = new Set(places.map(p=>p.city).filter(Boolean)).size;
+  document.getElementById('pstat-toprated').textContent= places.filter(p=>(p.rating||0)===5).length;
+
+  const counts={restaurant:0,activity:0,hotel:0,other:0};
+  places.forEach(p=>{if(counts[p.category]!==undefined)counts[p.category]++;});
+  const max=Math.max(...Object.values(counts),1);
+  Object.entries(counts).forEach(([t,n])=>{
+    document.getElementById(`pbar-${t}`).style.width=(n/max*100)+'%';
+    document.getElementById(`pcount-${t}`).textContent=n;
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CONTACT MODAL
+// ═══════════════════════════════════════════════════════════════
+function openContactModal(id) {
+  editingContactId = id||null;
+  const c = id ? contacts.find(x=>x.id===id) : null;
+  document.getElementById('contact-modal-title').textContent = c ? 'Edit Contact' : 'Add Contact';
+  ['first','last','city','state','org','role','email','phone','tags','how-met','notes'].forEach(f=>{
+    document.getElementById('f-'+f).value = c ? (c[f==='how-met'?'howMet':f]||'') : '';
+  });
+  document.getElementById('f-last-contact').value = c?.lastContact||'';
+  document.getElementById('f-followup').value     = c?.followup||'';
+  document.getElementById('f-type').value         = c?.type||'professional';
+  setWarmth(c?.warmth||3);
+  document.getElementById('contact-modal-overlay').classList.remove('hidden');
+}
+function closeContactModal() { document.getElementById('contact-modal-overlay').classList.add('hidden'); }
+
+function setWarmth(val) {
+  selectedWarmth = val;
+  document.querySelectorAll('.warmth-btn').forEach(b=>{
+    const v=parseInt(b.dataset.v);
+    b.classList.toggle('selected',v<=val);
+    b.style.background=v<=val?WARMTH_COLORS[val]:'';
+  });
+}
+
+function saveContact() {
+  const first  = document.getElementById('f-first').value.trim();
+  const city   = document.getElementById('f-city').value.trim();
+  const howMet = document.getElementById('f-how-met').value.trim();
+  if(!first)  { alert('First name is required.'); return; }
+  if(!city)   { alert('City is required.'); return; }
+  if(!howMet) { alert('How we met is required.'); return; }
+  const data = {
+    first, city, howMet,
+    last: document.getElementById('f-last').value.trim(),
+    state: document.getElementById('f-state').value.trim(),
+    org: document.getElementById('f-org').value.trim(),
+    role: document.getElementById('f-role').value.trim(),
+    email: document.getElementById('f-email').value.trim(),
+    phone: document.getElementById('f-phone').value.trim(),
+    type: document.getElementById('f-type').value,
+    lastContact: document.getElementById('f-last-contact').value,
+    followup: document.getElementById('f-followup').value,
+    warmth: selectedWarmth,
+    tags: document.getElementById('f-tags').value.trim(),
+    notes: document.getElementById('f-notes').value.trim(),
+  };
+  if(editingContactId) {
+    const i=contacts.findIndex(c=>c.id===editingContactId);
+    if(i>=0) contacts[i]={...contacts[i],...data};
+  } else {
+    contacts.push({id:genId(),added:new Date().toISOString(),...data});
+  }
+  saveContacts(); closeContactModal(); renderContacts();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PLACE MODAL
+// ═══════════════════════════════════════════════════════════════
+function openPlaceModal(id) {
+  editingPlaceId = id||null;
+  const p = id ? places.find(x=>x.id===id) : null;
+  document.getElementById('place-modal-title').textContent = p ? 'Edit Place' : 'Add Place';
+  ['name','city','state','address','website','tags','notes'].forEach(f=>{
+    document.getElementById('p-'+f).value = p?.(p[f]||'') ?? '';
+  });
+  document.getElementById('p-category').value = p?.category||'restaurant';
+  setStars(p?.rating||0);
+  placeVisited = p?.visited||false;
+  const tog = document.getElementById('p-visited-toggle');
+  tog.classList.toggle('on', placeVisited);
+  document.getElementById('place-modal-overlay').classList.remove('hidden');
+}
+function closePlaceModal() { document.getElementById('place-modal-overlay').classList.add('hidden'); }
+
+function setStars(val) {
+  selectedStars = val;
+  document.querySelectorAll('.star-pick-btn').forEach(b=>{
+    b.classList.toggle('selected', parseInt(b.dataset.v)<=val);
+  });
+}
+function toggleVisited() {
+  placeVisited = !placeVisited;
+  document.getElementById('p-visited-toggle').classList.toggle('on', placeVisited);
+}
+
+function savePlace() {
+  const name     = document.getElementById('p-name').value.trim();
+  const city     = document.getElementById('p-city').value.trim();
+  const category = document.getElementById('p-category').value;
+  if(!name)     { alert('Name is required.'); return; }
+  if(!city)     { alert('City is required.'); return; }
+  const data = {
+    name, city, category,
+    state:   document.getElementById('p-state').value.trim(),
+    address: document.getElementById('p-address').value.trim(),
+    website: document.getElementById('p-website').value.trim(),
+    tags:    document.getElementById('p-tags').value.trim(),
+    notes:   document.getElementById('p-notes').value.trim(),
+    rating:  selectedStars,
+    visited: placeVisited,
+  };
+  if(editingPlaceId) {
+    const i=places.findIndex(p=>p.id===editingPlaceId);
+    if(i>=0) places[i]={...places[i],...data};
+  } else {
+    places.push({id:genId(),added:new Date().toISOString(),...data});
+  }
+  savePlaces(); closePlaceModal(); renderPlaces();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DETAIL PANEL
+// ═══════════════════════════════════════════════════════════════
+function openContactDetail(id) {
+  const c = contacts.find(x=>x.id===id); if(!c) return;
+  const color = avatarColor(c.first+c.last);
+  const tags  = (c.tags||'').split(',').map(t=>t.trim()).filter(Boolean);
+  const days  = daysDiff(c.followup);
+  const loc   = [c.city,c.state].filter(Boolean).join(', ');
+  let wHtml   = '<div class="warmth-display">'+[1,2,3,4,5].map(i=>`<div class="warmth-display-dot${i<=(c.warmth||0)?' filled w'+(c.warmth||0):''}"></div>`).join('')+`<span style="font-size:13px;color:var(--text-muted);margin-left:6px">${WARMTH_LABELS[c.warmth||0]||'Not set'}</span></div>`;
+
+  document.getElementById('detail-header').innerHTML = `
+    <div class="detail-avatar" style="background:${color}22;color:${color}">${initials(c)}</div>
+    <div style="flex:1;min-width:0">
+      <div class="detail-name">${escHtml(c.first)} ${escHtml(c.last||'')}</div>
+      <div class="detail-sub">${escHtml([c.role,c.org].filter(Boolean).join(' · ')||'—')}</div>
+      ${loc?`<div style="font-size:12px;color:#818cf8;margin-top:2px">📍 ${escHtml(loc)}</div>`:''}
+      <div style="margin-top:5px"><span class="type-badge type-${c.type}">${TYPE_LABELS[c.type]}</span></div>
+    </div>`;
+
+  document.getElementById('detail-body').innerHTML = `
+    <div><div class="detail-section-title">Relationship</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px">
+        <div class="detail-field"><div class="detail-field-label">Warmth</div>${wHtml}</div>
+        <div class="detail-field"><div class="detail-field-label">Last Contact</div><div class="detail-field-value">${formatDate(c.lastContact)}</div></div>
+        <div class="detail-field"><div class="detail-field-label">Next Follow-up</div>
+          <div class="detail-field-value" style="color:${days!==null&&days<0?'var(--red)':days!==null&&days<=7?'var(--yellow)':'var(--text)'}">
+            ${c.followup?`${formatDate(c.followup)} <span style="font-size:11px;opacity:.7">(${relativeDate(days)})</span>`:'—'}
+          </div></div>
+      </div></div>
+    <div><div class="detail-section-title">How We Met</div>
+      <div class="detail-notes-text" style="font-style:italic">${escHtml(c.howMet||'—').replace(/\n/g,'<br>')}</div></div>
+    ${(c.email||c.phone)?`<div><div class="detail-section-title">Contact Info</div>
+      ${c.email?`<div class="detail-field" style="margin-bottom:6px"><div class="detail-field-label">Email</div><a href="mailto:${escHtml(c.email)}" style="color:var(--accent-light);font-size:14px">${escHtml(c.email)}</a></div>`:''}
+      ${c.phone?`<div class="detail-field"><div class="detail-field-label">Phone</div><a href="tel:${escHtml(c.phone)}" style="color:var(--accent-light);font-size:14px">${escHtml(c.phone)}</a></div>`:''}
+    </div>`:''}
+    ${c.notes?`<div><div class="detail-section-title">Additional Notes</div><div class="detail-notes-text">${escHtml(c.notes).replace(/\n/g,'<br>')}</div></div>`:''}
+    ${tags.length?`<div><div class="detail-section-title">Tags</div><div class="detail-tags">${tags.map(t=>`<span class="tag">${escHtml(t)}</span>`).join('')}</div></div>`:''}
+    <div style="font-size:11px;color:var(--text-muted)">Added ${formatDate(c.added?.slice(0,10))}</div>`;
+
+  document.getElementById('detail-footer').innerHTML = `
+    <button class="btn btn-ghost" style="flex:1" onclick="closeDetail();openContactModal('${c.id}')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit
+    </button>
+    <button class="btn btn-danger btn-sm" onclick="deleteContact('${c.id}')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg> Delete
+    </button>`;
+  showDetail();
+}
+
+function openPlaceDetail(id) {
+  const p = places.find(x=>x.id===id); if(!p) return;
+  const tags = (p.tags||'').split(',').map(t=>t.trim()).filter(Boolean);
+  const bg   = CAT_BG[p.category]||'#1a1d27';
+  const loc  = [p.city,p.state].filter(Boolean).join(', ');
+
+  document.getElementById('detail-header').innerHTML = `
+    <div class="detail-place-icon" style="background:${bg}">${CAT_ICONS[p.category]||'📍'}</div>
+    <div style="flex:1;min-width:0">
+      <div class="detail-name">${escHtml(p.name)}</div>
+      <div class="detail-sub">${escHtml(CAT_LABELS[p.category])}</div>
+      ${loc?`<div style="font-size:12px;color:#818cf8;margin-top:2px">📍 ${escHtml(loc)}</div>`:''}
+      <div style="margin-top:5px;display:flex;align-items:center;gap:8px">
+        ${p.rating?starRow(p.rating):''}
+        <span class="visited-badge ${p.visited?'visited-yes':'visited-no'}">${p.visited?'✓ Visited':'Not visited yet'}</span>
+      </div>
+    </div>`;
+
+  document.getElementById('detail-body').innerHTML = `
+    ${p.address?`<div><div class="detail-section-title">Address</div><div class="detail-field-value">${escHtml(p.address)}</div></div>`:''}
+    ${p.website?`<div><div class="detail-section-title">Website</div><a href="https://${escHtml(p.website.replace(/^https?:\/\//,''))}" target="_blank" style="color:var(--accent-light);font-size:14px">${escHtml(p.website)}</a></div>`:''}
+    ${p.notes?`<div><div class="detail-section-title">Notes</div><div class="detail-notes-text">${escHtml(p.notes).replace(/\n/g,'<br>')}</div></div>`:''}
+    ${tags.length?`<div><div class="detail-section-title">Tags</div><div class="detail-tags">${tags.map(t=>`<span class="tag">${escHtml(t)}</span>`).join('')}</div></div>`:''}
+    <div style="font-size:11px;color:var(--text-muted)">Added ${formatDate(p.added?.slice(0,10))}</div>`;
+
+  document.getElementById('detail-footer').innerHTML = `
+    <button class="btn btn-ghost" style="flex:1" onclick="closeDetail();openPlaceModal('${p.id}')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit
+    </button>
+    <button class="btn btn-danger btn-sm" onclick="deletePlace('${p.id}')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg> Delete
+    </button>`;
+  showDetail();
+}
+
+function showDetail() {
+  document.getElementById('detail-overlay').classList.remove('hidden');
+  document.getElementById('detail-panel').classList.remove('hidden');
+}
+function closeDetail() {
+  document.getElementById('detail-overlay').classList.add('hidden');
+  document.getElementById('detail-panel').classList.add('hidden');
+}
+function deleteContact(id) {
+  if(!confirm('Remove this contact?')) return;
+  contacts = contacts.filter(c=>c.id!==id);
+  saveContacts(); closeDetail(); renderContacts();
+}
+function deletePlace(id) {
+  if(!confirm('Remove this place?')) return;
+  places = places.filter(p=>p.id!==id);
+  savePlaces(); closeDetail(); renderPlaces();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// KEYBOARD
+// ═══════════════════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if(e.key==='Escape') { closeContactModal(); closePlaceModal(); closeDetail(); }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// SAMPLE DATA
+// ═══════════════════════════════════════════════════════════════
+function seedContacts() {
+  const d = o => { const dt=new Date(); dt.setDate(dt.getDate()+o); return dt.toISOString().slice(0,10); };
+  contacts = [
+    {id:genId(),added:new Date().toISOString(),first:'Sarah',last:'Chen',city:'San Francisco',state:'CA',org:'Sequoia Capital',role:'Partner',email:'sarah@sequoia.com',type:'investor',warmth:5,lastContact:d(-14),followup:d(-2),tags:'VC, lead investor, Board',howMet:'Warm intro from Marcus at a dinner in Palo Alto.',notes:'Lead investor in our Series A.'},
+    {id:genId(),added:new Date().toISOString(),first:'Marcus',last:'Williams',city:'San Francisco',state:'CA',org:'TechCorp',role:'CTO',email:'marcus@techcorp.io',type:'professional',warmth:4,lastContact:d(-7),followup:d(5),tags:'connector, tech',howMet:'Met at a16z Summit 2023.',notes:'Key connector in the SF ecosystem.'},
+    {id:genId(),added:new Date().toISOString(),first:'Priya',last:'Sharma',city:'New York',state:'NY',org:'',role:'',email:'priya@gmail.com',type:'personal',warmth:5,lastContact:d(-3),followup:d(14),tags:'close friend, mentor',howMet:'College roommate at UCLA.',notes:'Brilliant product mind.'},
+    {id:genId(),added:new Date().toISOString(),first:'James',last:'Park',city:'Chicago',state:'IL',org:'Innovate LLC',role:'CEO',email:'james@innovate.co',type:'lead',warmth:2,lastContact:d(-30),followup:d(-5),tags:'enterprise',howMet:'Met at SaaStr Annual.',notes:'Slow to respond — send case study.'},
+    {id:genId(),added:new Date().toISOString(),first:'Elena',last:'Rodriguez',city:'Austin',state:'TX',org:'Growth Advisors',role:'Advisor',email:'elena@growthadvisors.com',type:'investor',warmth:3,lastContact:d(-21),followup:d(10),tags:'advisor, GTM',howMet:'Referred by seed investor.',notes:'0.5% equity. Enterprise sales focus.'},
+    {id:genId(),added:new Date().toISOString(),first:'David',last:'Kim',city:'Seattle',state:'WA',org:'Stripe',role:'BD Manager',email:'dkim@stripe.com',type:'professional',warmth:3,lastContact:d(-45),followup:d(2),tags:'partnership',howMet:'Cold LinkedIn outreach.',notes:'Exploring integration partnership.'},
+  ];
+  saveContacts();
+}
+
+function seedPlaces() {
+  places = [
+    {id:genId(),added:new Date().toISOString(),name:'Zuni Café',city:'San Francisco',state:'CA',category:'restaurant',rating:5,visited:true,tags:'American, classic, lunch',address:'1658 Market St',notes:'Order the roast chicken — legendary. Great for client lunches.'},
+    {id:genId(),added:new Date().toISOString(),name:'Tartine Bakery',city:'San Francisco',state:'CA',category:'restaurant',rating:5,visited:true,tags:'bakery, coffee, breakfast',address:'600 Guerrero St',notes:'Get there early — line forms fast. Country bread is a must.'},
+    {id:genId(),added:new Date().toISOString(),name:'The Standard',city:'New York',state:'NY',category:'hotel',rating:4,visited:true,tags:'boutique, rooftop bar',address:'848 Washington St',notes:'Great rooftop. Ask for a high floor with Hudson views.'},
+    {id:genId(),added:new Date().toISOString(),name:'Chicago Riverwalk',city:'Chicago',state:'IL',category:'activity',rating:4,visited:false,tags:'outdoors, walking, views',notes:'Best in summer. Kayak rentals available along the river.'},
+    {id:genId(),added:new Date().toISOString(),name:'Franklin Barbecue',city:'Austin',state:'TX',category:'restaurant',rating:5,visited:true,tags:'BBQ, Texas, brisket',address:'900 E 11th St',notes:'Arrive by 8am or you will miss the brisket. Worth every minute of the wait.'},
+    {id:genId(),added:new Date().toISOString(),name:'Pike Place Market',city:'Seattle',state:'WA',category:'activity',rating:5,visited:false,tags:'market, seafood, touristy but good',notes:'Go early on a weekday. Best Dungeness crab in the city.'},
+  ];
+  savePlaces();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+if(contacts.length===0) seedContacts();
+if(places.length===0)   seedPlaces();
+if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
+renderContacts();
+renderPlaces();
+</script>
+</body>
+</html>

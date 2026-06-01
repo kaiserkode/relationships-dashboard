@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Prospect Prep — Dooley Corporate Finance</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f0f0f;
+    --surface: #181818;
+    --surface2: #212121;
+    --border: #2a2a2a;
+    --border2: #333;
+    --text: #e8e4dc;
+    --muted: #6b6860;
+    --accent: #c8b98a;
+    --accent2: #8a7d5e;
+    --success: #5a8a5a;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  .layout {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  .header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 24px;
+    margin-bottom: 36px;
+  }
+
+  .wordmark {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 300;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .section {
+    margin-bottom: 32px;
+  }
+
+  .section-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+
+  label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  input, textarea, select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    padding: 9px 11px;
+    width: 100%;
+    transition: border-color 0.15s;
+    outline: none;
+    -webkit-appearance: none;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--accent2);
+  }
+
+  input::placeholder, textarea::placeholder { color: var(--muted); }
+
+  textarea { resize: vertical; }
+
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b6860'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 28px;
+  }
+
+  .deliverable-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .del-btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    padding: 6px 13px;
+    border-radius: 3px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .del-btn:hover { border-color: var(--accent2); color: var(--text); }
+
+  .del-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #0f0f0f;
+    font-weight: 500;
+  }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .btn-primary {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    background: var(--accent);
+    color: #0f0f0f;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: opacity 0.15s;
+  }
+
+  .btn-primary:hover { opacity: 0.85; }
+
+  .btn-secondary {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border2);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: none;
+  }
+
+  .btn-secondary:hover { color: var(--text); border-color: var(--accent2); }
+
+  .copy-confirm {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--success);
+    letter-spacing: 0.05em;
+    display: none;
+  }
+
+  .output-section { display: none; margin-top: 32px; }
+
+  .output-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .output-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .output-box {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    padding: 20px;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.75;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .hint {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 12px;
+    font-family: var(--mono);
+    letter-spacing: 0.02em;
+  }
+
+  .hint a { color: var(--accent2); text-decoration: none; }
+  .hint a:hover { color: var(--accent); }
+
+  @media (max-width: 600px) {
+    .grid2, .grid3 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <div class="header">
+    <div class="wordmark">Dooley Corporate Finance</div>
+    <h1>Prospect <span>prep</span> generator</h1>
+  </div>
+
+  <!-- Prospect Details -->
+  <div class="section">
+    <div class="section-title">Prospect details</div>
+    <div class="grid2" style="margin-bottom:12px">
+      <div class="field">
+        <label>Company name</label>
+        <input type="text" id="company" placeholder="Acme Specialty Contractors" />
+      </div>
+      <div class="field">
+        <label>Owner / key contact</label>
+        <input type="text" id="owner" placeholder="John Smith, founder & CEO" />
+      </div>
+    </div>
+    <div class="grid3" style="margin-bottom:12px">
+      <div class="field">
+        <label>Industry / sector</label>
+        <input type="text" id="industry" placeholder="Specialty construction" />
+      </div>
+      <div class="field">
+        <label>Approx. revenue</label>
+        <input type="text" id="revenue" placeholder="$35M" />
+      </div>
+      <div class="field">
+        <label>Est. valuation range</label>
+        <input type="text" id="valuation" placeholder="$80–120M" />
+      </div>
+    </div>
+    <div class="field">
+      <label>How the intro came about</label>
+      <input type="text" id="intro" placeholder="CPA referral, PE contact, cold outreach, conference..." />
+    </div>
+  </div>
+
+  <!-- Situation -->
+  <div class="section">
+    <div class="section-title">Situation & motivations</div>
+    <div class="field" style="margin-bottom:12px">
+      <label>What you know about their situation</label>
+      <textarea id="situation" rows="3" placeholder="Founder in late 50s, no clear successor, 30% growth last 2 years, may have had prior buyer conversations..."></textarea>
+    </div>
+    <div class="field">
+      <label>Hypothesized motivation(s)</label>
+      <textarea id="motivation" rows="2" placeholder="Retirement / liquidity event, growth capital, partner buyout, key person risk..."></textarea>
+    </div>
+  </div>
+
+  <!-- Meeting Config -->
+  <div class="section">
+    <div class="section-title">Meeting config</div>
+    <div class="grid2" style="margin-bottom:12px">
+      <div class="field">
+        <label>Meeting type</label>
+        <select id="meeting">
+          <option value="first_call">First intro call</option>
+          <option value="follow_up">Follow-up conversation</option>
+          <option value="pitch">Formal pitch / capabilities</option>
+          <option value="loi">Pre-LOI / process alignment</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Additional context</label>
+        <input type="text" id="extra" placeholder="Sensitive topics, prior banker relationships, red flags..." />
+      </div>
+    </div>
+  </div>
+
+  <!-- Deliverables -->
+  <div class="section">
+    <div class="section-title">Deliverables</div>
+    <div class="deliverable-grid" id="deliverables"></div>
+  </div>
+
+  <!-- Actions -->
+  <div class="actions">
+    <button class="btn-primary" onclick="generate()">Generate prompt</button>
+    <button class="btn-secondary" id="copy-btn" onclick="copyPrompt()">Copy</button>
+    <button class="btn-secondary" id="clear-btn" onclick="clearAll()" style="display:none">Clear</button>
+    <span class="copy-confirm" id="copy-confirm">✓ Copied to clipboard</span>
+  </div>
+
+  <!-- Output -->
+  <div class="output-section" id="output-section">
+    <div class="output-label">Generated prompt</div>
+    <div class="output-box" id="output"></div>
+    <p class="hint">Paste into <a href="https://claude.ai" target="_blank">claude.ai</a> with web search enabled for best results.</p>
+  </div>
+
+</div>
+
+<script>
+const deliverableOptions = [
+  { id: "brief", label: "Company brief" },
+  { id: "questions", label: "Question list" },
+  { id: "objections", label: "Objection prep" },
+  { id: "pitch", label: "Pitch angle" },
+  { id: "roleplay", label: "Roleplay prompt" },
+  { id: "comp", label: "Comp deals" },
+];
+
+const selected = new Set(["brief", "questions", "objections"]);
+
+const deliverableInstructions = {
+  brief: `COMPANY BRIEF
+Summarize what is publicly known about this company: business model, revenue drivers, likely customer mix, competitive positioning, and any notable recent developments. Flag any information gaps I should try to fill in the conversation.`,
+  questions: `QUESTION LIST
+Draft 10–12 tailored discovery questions for this meeting. Prioritize questions that surface the owner's goals, timeline, personal financial needs, deal structure preferences, and whether they've engaged with other bankers or buyers. Order them conversationally — start soft, get specific.`,
+  objections: `OBJECTION PREP
+List the 6–8 most likely objections this owner might raise about hiring an M&A advisor or running a process, and provide a concise, credible response to each. Focus on objections specific to this owner's profile and situation.`,
+  pitch: `TAILORED PITCH ANGLE
+Based on the owner's hypothesized motivations and company profile, advise how I should position my value proposition in this meeting. What specific outcomes and themes should I emphasize? What should I avoid? What story should I be telling?`,
+  roleplay: `ROLEPLAY PROMPT
+Write a roleplay scenario where you play a skeptical version of this owner. Push back on my reasons for reaching out, challenge my track record and process, and ask hard questions about fees, timeline, and confidentiality. After I respond to each challenge, give me honest feedback on my answer.`,
+  comp: `COMPARABLE TRANSACTIONS
+Identify publicly known M&A transactions in this sector and approximate size range from the past 3 years. Note relevant valuation multiples, deal structures, and buyer profiles. Flag any PE firms or strategics that are active in this space.`,
+};
+
+const meetingLabels = {
+  first_call: "first intro call",
+  follow_up: "follow-up conversation",
+  pitch: "formal pitch / capabilities meeting",
+  loi: "pre-LOI / process alignment conversation",
+};
+
+function renderDeliverables() {
+  const container = document.getElementById("deliverables");
+  container.innerHTML = "";
+  deliverableOptions.forEach(opt => {
+    const btn = document.createElement("button");
+    btn.className = "del-btn" + (selected.has(opt.id) ? " active" : "");
+    btn.textContent = opt.label;
+    btn.onclick = () => {
+      selected.has(opt.id) ? selected.delete(opt.id) : selected.add(opt.id);
+      renderDeliverables();
+    };
+    container.appendChild(btn);
+  });
+}
+
+renderDeliverables();
+
+function val(id) { return document.getElementById(id).value.trim(); }
+
+function generate() {
+  const company = val("company") || "[Company]";
+  const owner = val("owner") || "[Owner]";
+  const industry = val("industry") || "[Industry]";
+  const revenue = val("revenue") || "[Not specified]";
+  const valuation = val("valuation") || "[Not specified]";
+  const intro = val("intro") || "[Not specified]";
+  const situation = val("situation") || "[Not specified]";
+  const motivation = val("motivation") || "[Not specified]";
+  const meeting = meetingLabels[document.getElementById("meeting").value];
+  const extra = val("extra");
+
+  const selectedDeliverables = deliverableOptions
+    .filter(o => selected.has(o.id))
+    .map(o => deliverableInstructions[o.id])
+    .join("\n\n");
+
+  if (!selectedDeliverables) {
+    alert("Select at least one deliverable.");
+    return;
+  }
+
+  const prompt = `I am a sell-side M&A advisor at Dooley Corporate Finance. I have an upcoming ${meeting} with the following prospect. Please prepare a pre-call brief based on the details below.
+
+─── PROSPECT OVERVIEW ───────────────────────
+Company: ${company}
+Owner / key contact: ${owner}
+Industry: ${industry}
+Approximate revenue: ${revenue}
+Estimated valuation range: ${valuation}
+How the intro came about: ${intro}
+
+─── SITUATION ───────────────────────────────
+${situation}
+
+─── HYPOTHESIZED MOTIVATIONS ────────────────
+${motivation}
+${extra ? `\n─── ADDITIONAL CONTEXT ──────────────────────\n${extra}` : ""}
+
+─── DELIVERABLES REQUESTED ──────────────────
+
+${selectedDeliverables}
+
+Format each deliverable with a clear header. Be direct and specific — avoid generic observations. Where information is missing, note the gap and suggest how I might surface it in conversation.`;
+
+  document.getElementById("output").textContent = prompt;
+  document.getElementById("output-section").style.display = "block";
+  document.getElementById("copy-btn").style.display = "inline-block";
+  document.getElementById("clear-btn").style.display = "inline-block";
+  document.getElementById("output-section").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function copyPrompt() {
+  const text = document.getElementById("output").textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const el = document.getElementById("copy-confirm");
+    el.style.display = "inline";
+    setTimeout(() => el.style.display = "none", 2500);
+  });
+}
+
+function clearAll() {
+  ["company","owner","industry","revenue","valuation","intro","situation","motivation","extra"].forEach(id => {
+    document.getElementById(id).value = "";
+  });
+  document.getElementById("meeting").value = "first_call";
+  selected.clear();
+  selected.add("brief"); selected.add("questions"); selected.add("objections");
+  renderDeliverables();
+  document.getElementById("output-section").style.display = "none";
+  document.getElementById("copy-btn").style.display = "none";
+  document.getElementById("clear-btn").style.display = "none";
+}
+</script>
+</body>
+</html>
