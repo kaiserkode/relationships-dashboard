@@ -326,12 +326,12 @@ header {
   position: fixed; left: 0; right: 0; bottom: 0;
   background: var(--surface); border-radius: 20px 20px 0 0;
   border-top: 1px solid var(--border);
-  max-height: 92dvh; overflow-y: auto; -webkit-overflow-scrolling: touch;
-  padding-bottom: var(--safe-bottom);
+  max-height: 92dvh;
+  display: flex; flex-direction: column; overflow: hidden;
 }
 .detail-panel.hidden { display: none; }
-.detail-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 0; }
-.detail-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; gap: 13px; }
+.detail-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 0; flex-shrink: 0; }
+.detail-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; gap: 13px; flex-shrink: 0; }
 .detail-avatar { width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 21px; font-weight: 700; flex-shrink: 0; }
 .detail-place-icon { width: 54px; height: 54px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 28px; flex-shrink: 0; }
 .detail-name { font-size: 19px; font-weight: 700; }
@@ -350,7 +350,15 @@ header {
   border-radius: var(--radius-sm); padding: 11px;
 }
 .detail-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-.detail-footer { padding: 13px 18px; border-top: 1px solid var(--border); display: flex; gap: 10px; }
+.detail-body-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.detail-footer {
+  flex-shrink: 0;
+  padding: 13px 18px;
+  padding-bottom: calc(13px + var(--safe-bottom));
+  border-top: 1px solid var(--border);
+  display: flex; gap: 10px;
+  background: var(--surface);
+}
 
 /* ── Bottom nav ────────────────────────────────────────────── */
 .bottom-nav { display: none; background: var(--surface); border-top: 1px solid var(--border); padding-bottom: var(--safe-bottom); flex-shrink: 0; }
@@ -397,6 +405,7 @@ header {
     position: fixed; top: 0; right: 0; bottom: 0; left: auto;
     width: 440px; border-radius: 0; border-left: 1px solid var(--border);
     border-top: none; max-height: 100%;
+    display: flex; flex-direction: column; overflow: hidden;
   }
   .detail-handle { display: none; }
   .contact-card:hover, .place-card:hover { border-color: var(--accent); transform: translateY(-1px); }
@@ -693,7 +702,9 @@ header {
 <div class="detail-panel hidden" id="detail-panel">
   <div class="detail-handle"></div>
   <div id="detail-header"></div>
-  <div id="detail-body"></div>
+  <div class="detail-body-scroll">
+    <div id="detail-body"></div>
+  </div>
   <div id="detail-footer"></div>
 </div>
 
@@ -1217,7 +1228,7 @@ function openContactDetail(id) {
     <button class="btn btn-ghost" style="flex:1" onclick="closeDetail();openContactModal('${c.id}')">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit
     </button>
-    <button class="btn btn-danger btn-sm" onclick="deleteContact('${c.id}')">
+    <button class="btn btn-danger btn-sm" onclick="confirmDelete('${c.id}','contact')">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg> Delete
     </button>`;
   showDetail();
@@ -1252,7 +1263,7 @@ function openPlaceDetail(id) {
     <button class="btn btn-ghost" style="flex:1" onclick="closeDetail();openPlaceModal('${p.id}')">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit
     </button>
-    <button class="btn btn-danger btn-sm" onclick="deletePlace('${p.id}')">
+    <button class="btn btn-danger btn-sm" onclick="confirmDelete('${p.id}','place')">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg> Delete
     </button>`;
   showDetail();
@@ -1266,15 +1277,28 @@ function closeDetail() {
   document.getElementById('detail-overlay').classList.add('hidden');
   document.getElementById('detail-panel').classList.add('hidden');
 }
-function deleteContact(id) {
-  if(!confirm('Remove this contact?')) return;
-  contacts = contacts.filter(c=>c.id!==id);
-  saveContacts(); closeDetail(); renderContacts();
+function confirmDelete(id, type) {
+  // Swap footer to inline confirmation — avoids iOS PWA confirm() issues
+  document.getElementById('detail-footer').innerHTML = `
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:600;color:var(--red);margin-bottom:8px">Delete this ${type}?</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" style="flex:1" onclick="${type==='contact'?'openContactDetail':'openPlaceDetail'}('${id}')">Cancel</button>
+        <button class="btn btn-danger" style="flex:1" onclick="${type==='contact'?'doDeleteContact':'doDeletePlace'}('${id}')">Yes, Delete</button>
+      </div>
+    </div>`;
 }
-function deletePlace(id) {
-  if(!confirm('Remove this place?')) return;
+function doDeleteContact(id) {
+  contacts = contacts.filter(c=>c.id!==id);
+  saveContacts(); closeDetail();
+  switchMobileTab('contacts');
+  renderContacts();
+}
+function doDeletePlace(id) {
   places = places.filter(p=>p.id!==id);
-  savePlaces(); closeDetail(); renderPlaces();
+  savePlaces(); closeDetail();
+  switchMobileTab('contacts');
+  renderPlaces();
 }
 
 // ═══════════════════════════════════════════════════════════════
