@@ -351,7 +351,7 @@ header {
   border-radius: var(--radius-sm); padding: 11px;
 }
 .detail-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-.detail-body-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: var(--safe-bottom); }
+.detail-body-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: var(--safe-bottom); overscroll-behavior: contain; touch-action: pan-y; }
 .detail-footer { display: none; } /* buttons moved to header */
 
 /* Action buttons in detail header */
@@ -383,7 +383,7 @@ header {
 }
 
 /* ── Bottom nav ────────────────────────────────────────────── */
-.bottom-nav { display: none; background: var(--surface); border-top: 1px solid var(--border); padding-bottom: var(--safe-bottom); flex-shrink: 0; }
+.bottom-nav { display: none; background: var(--surface); border-top: 1px solid var(--border); padding-bottom: var(--safe-bottom); flex-shrink: 0; position: relative; z-index: 160; }
 .bottom-nav-inner { display: flex; height: var(--bottom-nav-height); }
 .nav-tab {
   flex: 1; display: flex; flex-direction: column; align-items: center;
@@ -1392,11 +1392,13 @@ function showDetail() {
   document.getElementById('delete-modal').style.display = 'none';
   document.getElementById('detail-overlay').classList.remove('hidden');
   document.getElementById('detail-panel').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
 }
 function closeDetail() {
   document.getElementById('detail-overlay').classList.add('hidden');
   document.getElementById('detail-panel').classList.add('hidden');
   document.getElementById('delete-modal').style.display = 'none';
+  document.body.style.overflow = '';
 }
 function confirmDelete(id, type) {
   const modal   = document.getElementById('delete-modal');
