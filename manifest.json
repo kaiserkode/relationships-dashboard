@@ -1,8 +1,9 @@
 {
-  "name": "Relationships",
-  "short_name": "Relationships",
+  "name": "My World",
+  "short_name": "My World",
   "description": "Personal & professional relationship tracker",
-  "start_url": "/",
+  "start_url": "/relationships-dashboard/",
+  "scope": "/relationships-dashboard/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0f1117",

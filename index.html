@@ -1733,7 +1733,7 @@ function seedPlaces() {
 // ═══════════════════════════════════════════════════════════════
 if(contacts.length===0) seedContacts();
 if(places.length===0)   seedPlaces();
-if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
+if('serviceWorker' in navigator) navigator.serviceWorker.register('/relationships-dashboard/sw.js').catch(()=>{});
 renderContacts();
 renderPlaces();
 </script>
