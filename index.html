@@ -754,12 +754,23 @@ header {
       <!-- Import section -->
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px">
         <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">📥 Import — Restore from Backup</div>
-        <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">Select a JSON backup file to restore your data. Your existing data will be <strong style="color:var(--yellow)">merged</strong> — existing contacts are kept, no duplicates added.</div>
-        <label style="display:flex;align-items:center;justify-content:center;height:48px;background:var(--surface);border:2px dashed var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:14px;font-weight:600;color:var(--text-muted);gap:8px">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Choose Backup File
-          <input type="file" accept=".json" style="display:none" onchange="importJSON(event)">
-        </label>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">Select a backup file to restore. Existing data is <strong style="color:var(--yellow)">merged</strong> — no duplicates added.</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <label style="display:flex;align-items:center;justify-content:center;height:48px;background:var(--surface);border:2px dashed var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:14px;font-weight:600;color:var(--text-muted);gap:8px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Import Contacts CSV
+            <input type="file" accept=".csv" style="display:none" onchange="importCSV(event,'contacts')">
+          </label>
+          <label style="display:flex;align-items:center;justify-content:center;height:48px;background:var(--surface);border:2px dashed var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:14px;font-weight:600;color:var(--text-muted);gap:8px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Import Places CSV
+            <input type="file" accept=".csv" style="display:none" onchange="importCSV(event,'places')">
+          </label>
+          <label style="display:flex;align-items:center;justify-content:center;height:44px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:13px;font-weight:500;color:var(--text-muted);gap:8px">
+            Import from JSON backup
+            <input type="file" accept=".json" style="display:none" onchange="importJSON(event)">
+          </label>
+        </div>
       </div>
 
       <!-- Last backup info -->
@@ -1492,7 +1503,124 @@ function downloadFile(content, filename, mime) {
   setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
 }
 
-// ── Import ────────────────────────────────────────────────────
+// ── CSV parser ────────────────────────────────────────────────
+function parseCSV(text) {
+  const rows = [];
+  let cur = '', inQuote = false, row = [];
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i], next = text[i+1];
+    if (inQuote) {
+      if (ch === '"' && next === '"') { cur += '"'; i++; }
+      else if (ch === '"') inQuote = false;
+      else cur += ch;
+    } else {
+      if (ch === '"') inQuote = true;
+      else if (ch === ',') { row.push(cur.trim()); cur = ''; }
+      else if (ch === '\n' || (ch === '\r' && next === '\n')) {
+        row.push(cur.trim()); rows.push(row); row = []; cur = '';
+        if (ch === '\r') i++;
+      } else cur += ch;
+    }
+  }
+  if (cur || row.length) { row.push(cur.trim()); rows.push(row); }
+  return rows;
+}
+
+function importCSV(event, type) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const rows = parseCSV(e.target.result);
+      if (rows.length < 2) { showDataStatus('❌ File is empty or has no data rows.', false); return; }
+
+      const headers = rows[0].map(h => h.toLowerCase().replace(/[^a-z]/g,''));
+      const col = key => headers.indexOf(key);
+
+      let added = 0;
+
+      if (type === 'contacts') {
+        // Map CSV columns to contact fields
+        const existing = new Set(contacts.map(c => `${c.first}|${c.last}|${c.city}`));
+        for (let i = 1; i < rows.length; i++) {
+          const r = rows[i];
+          if (!r[col('firstname')] && !r[0]) continue;
+          const c = {
+            id: genId(),
+            added: new Date().toISOString(),
+            first:       r[col('firstname')]   || r[0] || '',
+            last:        r[col('lastname')]    || r[1] || '',
+            city:        r[col('city')]        || r[2] || '',
+            state:       r[col('state')]       || r[3] || '',
+            org:         r[col('organization')]|| r[4] || '',
+            role:        r[col('roletitle')]   || r[5] || '',
+            email:       r[col('email')]       || r[6] || '',
+            phone:       r[col('phone')]       || r[7] || '',
+            type:        csvTypeMap(r[col('type')] || r[8] || ''),
+            warmth:      parseInt(r[col('warmth')] || r[9]) || 0,
+            lastContact: r[col('lastcontact')] || r[10] || '',
+            followup:    r[col('nextfollowup')]|| r[11] || '',
+            tags:        r[col('tags')]        || r[12] || '',
+            howMet:      r[col('howwemet')]    || r[13] || '',
+            notes:       r[col('notes')]       || r[14] || '',
+          };
+          const key = `${c.first}|${c.last}|${c.city}`;
+          if (!existing.has(key) && c.first) { contacts.push(c); existing.add(key); added++; }
+        }
+        saveContacts(); renderContacts();
+
+      } else {
+        // Places
+        const existing = new Set(places.map(p => `${p.name}|${p.city}`));
+        for (let i = 1; i < rows.length; i++) {
+          const r = rows[i];
+          if (!r[0]) continue;
+          const p = {
+            id: genId(),
+            added: new Date().toISOString(),
+            name:     r[col('name')]     || r[0] || '',
+            city:     r[col('city')]     || r[1] || '',
+            state:    r[col('state')]    || r[2] || '',
+            category: csvCatMap(r[col('category')] || r[3] || ''),
+            rating:   parseInt(r[col('rating')] || r[4]) || 0,
+            visited:  (r[col('visited')] || r[5] || '').toLowerCase() === 'yes',
+            address:  r[col('address')]  || r[6] || '',
+            website:  r[col('website')]  || r[7] || '',
+            tags:     r[col('tags')]     || r[8] || '',
+            notes:    r[col('notes')]    || r[9] || '',
+          };
+          const key = `${p.name}|${p.city}`;
+          if (!existing.has(key) && p.name) { places.push(p); existing.add(key); added++; }
+        }
+        savePlaces(); renderPlaces();
+      }
+
+      showDataStatus(`✓ Imported ${added} new ${type} from CSV.`, true);
+    } catch(err) {
+      showDataStatus('❌ Could not parse CSV — make sure it was exported from this app.', false);
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function csvTypeMap(s) {
+  s = (s||'').toLowerCase();
+  if (s.includes('personal')) return 'personal';
+  if (s.includes('prospect') || s.includes('lead')) return 'lead';
+  if (s.includes('invest') || s.includes('advis')) return 'investor';
+  return 'professional';
+}
+function csvCatMap(s) {
+  s = (s||'').toLowerCase();
+  if (s.includes('restaur') || s.includes('food') || s.includes('dining')) return 'restaurant';
+  if (s.includes('activ') || s.includes('tour') || s.includes('sport')) return 'activity';
+  if (s.includes('hotel') || s.includes('stay') || s.includes('lodge')) return 'hotel';
+  return 'other';
+}
+
+// ── Import JSON ───────────────────────────────────────────────
 function importJSON(event) {
   const file = event.target.files[0];
   if (!file) return;
