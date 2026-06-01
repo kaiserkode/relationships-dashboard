@@ -459,6 +459,9 @@ header {
       <button class="app-tab active" id="apptab-relationships" onclick="switchAppTab('relationships')">Relationships</button>
       <button class="app-tab" id="apptab-places" onclick="switchAppTab('places')">Places</button>
     </div>
+    <button class="btn btn-ghost btn-icon" onclick="openDataModal()" title="Backup & Restore" style="margin-right:4px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+    </button>
     <button class="btn btn-primary" id="header-add-btn" onclick="openAddModal()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       <span id="header-add-label">Add</span>
@@ -715,6 +718,53 @@ header {
     <div class="modal-footer">
       <button class="btn btn-ghost" style="flex:1" onclick="closePlaceModal()">Cancel</button>
       <button class="btn btn-primary" style="flex:2" onclick="savePlace()">Save Place</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Data / Backup Modal ════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="data-modal-overlay" onclick="if(event.target===this)closeDataModal()">
+  <div class="modal scroll-hidden" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">Backup &amp; Restore</div>
+      <button class="modal-close" onclick="closeDataModal()">×</button>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+
+      <!-- Status message -->
+      <div id="data-status" style="display:none;padding:10px 14px;border-radius:var(--radius-sm);font-size:13px;font-weight:500"></div>
+
+      <!-- Export section -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">📤 Export — Save a Backup</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">Downloads your data as a file. Save it to iCloud, email it to yourself, or keep it anywhere safe.</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn btn-primary" style="justify-content:center;height:48px;font-size:15px" onclick="exportJSON('all')">
+            Export Everything (JSON)
+          </button>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <button class="btn btn-ghost" style="justify-content:center;height:44px" onclick="exportCSV('contacts')">Contacts CSV</button>
+            <button class="btn btn-ghost" style="justify-content:center;height:44px" onclick="exportCSV('places')">Places CSV</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Import section -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">📥 Import — Restore from Backup</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">Select a JSON backup file to restore your data. Your existing data will be <strong style="color:var(--yellow)">merged</strong> — existing contacts are kept, no duplicates added.</div>
+        <label style="display:flex;align-items:center;justify-content:center;height:48px;background:var(--surface);border:2px dashed var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:14px;font-weight:600;color:var(--text-muted);gap:8px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Choose Backup File
+          <input type="file" accept=".json" style="display:none" onchange="importJSON(event)">
+        </label>
+      </div>
+
+      <!-- Last backup info -->
+      <div id="last-backup-info" style="font-size:12px;color:var(--text-muted);text-align:center;padding:4px 0"></div>
+
     </div>
   </div>
 </div>
@@ -1358,10 +1408,146 @@ function doDeletePlace(id) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// DATA MODAL
+// ═══════════════════════════════════════════════════════════════
+function openDataModal() {
+  updateLastBackupInfo();
+  document.getElementById('data-status').style.display = 'none';
+  document.getElementById('data-modal-overlay').classList.remove('hidden');
+}
+function closeDataModal() {
+  document.getElementById('data-modal-overlay').classList.add('hidden');
+}
+
+function showDataStatus(msg, ok) {
+  const el = document.getElementById('data-status');
+  el.textContent = msg;
+  el.style.display = '';
+  el.style.background = ok ? '#064e3b' : '#7f1d1d';
+  el.style.color = ok ? '#34d399' : '#fca5a5';
+  el.style.border = `1px solid ${ok ? '#10b981' : '#ef4444'}`;
+}
+
+function updateLastBackupInfo() {
+  const ts = localStorage.getItem('last_backup_ts');
+  const el = document.getElementById('last-backup-info');
+  el.textContent = ts
+    ? `Last backup: ${new Date(ts).toLocaleString()}`
+    : 'No backup made yet — export one now to protect your data.';
+}
+
+// ── Export ────────────────────────────────────────────────────
+function exportJSON(scope) {
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    version: 1,
+    contacts: contacts,
+    places: places,
+  };
+  const json = JSON.stringify(payload, null, 2);
+  const filename = `my-world-backup-${new Date().toISOString().slice(0,10)}.json`;
+  downloadFile(json, filename, 'application/json');
+  localStorage.setItem('last_backup_ts', new Date().toISOString());
+  showDataStatus(`✓ Backup exported — ${contacts.length} contacts, ${places.length} places. Save this file somewhere safe!`, true);
+  updateLastBackupInfo();
+}
+
+function exportCSV(type) {
+  let csv, filename;
+  if (type === 'contacts') {
+    const headers = ['First Name','Last Name','City','State','Organization','Role','Email','Phone','Type','Warmth','Last Contact','Next Follow-up','Tags','How We Met','Notes'];
+    const rows = contacts.map(c => [
+      c.first, c.last, c.city, c.state, c.org, c.role, c.email, c.phone,
+      TYPE_LABELS[c.type]||c.type, c.warmth||'', c.lastContact, c.followup,
+      c.tags, c.howMet, c.notes
+    ].map(csvCell).join(','));
+    csv = [headers.join(','), ...rows].join('\n');
+    filename = `contacts-${new Date().toISOString().slice(0,10)}.csv`;
+  } else {
+    const headers = ['Name','City','State','Category','Rating','Visited','Address','Website','Tags','Notes'];
+    const rows = places.map(p => [
+      p.name, p.city, p.state, CAT_LABELS[p.category]||p.category,
+      p.rating||'', p.visited?'Yes':'No', p.address, p.website, p.tags, p.notes
+    ].map(csvCell).join(','));
+    csv = [headers.join(','), ...rows].join('\n');
+    filename = `places-${new Date().toISOString().slice(0,10)}.csv`;
+  }
+  downloadFile(csv, filename, 'text/csv');
+  showDataStatus(`✓ ${type === 'contacts' ? contacts.length + ' contacts' : places.length + ' places'} exported as CSV.`, true);
+}
+
+function csvCell(val) {
+  const s = String(val == null ? '' : val).replace(/"/g, '""');
+  return /[",\n]/.test(s) ? `"${s}"` : s;
+}
+
+function downloadFile(content, filename, mime) {
+  const blob = new Blob([content], { type: mime });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+}
+
+// ── Import ────────────────────────────────────────────────────
+function importJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+
+      // Validate
+      if (!data.contacts && !data.places) {
+        showDataStatus('❌ Invalid file — this does not look like a My World backup.', false);
+        return;
+      }
+
+      let addedContacts = 0, addedPlaces = 0;
+
+      // Merge contacts (skip any with same id to avoid duplicates)
+      if (Array.isArray(data.contacts)) {
+        const existingIds = new Set(contacts.map(c => c.id));
+        const newContacts = data.contacts.filter(c => !existingIds.has(c.id));
+        contacts = [...contacts, ...newContacts];
+        addedContacts = newContacts.length;
+        saveContacts();
+        renderContacts();
+      }
+
+      // Merge places
+      if (Array.isArray(data.places)) {
+        const existingIds = new Set(places.map(p => p.id));
+        const newPlaces = data.places.filter(p => !existingIds.has(p.id));
+        places = [...places, ...newPlaces];
+        addedPlaces = newPlaces.length;
+        savePlaces();
+        renderPlaces();
+      }
+
+      showDataStatus(
+        `✓ Restore complete — added ${addedContacts} contact${addedContacts!==1?'s':''} and ${addedPlaces} place${addedPlaces!==1?'s':''}.`,
+        true
+      );
+
+    } catch {
+      showDataStatus('❌ Could not read file — make sure it is a valid JSON backup.', false);
+    }
+    // Reset file input so the same file can be re-selected if needed
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// ═══════════════════════════════════════════════════════════════
 // KEYBOARD
 // ═══════════════════════════════════════════════════════════════
 document.addEventListener('keydown', e => {
-  if(e.key==='Escape') { closeContactModal(); closePlaceModal(); closeDetail(); }
+  if(e.key==='Escape') { closeContactModal(); closePlaceModal(); closeDetail(); closeDataModal(); }
 });
 
 // ═══════════════════════════════════════════════════════════════
