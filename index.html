@@ -782,6 +782,38 @@ header {
 
 <!-- ══ Detail panels ══════════════════════════════════════════ -->
 <div class="detail-overlay hidden" id="detail-overlay" onclick="closeDetail()"></div>
+
+<!-- ══ Delete Confirmation Modal ══════════════════════════════ -->
+<div id="delete-modal" style="
+  display:none; position:fixed; inset:0; z-index:400;
+  background:rgba(0,0,0,0.85);
+  align-items:center; justify-content:center; padding:24px;">
+  <div style="
+    background:#1a1d27; border:1px solid #ef444466;
+    border-radius:16px; padding:28px 24px; width:100%; max-width:320px;
+    display:flex; flex-direction:column; gap:20px;">
+    <div>
+      <div style="font-size:18px; font-weight:700; color:#fca5a5; margin-bottom:8px">Delete?</div>
+      <div id="delete-modal-msg" style="font-size:14px; color:#9ca3af; line-height:1.5"></div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <button id="delete-modal-confirm" style="
+        height:52px; border-radius:10px; border:none;
+        background:#991b1b; color:#fca5a5;
+        font-size:16px; font-weight:700; cursor:pointer;
+        -webkit-tap-highlight-color:transparent;">
+        Yes, Delete
+      </button>
+      <button id="delete-modal-cancel" style="
+        height:52px; border-radius:10px; border:1px solid #2e3149;
+        background:#232636; color:#9ca3af;
+        font-size:16px; font-weight:600; cursor:pointer;
+        -webkit-tap-highlight-color:transparent;">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
 <div class="detail-panel hidden" id="detail-panel">
   <div class="detail-handle"></div>
   <div id="detail-header"></div>
@@ -1363,47 +1395,31 @@ function showDetail() {
 function closeDetail() {
   document.getElementById('detail-overlay').classList.add('hidden');
   document.getElementById('detail-panel').classList.add('hidden');
+  document.getElementById('delete-modal').style.display = 'none';
 }
 function confirmDelete(id, type) {
-  // Remove any existing banner first
-  const existing = document.getElementById('delete-confirm-banner');
-  if (existing) existing.remove();
+  const modal   = document.getElementById('delete-modal');
+  const msg     = document.getElementById('delete-modal-msg');
+  const confirm = document.getElementById('delete-modal-confirm');
+  const cancel  = document.getElementById('delete-modal-cancel');
 
-  const banner = document.createElement('div');
-  banner.className = 'delete-confirm';
-  banner.id = 'delete-confirm-banner';
+  msg.textContent = `This will permanently remove this ${type}. This cannot be undone.`;
+  modal.style.display = 'flex';
 
-  const text = document.createElement('div');
-  text.className = 'delete-confirm-text';
-  text.textContent = `⚠️ Delete this ${type}? This cannot be undone.`;
+  // Replace buttons each time to wipe old listeners
+  const newConfirm = confirm.cloneNode(true);
+  const newCancel  = cancel.cloneNode(true);
+  confirm.replaceWith(newConfirm);
+  cancel.replaceWith(newCancel);
 
-  const btns = document.createElement('div');
-  btns.className = 'delete-confirm-btns';
-
-  const cancelBtn = document.createElement('button');
-  cancelBtn.className = 'btn btn-ghost';
-  cancelBtn.textContent = 'Cancel';
-
-  const deleteBtn = document.createElement('button');
-  deleteBtn.className = 'btn btn-danger';
-  deleteBtn.textContent = 'Yes, Delete';
-
-  btns.appendChild(cancelBtn);
-  btns.appendChild(deleteBtn);
-  banner.appendChild(text);
-  banner.appendChild(btns);
-
-  // Bind via addEventListener (more reliable than inline onclick for fresh nodes on iOS).
-  // Listen for BOTH click and touchend so a tap always registers.
-  const cancel = () => banner.remove();
-  const doDelete = () => { if (type === 'contact') doDeleteContact(id); else doDeletePlace(id); };
-  cancelBtn.addEventListener('click', cancel);
-  deleteBtn.addEventListener('click', doDelete);
-
-  // Insert OUTSIDE the scroll container — directly after the header — so taps
-  // don't compete with momentum scrolling (the cause of intermittent misses).
-  const header = document.getElementById('detail-header');
-  header.insertAdjacentElement('afterend', banner);
+  newConfirm.addEventListener('click', () => {
+    modal.style.display = 'none';
+    if (type === 'contact') doDeleteContact(id);
+    else doDeletePlace(id);
+  });
+  newCancel.addEventListener('click', () => {
+    modal.style.display = 'none';
+  });
 }
 function doDeleteContact(id) {
   contacts = contacts.filter(c=>c.id!==id);
@@ -1675,7 +1691,10 @@ function importJSON(event) {
 // KEYBOARD
 // ═══════════════════════════════════════════════════════════════
 document.addEventListener('keydown', e => {
-  if(e.key==='Escape') { closeContactModal(); closePlaceModal(); closeDetail(); closeDataModal(); }
+  if(e.key==='Escape') {
+    document.getElementById('delete-modal').style.display = 'none';
+    closeContactModal(); closePlaceModal(); closeDetail(); closeDataModal();
+  }
 });
 
 // ═══════════════════════════════════════════════════════════════
