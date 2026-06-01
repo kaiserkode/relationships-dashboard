@@ -368,14 +368,19 @@ header {
 
 /* Delete confirm banner */
 .delete-confirm {
-  margin: 0 18px 14px;
+  flex-shrink: 0;
+  margin: 14px 18px 0;
   background: #7f1d1d33; border: 1px solid #ef444466;
-  border-radius: var(--radius-sm); padding: 12px 14px;
-  display: flex; flex-direction: column; gap: 10px;
+  border-radius: var(--radius-sm); padding: 14px;
+  display: flex; flex-direction: column; gap: 12px;
 }
-.delete-confirm-text { font-size: 13px; font-weight: 600; color: #fca5a5; }
-.delete-confirm-btns { display: flex; gap: 8px; }
-.delete-confirm-btns .btn { flex: 1; justify-content: center; }
+.delete-confirm-text { font-size: 14px; font-weight: 600; color: #fca5a5; }
+.delete-confirm-btns { display: flex; gap: 10px; }
+.delete-confirm-btns .btn {
+  flex: 1; justify-content: center;
+  height: 48px; font-size: 15px; font-weight: 600;
+  padding: 0 16px;
+}
 
 /* ── Bottom nav ────────────────────────────────────────────── */
 .bottom-nav { display: none; background: var(--surface); border-top: 1px solid var(--border); padding-bottom: var(--safe-bottom); flex-shrink: 0; }
@@ -1299,21 +1304,45 @@ function closeDetail() {
   document.getElementById('detail-panel').classList.add('hidden');
 }
 function confirmDelete(id, type) {
-  // Insert confirmation banner at top of body — always visible
-  const body = document.getElementById('detail-body');
+  // Remove any existing banner first
+  const existing = document.getElementById('delete-confirm-banner');
+  if (existing) existing.remove();
+
   const banner = document.createElement('div');
   banner.className = 'delete-confirm';
   banner.id = 'delete-confirm-banner';
-  banner.innerHTML = `
-    <div class="delete-confirm-text">⚠️ Delete this ${type}? This cannot be undone.</div>
-    <div class="delete-confirm-btns">
-      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('delete-confirm-banner').remove()">Cancel</button>
-      <button class="btn btn-danger btn-sm" onclick="${type==='contact'?'doDeleteContact':'doDeletePlace'}('${id}')">Yes, Delete</button>
-    </div>`;
-  // Remove any existing banner, then prepend
-  const existing = document.getElementById('delete-confirm-banner');
-  if (existing) existing.remove();
-  body.insertAdjacentElement('beforebegin', banner);
+
+  const text = document.createElement('div');
+  text.className = 'delete-confirm-text';
+  text.textContent = `⚠️ Delete this ${type}? This cannot be undone.`;
+
+  const btns = document.createElement('div');
+  btns.className = 'delete-confirm-btns';
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'btn btn-ghost';
+  cancelBtn.textContent = 'Cancel';
+
+  const deleteBtn = document.createElement('button');
+  deleteBtn.className = 'btn btn-danger';
+  deleteBtn.textContent = 'Yes, Delete';
+
+  btns.appendChild(cancelBtn);
+  btns.appendChild(deleteBtn);
+  banner.appendChild(text);
+  banner.appendChild(btns);
+
+  // Bind via addEventListener (more reliable than inline onclick for fresh nodes on iOS).
+  // Listen for BOTH click and touchend so a tap always registers.
+  const cancel = () => banner.remove();
+  const doDelete = () => { if (type === 'contact') doDeleteContact(id); else doDeletePlace(id); };
+  cancelBtn.addEventListener('click', cancel);
+  deleteBtn.addEventListener('click', doDelete);
+
+  // Insert OUTSIDE the scroll container — directly after the header — so taps
+  // don't compete with momentum scrolling (the cause of intermittent misses).
+  const header = document.getElementById('detail-header');
+  header.insertAdjacentElement('afterend', banner);
 }
 function doDeleteContact(id) {
   contacts = contacts.filter(c=>c.id!==id);
