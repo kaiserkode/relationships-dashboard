@@ -2648,10 +2648,15 @@ function closeConfirm() {
 // ══════════════════════════════════════════
 const INDUSTRY_ORDER = ['tech', 'software', 'ai', 'media', 'other'];
 const industryOpen = { tech: true, software: true, ai: true, media: true, other: true };
-// Per-industry sub-sector filter: undefined/'__all__' = show everything, else a sub-sector name
+// Per-industry sub-sector filter: array of selected sub-sectors ([] = show all)
 const industrySubFilter = {};
-function setMapSub(ind, sub) {
-  industrySubFilter[ind] = sub;
+function toggleMapSub(ind, sub) {
+  if (sub === '__all__') {
+    industrySubFilter[ind] = [];           // clear → show all
+  } else {
+    const arr = industrySubFilter[ind] || [];
+    industrySubFilter[ind] = arr.includes(sub) ? arr.filter(s => s !== sub) : [...arr, sub];
+  }
   renderMap(document.getElementById('map-search').value.trim().toLowerCase());
   const el = document.getElementById('miblock-' + ind);
   if (el) el.scrollIntoView({ block: 'start' });
@@ -2715,23 +2720,24 @@ function renderMap(q = '') {
 
     const sgOrder = Object.keys(subgroups).sort((a,b) => a === '__general__' ? -1 : b === '__general__' ? 1 : a.localeCompare(b));
 
-    // When searching, show all matches; otherwise honour the chosen sub-sector
-    const sel = q ? '__all__' : (industrySubFilter[ind] || '__all__');
+    // When searching, show all matches; otherwise honour the selected sub-sectors
+    const selected = q ? [] : (industrySubFilter[ind] || []);
+    const showAll = selected.length === 0;
 
-    // Sub-sector filter chips
+    // Sub-sector filter chips (multi-select)
     if (sgOrder.length) {
       const chipBar = document.createElement('div');
       chipBar.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;padding:2px 0 10px;';
       const allChip = document.createElement('button');
-      allChip.className = 'filter-chip' + (sel === '__all__' ? ' active' : '');
+      allChip.className = 'filter-chip' + (showAll ? ' active' : '');
       allChip.textContent = `All (${group.length})`;
-      allChip.onclick = () => setMapSub(ind, '__all__');
+      allChip.onclick = () => toggleMapSub(ind, '__all__');
       chipBar.appendChild(allChip);
       sgOrder.forEach(sg => {
         const chip = document.createElement('button');
-        chip.className = 'filter-chip' + (sel === sg ? ' active' : '');
+        chip.className = 'filter-chip' + (selected.includes(sg) ? ' active' : '');
         chip.textContent = `${sg === '__general__' ? 'General' : sg} (${subgroups[sg].length})`;
-        chip.onclick = () => setMapSub(ind, sg);
+        chip.onclick = () => toggleMapSub(ind, sg);
         chipBar.appendChild(chip);
       });
       itemsDiv.appendChild(chipBar);
@@ -2744,18 +2750,12 @@ function renderMap(q = '') {
       itemsDiv.appendChild(empty);
     }
 
-    // Which sub-sectors to actually render
-    const subsToRender = sel === '__all__' ? sgOrder : (subgroups[sel] ? [sel] : []);
-    if (sel !== '__all__' && subsToRender.length === 0) {
-      const none = document.createElement('div');
-      none.style.cssText = 'padding:8px 0;font-size:12px;color:var(--text-muted);';
-      none.textContent = 'No companies in this sub-sector.';
-      itemsDiv.appendChild(none);
-    }
+    // Which sub-sectors to actually render (selected ones, in canonical order)
+    const subsToRender = showAll ? sgOrder : sgOrder.filter(sg => selected.includes(sg));
 
     subsToRender.forEach(sg => {
-      // Sub-sector header label only matters in the "All" view
-      if (sel === '__all__' && (sgOrder.length > 1 || sg !== '__general__')) {
+      // Show the sub-sector header label whenever more than one group is listed
+      if (subsToRender.length > 1 && (sgOrder.length > 1 || sg !== '__general__')) {
         const sgLabel = document.createElement('div');
         sgLabel.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.07em;margin-top:4px;margin-bottom:4px;';
         sgLabel.textContent = sg === '__general__' ? 'General' : sg;
