@@ -29,6 +29,11 @@
   --yellow: #f59e0b;
   --red: #ef4444;
   --orange: #f97316;
+  --surface3: #2a2e42;
+  --blue: #3b82f6;
+  --purple: #a855f7;
+  --teal: #14b8a6;
+  --nav-h: 60px;
   --radius: 12px;
   --radius-sm: 8px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -447,6 +452,195 @@ header {
   .form-grid { grid-template-columns: 1fr; }
   .form-full, .section-div { grid-column: 1; }
 }
+
+/* ════════════════════════════════════════════════════════════════
+   MARKET INTELLIGENCE — all rules scoped under #mi-app so they never
+   collide with the relationship dashboard's own classes.
+   ════════════════════════════════════════════════════════════════ */
+/* app-tab row: allow horizontal scroll now that there are 4 tabs */
+.app-tabs { overflow-x: auto; scrollbar-width: none; }
+.app-tabs::-webkit-scrollbar { display: none; }
+.app-tab { flex-shrink: 0; white-space: nowrap; }
+
+#mi-app .content { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+#mi-app .tab-panel { display: none; }
+#mi-app .tab-panel.active { display: block; }
+
+#mi-app .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; white-space: nowrap; }
+#mi-app .btn-primary { background: var(--accent); color: #fff; }
+#mi-app .btn-primary:active { background: var(--accent-light); }
+#mi-app .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+#mi-app .btn-ghost:active { background: var(--surface2); color: var(--text); }
+#mi-app .btn-danger { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+#mi-app .btn-sm { padding: 5px 10px; font-size: 12px; }
+#mi-app .btn-icon { padding: 7px; border-radius: var(--radius-sm); background: var(--surface2); border: 1px solid var(--border); color: var(--text-dim); cursor: pointer; }
+#mi-app .btn-icon svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; display: block; }
+
+#mi-app input, #mi-app textarea, #mi-app select { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: var(--radius-sm); font-family: inherit; font-size: 14px; padding: 10px 12px; width: 100%; outline: none; transition: border-color 0.15s; -webkit-appearance: none; }
+#mi-app input:focus, #mi-app textarea:focus, #mi-app select:focus { border-color: var(--accent); }
+#mi-app textarea { resize: vertical; min-height: 80px; }
+#mi-app select option { background: var(--surface2); }
+
+#mi-app .form-group { display: flex; flex-direction: column; gap: 6px; }
+#mi-app .form-label { font-size: 12px; font-weight: 500; color: var(--text-dim); }
+#mi-app .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+#mi-app .tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+#mi-app .tag-tech { background: rgba(59,130,246,0.18); color: #60a5fa; }
+#mi-app .tag-software { background: rgba(168,85,247,0.18); color: #c084fc; }
+#mi-app .tag-ai { background: rgba(20,184,166,0.18); color: #2dd4bf; }
+#mi-app .tag-media { background: rgba(249,115,22,0.18); color: #fdba74; }
+#mi-app .tag-other { background: rgba(107,114,128,0.18); color: #9ca3af; }
+
+#mi-app .pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 500; }
+#mi-app .pill-blue { background: rgba(59,130,246,0.15); color: #93c5fd; }
+#mi-app .pill-green { background: rgba(16,185,129,0.15); color: #6ee7b7; }
+#mi-app .pill-yellow { background: rgba(245,158,11,0.15); color: #fcd34d; }
+#mi-app .pill-red { background: rgba(239,68,68,0.15); color: #fca5a5; }
+#mi-app .pill-purple { background: rgba(168,85,247,0.15); color: #d8b4fe; }
+#mi-app .pill-teal { background: rgba(20,184,166,0.15); color: #5eead4; }
+
+#mi-app .search-wrap { padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+#mi-app .search-inner { position: relative; }
+#mi-app .search-inner svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; stroke: var(--text-muted); fill: none; stroke-width: 2; pointer-events: none; }
+#mi-app .search-inner input { padding-left: 34px; }
+
+#mi-app .section-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 16px 8px; }
+#mi-app .section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+#mi-app .section-title .count { background: var(--surface2); border: 1px solid var(--border); border-radius: 99px; padding: 1px 7px; font-size: 10px; color: var(--text-dim); }
+
+#mi-app .industry-block { margin-bottom: 4px; }
+#mi-app .industry-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; cursor: pointer; user-select: none; border-top: 1px solid var(--border); }
+#mi-app .industry-header:first-child { border-top: none; }
+#mi-app .industry-label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--text); }
+#mi-app .industry-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+#mi-app .ind-tech { background: #3b82f6; }
+#mi-app .ind-software { background: #a855f7; }
+#mi-app .ind-ai { background: #14b8a6; }
+#mi-app .ind-media { background: #f97316; }
+#mi-app .ind-other { background: #6b7280; }
+#mi-app .industry-chevron { width: 16px; height: 16px; stroke: var(--text-muted); fill: none; stroke-width: 2; transition: transform 0.2s; }
+#mi-app .industry-chevron.open { transform: rotate(90deg); }
+#mi-app .industry-items { padding: 0 16px 8px; display: flex; flex-direction: column; gap: 8px; }
+#mi-app .industry-items.collapsed { display: none; }
+
+#mi-app .company-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; cursor: pointer; transition: border-color 0.15s; }
+#mi-app .company-card:active { border-color: var(--accent); }
+#mi-app .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+#mi-app .card-name { font-size: 15px; font-weight: 600; color: var(--text); }
+#mi-app .card-type { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+#mi-app .card-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+#mi-app .card-note { margin-top: 10px; font-size: 12px; color: var(--text-dim); background: var(--surface); border-radius: var(--radius-sm); padding: 8px 10px; border-left: 2px solid var(--accent); white-space: pre-wrap; }
+#mi-app .card-note.empty { display: none; }
+#mi-app .card-partners { margin-top: 8px; font-size: 12px; color: var(--text-dim); }
+#mi-app .card-partners strong { color: var(--text-dim); font-weight: 500; }
+
+#mi-app .filter-bar { display: flex; gap: 6px; overflow-x: auto; padding: 10px 16px; background: var(--surface); border-bottom: 1px solid var(--border); scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+#mi-app .filter-bar::-webkit-scrollbar { display: none; }
+#mi-app .filter-chip { flex-shrink: 0; padding: 5px 12px; border-radius: 99px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--surface2); color: var(--text-muted); transition: all 0.15s; white-space: nowrap; }
+#mi-app .filter-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+#mi-app .feed-list { display: flex; flex-direction: column; }
+#mi-app .feed-item { display: flex; gap: 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; padding: 0; }
+#mi-app .feed-item:active { background: var(--surface2); }
+#mi-app .feed-ts { flex-shrink: 0; width: 52px; padding: 10px 0 10px 14px; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 2px; }
+#mi-app .feed-ts-time { font-size: 10px; font-weight: 700; color: var(--accent-light); font-variant-numeric: tabular-nums; }
+#mi-app .feed-ts-date { font-size: 9px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+#mi-app .feed-divider { width: 1px; background: var(--border); margin: 8px 10px; flex-shrink: 0; }
+#mi-app .feed-body { flex: 1; padding: 10px 14px 10px 0; min-width: 0; }
+#mi-app .feed-headline { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.35; margin-bottom: 5px; }
+#mi-app .feed-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; }
+#mi-app .feed-snippet { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+#mi-app .feed-source { font-size: 10px; color: var(--text-muted); margin-top: 3px; opacity: 0.7; }
+#mi-app .feed-date-sep { padding: 8px 16px 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: var(--text-muted); background: var(--bg); border-bottom: 1px solid var(--border); }
+
+#mi-app .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+#mi-app .modal-overlay.open { opacity: 1; pointer-events: all; }
+#mi-app .modal { background: var(--surface); border-radius: 20px 20px 0 0; width: 100%; max-height: 92dvh; overflow-y: auto; padding: 0 0 env(safe-area-inset-bottom); transform: translateY(100%); transition: transform 0.25s cubic-bezier(0.4,0,0.2,1); }
+#mi-app .modal-overlay.open .modal { transform: translateY(0); }
+#mi-app .modal-drag { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 0; }
+#mi-app .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 12px; border-bottom: 1px solid var(--border); }
+#mi-app .modal-title { font-size: 17px; font-weight: 700; }
+#mi-app .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+#mi-app .modal-actions { display: flex; gap: 10px; padding: 0 20px 20px; }
+#mi-app .modal-actions .btn { flex: 1; justify-content: center; }
+
+#mi-app .detail-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 300; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+#mi-app .detail-overlay.open { opacity: 1; pointer-events: all; }
+#mi-app .detail-sheet { background: var(--surface); flex: 1; overflow-y: auto; margin-top: 40px; border-radius: 20px 20px 0 0; transform: translateY(100%); transition: transform 0.25s cubic-bezier(0.4,0,0.2,1); padding-bottom: env(safe-area-inset-bottom); }
+#mi-app .detail-overlay.open .detail-sheet { transform: translateY(0); }
+#mi-app .detail-drag { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 0; }
+#mi-app .detail-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 12px; border-bottom: 1px solid var(--border); }
+#mi-app .detail-title { font-size: 19px; font-weight: 700; }
+#mi-app .detail-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+#mi-app .detail-section { display: flex; flex-direction: column; gap: 8px; }
+#mi-app .detail-section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+#mi-app .detail-value { font-size: 14px; color: var(--text); white-space: pre-wrap; }
+#mi-app .detail-actions { display: flex; gap: 10px; padding: 0 20px 20px; }
+#mi-app .detail-actions .btn { flex: 1; justify-content: center; }
+
+#mi-app .confirm-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 400; display: flex; align-items: center; justify-content: center; padding: 24px; opacity: 0; pointer-events: none; transition: opacity 0.15s; }
+#mi-app .confirm-overlay.open { opacity: 1; pointer-events: all; }
+#mi-app .confirm-box { background: var(--surface); border-radius: var(--radius); padding: 24px; width: 100%; max-width: 320px; transform: scale(0.95); transition: transform 0.15s; }
+#mi-app .confirm-overlay.open .confirm-box { transform: scale(1); }
+#mi-app .confirm-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+#mi-app .confirm-msg { font-size: 14px; color: var(--text-dim); margin-bottom: 20px; }
+#mi-app .confirm-actions { display: flex; gap: 10px; }
+#mi-app .confirm-actions .btn { flex: 1; justify-content: center; }
+
+#mi-app .fab { position: fixed; bottom: calc(var(--nav-h) + 16px + env(safe-area-inset-bottom)); right: 20px; width: 52px; height: 52px; border-radius: 50%; background: var(--accent); color: #fff; border: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(99,102,241,0.45); cursor: pointer; z-index: 150; transition: background 0.15s, transform 0.1s; }
+#mi-app .fab:active { background: var(--accent-light); transform: scale(0.95); }
+#mi-app .fab svg { width: 24px; height: 24px; stroke: #fff; fill: none; stroke-width: 2.2; }
+
+#mi-app .empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 24px; gap: 12px; color: var(--text-muted); text-align: center; }
+#mi-app .empty svg { width: 40px; height: 40px; stroke: var(--border); fill: none; stroke-width: 1.5; }
+#mi-app .empty p { font-size: 13px; }
+
+#mi-app .comment-list { display: flex; flex-direction: column; gap: 8px; }
+#mi-app .comment-item { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; }
+#mi-app .comment-item-text { font-size: 13px; color: var(--text); white-space: pre-wrap; }
+#mi-app .comment-item-meta { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+#mi-app .comment-input-row { display: flex; gap: 8px; align-items: flex-end; }
+#mi-app .comment-input-row textarea { flex: 1; min-height: 60px; }
+
+#mi-app .subgroup-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 500; background: var(--surface3); border: 1px solid var(--border); color: var(--text-dim); }
+
+#mi-app .deal-type-badge { padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+#mi-app .dtype-ma { background: rgba(245,158,11,0.15); color: #fcd34d; }
+#mi-app .dtype-financing { background: rgba(16,185,129,0.15); color: #6ee7b7; }
+#mi-app .dtype-ipo { background: rgba(59,130,246,0.15); color: #93c5fd; }
+#mi-app .dtype-recap { background: rgba(168,85,247,0.15); color: #d8b4fe; }
+#mi-app .dtype-other { background: rgba(107,114,128,0.15); color: #9ca3af; }
+
+#mi-app .settings-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 350; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+#mi-app .settings-overlay.open { opacity: 1; pointer-events: all; }
+#mi-app .settings-sheet { background: var(--surface); flex: 1; overflow-y: auto; margin-top: 40px; border-radius: 20px 20px 0 0; transform: translateY(100%); transition: transform 0.25s cubic-bezier(0.4,0,0.2,1); padding-bottom: env(safe-area-inset-bottom); }
+#mi-app .settings-overlay.open .settings-sheet { transform: translateY(0); }
+#mi-app .sv-industry-block { border-bottom: 1px solid var(--border); }
+#mi-app .sv-industry-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; cursor: pointer; user-select: none; }
+#mi-app .sv-industry-label { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+#mi-app .sv-chevron { width: 16px; height: 16px; stroke: var(--text-muted); fill: none; stroke-width: 2; transition: transform 0.2s; }
+#mi-app .sv-chevron.open { transform: rotate(90deg); }
+#mi-app .sv-items { padding: 0 20px 12px; display: flex; flex-direction: column; gap: 6px; }
+#mi-app .sv-items.collapsed { display: none; }
+#mi-app .sv-row { display: flex; align-items: center; gap: 8px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 10px; }
+#mi-app .sv-row-name { flex: 1; font-size: 13px; color: var(--text); }
+#mi-app .sv-row-count { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+#mi-app .sv-btn { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 500; border: none; cursor: pointer; }
+#mi-app .sv-btn-rename { background: var(--surface3); color: var(--text-dim); }
+#mi-app .sv-btn-delete { background: rgba(239,68,68,0.15); color: var(--red); }
+#mi-app .sv-add-row { display: flex; gap: 8px; margin-top: 4px; }
+#mi-app .sv-add-row input { flex: 1; }
+#mi-app .sv-add-row .btn { flex-shrink: 0; }
+
+#mi-app .reassign-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 500; display: flex; align-items: center; justify-content: center; padding: 24px; opacity: 0; pointer-events: none; transition: opacity 0.15s; }
+#mi-app .reassign-overlay.open { opacity: 1; pointer-events: all; }
+#mi-app .reassign-box { background: var(--surface); border-radius: var(--radius); padding: 24px; width: 100%; max-width: 340px; transform: scale(0.95); transition: transform 0.15s; }
+#mi-app .reassign-overlay.open .reassign-box { transform: scale(1); }
+#mi-app .reassign-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+#mi-app .reassign-msg { font-size: 13px; color: var(--text-dim); margin-bottom: 16px; }
+#mi-app .reassign-actions { display: flex; gap: 10px; margin-top: 16px; }
+#mi-app .reassign-actions .btn { flex: 1; justify-content: center; }
 </style>
 </head>
 <body>
@@ -458,7 +652,12 @@ header {
     <div class="app-tabs">
       <button class="app-tab active" id="apptab-relationships" onclick="switchAppTab('relationships')">Relationships</button>
       <button class="app-tab" id="apptab-places" onclick="switchAppTab('places')">Places</button>
+      <button class="app-tab" id="apptab-marketmap" onclick="switchAppTab('marketmap')">Market Map</button>
+      <button class="app-tab" id="apptab-intel" onclick="switchAppTab('intel')">Intel</button>
     </div>
+    <button class="btn btn-ghost btn-icon" id="mi-settings-btn" onclick="openSettings()" title="Manage Sub-Verticals" style="margin-right:4px;display:none">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
     <button class="btn btn-ghost btn-icon" onclick="openDataModal()" title="Backup & Restore" style="margin-right:4px">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
     </button>
@@ -621,6 +820,297 @@ header {
     </button>
   </div>
 </nav>
+
+<!-- ══ Market Intelligence (Market Map + Intel tabs) ══════════ -->
+<div class="screen hidden" id="mi-app">
+  <div class="content">
+
+    <!-- ── Market Map panel ── -->
+    <div class="tab-panel active" id="panel-map">
+      <div class="search-wrap" id="search-map">
+        <div class="search-inner">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="search" placeholder="Search companies…" id="map-search" oninput="filterMap()" autocomplete="off">
+        </div>
+      </div>
+      <div id="map-list"></div>
+    </div>
+
+    <!-- ── Intelligence panel ── -->
+    <div class="tab-panel" id="panel-deals">
+      <div class="search-wrap">
+        <div class="search-inner">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="search" placeholder="Search headlines, parties, notes…" id="deal-search" oninput="filterDeals()" autocomplete="off">
+        </div>
+      </div>
+      <div class="filter-bar" id="deal-filter-bar"></div>
+      <div id="deal-list"></div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- FAB -->
+  <button class="fab" id="mi-fab" onclick="miOpenAddModal()">
+    <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+
+  <!-- ADD COMPANY MODAL -->
+  <div class="modal-overlay" id="company-modal" onclick="closeOnBackdrop(event,'company-modal')">
+    <div class="modal">
+      <div class="modal-drag"></div>
+      <div class="modal-header">
+        <div class="modal-title" id="company-modal-title">Add Company</div>
+        <button class="btn-icon" onclick="closeModal('company-modal')">
+          <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Company Name *</label>
+          <input type="text" id="c-name" placeholder="e.g. Acme Capital">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Industry *</label>
+            <select id="c-industry" onchange="updateSubgroups()">
+              <option value="">Select…</option>
+              <option value="tech">Tech Services</option>
+              <option value="software">Software</option>
+              <option value="ai">AI</option>
+              <option value="media">Media</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sub-Group</label>
+            <select id="c-subgroup">
+              <option value="">Select industry first</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Company Type</label>
+          <select id="c-type">
+            <option value="Strategic">Strategic</option>
+            <option value="PE backed Strategic">PE backed Strategic</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Financing Partners</label>
+          <input type="text" id="c-partners" placeholder="e.g. Goldman Sachs, JP Morgan (comma separated)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes / Conversation Summary</label>
+          <textarea id="c-notes" placeholder="Key conversation notes, add-on targets, thesis…"></textarea>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('company-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveCompany()">Save Company</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD DEAL MODAL -->
+  <div class="modal-overlay" id="deal-modal" onclick="closeOnBackdrop(event,'deal-modal')">
+    <div class="modal">
+      <div class="modal-drag"></div>
+      <div class="modal-header">
+        <div class="modal-title" id="deal-modal-title">Add Deal / Intelligence</div>
+        <button class="btn-icon" onclick="closeModal('deal-modal')">
+          <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Headline *</label>
+          <input type="text" id="d-name" placeholder="e.g. Acme acquires Target Co.">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Industry *</label>
+            <select id="d-industry" onchange="updateDealSubgroups()">
+              <option value="">Select…</option>
+              <option value="tech">Tech Services</option>
+              <option value="software">Software</option>
+              <option value="ai">AI</option>
+              <option value="media">Media</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sub-Group</label>
+            <select id="d-subgroup">
+              <option value="">Select industry first</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Deal Type *</label>
+            <select id="d-type">
+              <option value="">Select…</option>
+              <option value="M&A">M&A</option>
+              <option value="Financing">Financing</option>
+              <option value="IPO">IPO / Public Markets</option>
+              <option value="Recap">Recapitalization</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Deal Size</label>
+            <input type="text" id="d-size" placeholder="e.g. $250M">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Parties Involved</label>
+          <input type="text" id="d-parties" placeholder="Buyer, seller, advisors…">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Source / Date</label>
+          <input type="text" id="d-source" placeholder="e.g. WSJ, Jun 2025">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Intelligence Notes</label>
+          <textarea id="d-notes" placeholder="Market implications, relevance to coverage, follow-up…"></textarea>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('deal-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveDeal()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPANY DETAIL SHEET -->
+  <div class="detail-overlay" id="company-detail" onclick="miCloseDetailOnBackdrop(event,'company-detail')">
+    <div class="detail-sheet">
+      <div class="detail-drag"></div>
+      <div class="detail-header">
+        <div class="detail-title" id="cd-title">Company</div>
+        <button class="btn-icon" onclick="miCloseDetail('company-detail')">
+          <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="detail-body">
+        <div id="cd-tags" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+
+        <div class="detail-section" id="cd-partners-sec">
+          <div class="detail-section-label">Financing Partners</div>
+          <div class="detail-value" id="cd-partners"></div>
+        </div>
+
+        <div class="detail-section" id="cd-notes-sec">
+          <div class="detail-section-label">Notes</div>
+          <div class="detail-value" id="cd-notes"></div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-section-label" style="margin-bottom:8px;">Comments & Add-Ons</div>
+          <div class="comment-list" id="cd-comments"></div>
+          <div class="comment-input-row" style="margin-top:8px;">
+            <textarea id="cd-comment-input" placeholder="Add a comment or add-on note…"></textarea>
+            <button class="btn btn-primary btn-sm" style="height:60px;align-self:flex-end;" onclick="addComment()">Add</button>
+          </div>
+        </div>
+      </div>
+      <div class="detail-actions">
+        <button class="btn btn-ghost" onclick="openEditCompany()">
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Edit
+        </button>
+        <button class="btn btn-danger" onclick="confirmDeleteCompany()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEAL DETAIL SHEET -->
+  <div class="detail-overlay" id="deal-detail" onclick="miCloseDetailOnBackdrop(event,'deal-detail')">
+    <div class="detail-sheet">
+      <div class="detail-drag"></div>
+      <div class="detail-header">
+        <div class="detail-title" id="dd-title">Deal</div>
+        <button class="btn-icon" onclick="miCloseDetail('deal-detail')">
+          <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="detail-body">
+        <div id="dd-tags" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+
+        <div class="detail-section" id="dd-size-sec">
+          <div class="detail-section-label">Deal Size</div>
+          <div class="detail-value" id="dd-size"></div>
+        </div>
+
+        <div class="detail-section" id="dd-parties-sec">
+          <div class="detail-section-label">Parties Involved</div>
+          <div class="detail-value" id="dd-parties"></div>
+        </div>
+
+        <div class="detail-section" id="dd-source-sec">
+          <div class="detail-section-label">Source / Date</div>
+          <div class="detail-value" id="dd-source"></div>
+        </div>
+
+        <div class="detail-section" id="dd-notes-sec">
+          <div class="detail-section-label">Intelligence Notes</div>
+          <div class="detail-value" id="dd-notes"></div>
+        </div>
+      </div>
+      <div class="detail-actions">
+        <button class="btn btn-ghost" onclick="openEditDeal()">
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Edit
+        </button>
+        <button class="btn btn-danger" onclick="confirmDeleteDeal()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS: MANAGE SUB-VERTICALS -->
+  <div class="settings-overlay" id="settings-overlay" onclick="closeSettingsOnBackdrop(event)">
+    <div class="settings-sheet">
+      <div class="detail-drag"></div>
+      <div class="detail-header">
+        <div class="detail-title">Manage Sub-Verticals</div>
+        <button class="btn-icon" onclick="closeSettings()">
+          <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div id="settings-body" style="padding-bottom:40px;"></div>
+    </div>
+  </div>
+
+  <!-- REASSIGN MODAL -->
+  <div class="reassign-overlay" id="reassign-overlay">
+    <div class="reassign-box">
+      <div class="reassign-title" id="reassign-title">Reassign before deleting</div>
+      <div class="reassign-msg" id="reassign-msg"></div>
+      <div class="form-group">
+        <label class="form-label">Move affected entries to</label>
+        <select id="reassign-select"></select>
+      </div>
+      <div class="reassign-actions">
+        <button class="btn btn-ghost" onclick="closeReassign()">Cancel</button>
+        <button class="btn btn-danger" id="reassign-ok">Delete &amp; Reassign</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIRM DELETE -->
+  <div class="confirm-overlay" id="confirm-overlay">
+    <div class="confirm-box">
+      <div class="confirm-title" id="confirm-title">Delete?</div>
+      <div class="confirm-msg" id="confirm-msg">This cannot be undone.</div>
+      <div class="confirm-actions">
+        <button class="btn btn-ghost" onclick="closeConfirm()">Cancel</button>
+        <button class="btn btn-danger" id="confirm-ok">Delete</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /#mi-app -->
 
 </div><!-- .app -->
 
@@ -898,17 +1388,36 @@ function locTag(city, state) {
 // ═══════════════════════════════════════════════════════════════
 function switchAppTab(tab) {
   activeAppTab = tab;
-  document.getElementById('screen-relationships').classList.toggle('hidden', tab !== 'relationships');
-  document.getElementById('screen-places').classList.toggle('hidden', tab !== 'places');
-  document.getElementById('apptab-relationships').classList.toggle('active', tab === 'relationships');
-  document.getElementById('apptab-places').classList.toggle('active', tab === 'places');
-  document.getElementById('header-add-label').textContent = tab === 'places' ? 'Add Place' : 'Add Contact';
-  // reset mobile tab to contacts view when switching app tab
-  if(isMobile()) switchMobileTab('contacts');
+  const isRel = tab === 'relationships', isPl = tab === 'places';
+  const isMM = tab === 'marketmap', isIntel = tab === 'intel';
+  const isMI = isMM || isIntel;
+  document.getElementById('screen-relationships').classList.toggle('hidden', !isRel);
+  document.getElementById('screen-places').classList.toggle('hidden', !isPl);
+  document.getElementById('mi-app').classList.toggle('hidden', !isMI);
+  ['relationships','places','marketmap','intel'].forEach(t => {
+    const b = document.getElementById('apptab-' + t);
+    if(b) b.classList.toggle('active', t === tab);
+  });
+  const labels = { relationships:'Add Contact', places:'Add Place', marketmap:'Add Company', intel:'Add Deal' };
+  document.getElementById('header-add-label').textContent = labels[tab] || 'Add';
+  // MI settings gear only on Market Intelligence tabs
+  const gear = document.getElementById('mi-settings-btn');
+  if(gear) gear.style.display = isMI ? '' : 'none';
+  // hide the relationship bottom-nav while in Market Intelligence
+  const bn = document.querySelector('.bottom-nav');
+  if(bn) bn.style.display = isMI ? 'none' : '';
+  if(isMI) {
+    miSwitchPanel(isMM ? 'map' : 'deals');
+  } else if(isMobile()) {
+    // reset mobile tab to contacts view when switching app tab
+    switchMobileTab('contacts');
+  }
 }
 
 function openAddModal() {
   if(activeAppTab === 'places') openPlaceModal();
+  else if(activeAppTab === 'marketmap') openAddCompany();
+  else if(activeAppTab === 'intel') openAddDeal();
   else openContactModal();
 }
 
@@ -1470,15 +1979,18 @@ function updateLastBackupInfo() {
 function exportJSON(scope) {
   const payload = {
     exportedAt: new Date().toISOString(),
-    version: 1,
+    version: 2,
     contacts: contacts,
     places: places,
+    companies: (typeof companies !== 'undefined') ? companies : [],
+    deals: (typeof deals !== 'undefined') ? deals : [],
+    subgroups: (typeof SUBGROUPS !== 'undefined') ? SUBGROUPS : undefined,
   };
   const json = JSON.stringify(payload, null, 2);
   const filename = `my-world-backup-${new Date().toISOString().slice(0,10)}.json`;
   downloadFile(json, filename, 'application/json');
   localStorage.setItem('last_backup_ts', new Date().toISOString());
-  showDataStatus(`✓ Backup exported — ${contacts.length} contacts, ${places.length} places. Save this file somewhere safe!`, true);
+  showDataStatus(`✓ Backup exported — ${contacts.length} contacts, ${places.length} places, ${payload.companies.length} companies. Save this file somewhere safe!`, true);
   updateLastBackupInfo();
 }
 
@@ -1649,12 +2161,12 @@ function importJSON(event) {
       const data = JSON.parse(e.target.result);
 
       // Validate
-      if (!data.contacts && !data.places) {
+      if (!data.contacts && !data.places && !data.companies && !data.deals) {
         showDataStatus('❌ Invalid file — this does not look like a My World backup.', false);
         return;
       }
 
-      let addedContacts = 0, addedPlaces = 0;
+      let addedContacts = 0, addedPlaces = 0, addedCompanies = 0, addedDeals = 0;
 
       // Merge contacts (skip any with same id to avoid duplicates)
       if (Array.isArray(data.contacts)) {
@@ -1676,8 +2188,35 @@ function importJSON(event) {
         renderPlaces();
       }
 
+      // Merge Market Map companies (skip duplicate ids)
+      if (Array.isArray(data.companies) && typeof companies !== 'undefined') {
+        const existingIds = new Set(companies.map(c => c.id));
+        const newCompanies = data.companies.filter(c => !existingIds.has(c.id));
+        companies = [...companies, ...newCompanies];
+        addedCompanies = newCompanies.length;
+        saveCompanies();
+      }
+
+      // Merge Intel deals (skip duplicate ids)
+      if (Array.isArray(data.deals) && typeof deals !== 'undefined') {
+        const existingIds = new Set(deals.map(d => d.id));
+        const newDeals = data.deals.filter(d => !existingIds.has(d.id));
+        deals = [...deals, ...newDeals];
+        addedDeals = newDeals.length;
+        saveDeals();
+      }
+
+      // Restore sub-group taxonomy if the backup carries one
+      if (data.subgroups && typeof SUBGROUPS !== 'undefined') {
+        SUBGROUPS = data.subgroups;
+        saveSubgroups();
+      }
+
+      // Re-render the Market Map / Intel feeds if those functions are loaded
+      if (typeof renderAll === 'function') renderAll();
+
       showDataStatus(
-        `✓ Restore complete — added ${addedContacts} contact${addedContacts!==1?'s':''} and ${addedPlaces} place${addedPlaces!==1?'s':''}.`,
+        `✓ Restore complete — added ${addedContacts} contact${addedContacts!==1?'s':''}, ${addedPlaces} place${addedPlaces!==1?'s':''}, ${addedCompanies} compan${addedCompanies!==1?'ies':'y'}, and ${addedDeals} deal${addedDeals!==1?'s':''}.`,
         true
       );
 
@@ -1731,11 +2270,789 @@ function seedPlaces() {
 // ═══════════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════════
-if(contacts.length===0) seedContacts();
-if(places.length===0)   seedPlaces();
+// Demo seeding disabled for production — the app starts empty and is populated
+// from your backup via Backup & Restore → Import JSON.
 if('serviceWorker' in navigator) navigator.serviceWorker.register('/relationships-dashboard/sw.js').catch(()=>{});
 renderContacts();
 renderPlaces();
+</script>
+
+<!-- ══════════════════════════════════════════════════════════════
+     MARKET INTELLIGENCE LOGIC (Market Map + Intel tabs)
+     Namespaced to avoid collisions with the dashboard above:
+       escHtml→miEsc, openAddModal→miOpenAddModal,
+       openDetail/closeDetail/closeDetailOnBackdrop→mi*,
+       switchTab→miSwitchPanel
+     Storage keys (mi_companies / mi_deals / mi_subgroups) unchanged
+     so any previously saved data carries over.
+     ══════════════════════════════════════════════════════════════ -->
+<script>
+// ══════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════
+const SUBGROUPS_DEFAULT = {
+  tech: [ 'Digital Engineering (DE)', 'Quality Engineering (QE)', 'Infrastructure', 'VAR', 'Platform Engineering', 'Managed Services', 'Data Center', 'Vertical', 'Hardware', 'Cyberrisk and IPE', 'Staffing', 'Communications' ],
+  software: [ 'Data', 'Infrastructure', 'Developer / Engineering', 'Vertical Market', 'Ecommerce', 'Workflows - HR', 'Workflows - Office of CFO', 'Workflows - Sales and Other', 'ERP', 'AdTech', 'Cyber', 'Payments / Fintech', 'Education', 'Supply Chain and Infrastructure', 'HCIT', 'InsurTech', 'Real Estate / Construction', 'Media / Gaming Software', 'Physical Infrastructure & Public Safety', 'Energy & Utility', 'Tax & Legal', 'Telco', 'WealthTech', 'EdTech', 'Design / CAD' ],
+  ai: [ 'Infrastructure', 'Modeling & Analytics', 'GRC', 'S&M', 'Cyber', 'Vertical' ],
+  media: [ 'Production', 'Agency and Services', 'Digital Media', 'Entertainment', 'Gaming' ],
+  other: [ 'Telecom', 'All Other Verticals' ],
+};
+
+// Load from localStorage or fall back to defaults
+let SUBGROUPS = JSON.parse(localStorage.getItem('mi_subgroups') || 'null') || JSON.parse(JSON.stringify(SUBGROUPS_DEFAULT));
+function saveSubgroups() { localStorage.setItem('mi_subgroups', JSON.stringify(SUBGROUPS)); }
+// Backfill industries added after a user may have already saved sub-groups
+Object.keys(SUBGROUPS_DEFAULT).forEach(k => { if (!SUBGROUPS[k]) { SUBGROUPS[k] = SUBGROUPS_DEFAULT[k].slice(); saveSubgroups(); } });
+
+const IND_LABELS = { tech: 'Tech Services', software: 'Software', ai: 'AI', media: 'Media', other: 'Other' };
+const IND_CLASSES = { tech: 'tag-tech', software: 'tag-software', ai: 'tag-ai', media: 'tag-media', other: 'tag-other' };
+const IND_DOT = { tech: 'ind-tech', software: 'ind-software', ai: 'ind-ai', media: 'ind-media', other: 'ind-other' };
+
+const DEAL_TYPE_CLASS = { 'M&A': 'dtype-ma', 'Financing': 'dtype-financing', 'IPO': 'dtype-ipo', 'Recap': 'dtype-recap', 'Other': 'dtype-other' };
+
+let companies = JSON.parse(localStorage.getItem('mi_companies') || '[]');
+let deals = JSON.parse(localStorage.getItem('mi_deals') || '[]');
+
+function saveCompanies() { localStorage.setItem('mi_companies', JSON.stringify(companies)); }
+function saveDeals() { localStorage.setItem('mi_deals', JSON.stringify(deals)); }
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+// ══════════════════════════════════════════
+// PANEL SWITCH (driven by the top app-tabs)
+// ══════════════════════════════════════════
+let currentTab = 'map';
+
+function miSwitchPanel(tab) {
+  currentTab = tab;
+  document.querySelectorAll('#mi-app .tab-panel').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById('panel-' + tab);
+  if (panel) panel.classList.add('active');
+  renderAll();
+}
+
+// ══════════════════════════════════════════
+// SUB-GROUP SELECTS
+// ══════════════════════════════════════════
+function populateSubgroups(selectId, industry) {
+  const sel = document.getElementById(selectId);
+  sel.innerHTML = '<option value="">General</option>';
+  if (industry && SUBGROUPS[industry]) {
+    SUBGROUPS[industry].forEach(sg => {
+      const o = document.createElement('option'); o.value = sg; o.textContent = sg; sel.appendChild(o);
+    });
+  }
+}
+
+function updateSubgroups() {
+  const ind = document.getElementById('c-industry').value;
+  populateSubgroups('c-subgroup', ind);
+}
+function updateDealSubgroups() {
+  const ind = document.getElementById('d-industry').value;
+  populateSubgroups('d-subgroup', ind);
+}
+
+// ══════════════════════════════════════════
+// MODALS
+// ══════════════════════════════════════════
+let editingCompanyId = null;
+let editingDealId = null;
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+function closeOnBackdrop(e, id) {
+  if (e.target === document.getElementById(id)) closeModal(id);
+}
+
+function miOpenAddModal() {
+  if (currentTab === 'map') openAddCompany();
+  else openAddDeal();
+}
+
+// Company modal
+function openAddCompany(prefillInd) {
+  editingCompanyId = null;
+  document.getElementById('company-modal-title').textContent = 'Add Company';
+  document.getElementById('c-name').value = '';
+  document.getElementById('c-industry').value = prefillInd || '';
+  updateSubgroups();
+  document.getElementById('c-subgroup').value = '';
+  document.getElementById('c-type').value = 'Strategic';
+  document.getElementById('c-partners').value = '';
+  document.getElementById('c-notes').value = '';
+  openModal('company-modal');
+}
+
+function openEditCompany() {
+  if (!activeCompany) return;
+  const c = companies.find(x => x.id === activeCompany);
+  if (!c) return;
+  editingCompanyId = c.id;
+  document.getElementById('company-modal-title').textContent = 'Edit Company';
+  document.getElementById('c-name').value = c.name;
+  document.getElementById('c-industry').value = c.industry;
+  updateSubgroups();
+  document.getElementById('c-subgroup').value = c.subgroup || '';
+  document.getElementById('c-type').value = c.type;
+  document.getElementById('c-partners').value = c.partners;
+  document.getElementById('c-notes').value = c.notes;
+  miCloseDetail('company-detail');
+  openModal('company-modal');
+}
+
+function saveCompany() {
+  const name = document.getElementById('c-name').value.trim();
+  const industry = document.getElementById('c-industry').value;
+  if (!name) { alert('Company name is required.'); return; }
+  if (!industry) { alert('Please select an industry.'); return; }
+
+  const data = {
+    name, industry,
+    subgroup: document.getElementById('c-subgroup').value,
+    type: document.getElementById('c-type').value,
+    partners: document.getElementById('c-partners').value.trim(),
+    notes: document.getElementById('c-notes').value.trim(),
+  };
+
+  if (editingCompanyId) {
+    const idx = companies.findIndex(x => x.id === editingCompanyId);
+    if (idx > -1) { companies[idx] = { ...companies[idx], ...data }; }
+  } else {
+    companies.push({ id: uid(), ...data, comments: [], createdAt: Date.now() });
+  }
+  saveCompanies();
+  closeModal('company-modal');
+  renderMap();
+}
+
+// Deal modal
+function openAddDeal() {
+  editingDealId = null;
+  document.getElementById('deal-modal-title').textContent = 'Add Deal / Intelligence';
+  document.getElementById('d-name').value = '';
+  document.getElementById('d-industry').value = '';
+  updateDealSubgroups();
+  document.getElementById('d-subgroup').value = '';
+  document.getElementById('d-type').value = '';
+  document.getElementById('d-size').value = '';
+  document.getElementById('d-parties').value = '';
+  document.getElementById('d-source').value = '';
+  document.getElementById('d-notes').value = '';
+  openModal('deal-modal');
+}
+
+function openEditDeal() {
+  if (!activeDeal) return;
+  const d = deals.find(x => x.id === activeDeal);
+  if (!d) return;
+  editingDealId = d.id;
+  document.getElementById('deal-modal-title').textContent = 'Edit Deal';
+  document.getElementById('d-name').value = d.name;
+  document.getElementById('d-industry').value = d.industry;
+  updateDealSubgroups();
+  document.getElementById('d-subgroup').value = d.subgroup || '';
+  document.getElementById('d-type').value = d.type;
+  document.getElementById('d-size').value = d.size || '';
+  document.getElementById('d-parties').value = d.parties || '';
+  document.getElementById('d-source').value = d.source || '';
+  document.getElementById('d-notes').value = d.notes || '';
+  miCloseDetail('deal-detail');
+  openModal('deal-modal');
+}
+
+function saveDeal() {
+  const name = document.getElementById('d-name').value.trim();
+  const industry = document.getElementById('d-industry').value;
+  const type = document.getElementById('d-type').value;
+  if (!name) { alert('Headline is required.'); return; }
+  if (!industry) { alert('Please select an industry.'); return; }
+  if (!type) { alert('Please select a deal type.'); return; }
+
+  const data = {
+    name, industry, type,
+    subgroup: document.getElementById('d-subgroup').value,
+    size: document.getElementById('d-size').value.trim(),
+    parties: document.getElementById('d-parties').value.trim(),
+    source: document.getElementById('d-source').value.trim(),
+    notes: document.getElementById('d-notes').value.trim(),
+  };
+
+  if (editingDealId) {
+    const idx = deals.findIndex(x => x.id === editingDealId);
+    if (idx > -1) { deals[idx] = { ...deals[idx], ...data }; }
+  } else {
+    deals.push({ id: uid(), ...data, createdAt: Date.now() });
+  }
+  saveDeals();
+  closeModal('deal-modal');
+  renderDeals();
+}
+
+// ══════════════════════════════════════════
+// DETAIL SHEETS
+// ══════════════════════════════════════════
+let activeCompany = null;
+let activeDeal = null;
+
+function miOpenDetail(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function miCloseDetail(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+function miCloseDetailOnBackdrop(e, id) {
+  if (e.target === document.getElementById(id)) miCloseDetail(id);
+}
+
+function showCompanyDetail(id) {
+  const c = companies.find(x => x.id === id);
+  if (!c) return;
+  activeCompany = id;
+
+  document.getElementById('cd-title').textContent = c.name;
+
+  const tagsEl = document.getElementById('cd-tags');
+  tagsEl.innerHTML = `
+    <span class="tag ${IND_CLASSES[c.industry]}">${IND_LABELS[c.industry]}</span>
+    ${c.subgroup ? `<span class="subgroup-badge">${c.subgroup}</span>` : ''}
+    <span class="pill pill-blue">${c.type}</span>
+  `;
+
+  const pSec = document.getElementById('cd-partners-sec');
+  if (c.partners) {
+    document.getElementById('cd-partners').textContent = c.partners;
+    pSec.style.display = '';
+  } else { pSec.style.display = 'none'; }
+
+  const nSec = document.getElementById('cd-notes-sec');
+  if (c.notes) {
+    document.getElementById('cd-notes').textContent = c.notes;
+    nSec.style.display = '';
+  } else { nSec.style.display = 'none'; }
+
+  renderComments(c);
+
+  miOpenDetail('company-detail');
+}
+
+function renderComments(c) {
+  const list = document.getElementById('cd-comments');
+  list.innerHTML = '';
+  (c.comments || []).forEach((cm) => {
+    const el = document.createElement('div');
+    el.className = 'comment-item';
+    el.innerHTML = `
+      <div class="comment-item-text">${miEsc(cm.text)}</div>
+      <div class="comment-item-meta">${new Date(cm.ts).toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'})}</div>
+    `;
+    list.appendChild(el);
+  });
+  document.getElementById('cd-comment-input').value = '';
+}
+
+function addComment() {
+  const text = document.getElementById('cd-comment-input').value.trim();
+  if (!text || !activeCompany) return;
+  const idx = companies.findIndex(x => x.id === activeCompany);
+  if (idx < 0) return;
+  if (!companies[idx].comments) companies[idx].comments = [];
+  companies[idx].comments.push({ text, ts: Date.now() });
+  saveCompanies();
+  renderComments(companies[idx]);
+  renderMap();
+}
+
+function showDealDetail(id) {
+  const d = deals.find(x => x.id === id);
+  if (!d) return;
+  activeDeal = id;
+
+  document.getElementById('dd-title').textContent = d.name;
+
+  const tagsEl = document.getElementById('dd-tags');
+  tagsEl.innerHTML = `
+    <span class="tag ${IND_CLASSES[d.industry]}">${IND_LABELS[d.industry]}</span>
+    ${d.subgroup ? `<span class="subgroup-badge">${d.subgroup}</span>` : ''}
+    <span class="deal-type-badge ${DEAL_TYPE_CLASS[d.type] || 'dtype-other'}">${d.type}</span>
+  `;
+
+  const sizeSec = document.getElementById('dd-size-sec');
+  if (d.size) { document.getElementById('dd-size').textContent = d.size; sizeSec.style.display = ''; }
+  else { sizeSec.style.display = 'none'; }
+
+  const pSec = document.getElementById('dd-parties-sec');
+  if (d.parties) { document.getElementById('dd-parties').textContent = d.parties; pSec.style.display = ''; }
+  else { pSec.style.display = 'none'; }
+
+  const sSec = document.getElementById('dd-source-sec');
+  if (d.source) { document.getElementById('dd-source').textContent = d.source; sSec.style.display = ''; }
+  else { sSec.style.display = 'none'; }
+
+  const nSec = document.getElementById('dd-notes-sec');
+  if (d.notes) { document.getElementById('dd-notes').textContent = d.notes; nSec.style.display = ''; }
+  else { nSec.style.display = 'none'; }
+
+  miOpenDetail('deal-detail');
+}
+
+// ══════════════════════════════════════════
+// DELETE
+// ══════════════════════════════════════════
+function confirmDeleteCompany() {
+  document.getElementById('confirm-title').textContent = 'Delete Company';
+  document.getElementById('confirm-msg').textContent = 'Remove this company from your market map? This cannot be undone.';
+  document.getElementById('confirm-ok').onclick = () => {
+    companies = companies.filter(x => x.id !== activeCompany);
+    saveCompanies();
+    closeConfirm();
+    miCloseDetail('company-detail');
+    renderMap();
+  };
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+
+function confirmDeleteDeal() {
+  document.getElementById('confirm-title').textContent = 'Delete Deal';
+  document.getElementById('confirm-msg').textContent = 'Remove this deal entry? This cannot be undone.';
+  document.getElementById('confirm-ok').onclick = () => {
+    deals = deals.filter(x => x.id !== activeDeal);
+    saveDeals();
+    closeConfirm();
+    miCloseDetail('deal-detail');
+    renderDeals();
+  };
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+
+function closeConfirm() {
+  document.getElementById('confirm-overlay').classList.remove('open');
+}
+
+// ══════════════════════════════════════════
+// RENDER: MARKET MAP
+// ══════════════════════════════════════════
+const INDUSTRY_ORDER = ['tech', 'software', 'ai', 'media', 'other'];
+const industryOpen = { tech: true, software: true, ai: true, media: true, other: true };
+
+function filterMap() {
+  renderMap(document.getElementById('map-search').value.trim().toLowerCase());
+}
+
+function renderMap(q = '') {
+  const list = document.getElementById('map-list');
+  list.innerHTML = '';
+
+  const filtered = q
+    ? companies.filter(c =>
+        c.name.toLowerCase().includes(q) ||
+        c.partners.toLowerCase().includes(q) ||
+        c.notes.toLowerCase().includes(q) ||
+        (c.subgroup || '').toLowerCase().includes(q) ||
+        IND_LABELS[c.industry].toLowerCase().includes(q)
+      )
+    : companies;
+
+  let anyShown = false;
+
+  INDUSTRY_ORDER.forEach(ind => {
+    const group = filtered.filter(c => c.industry === ind);
+    if (!group.length && !q) return;
+
+    anyShown = true;
+    const block = document.createElement('div');
+    block.className = 'industry-block';
+
+    const subgroups = {};
+    group.forEach(c => {
+      const sg = c.subgroup || '__general__';
+      if (!subgroups[sg]) subgroups[sg] = [];
+      subgroups[sg].push(c);
+    });
+
+    const isOpen = industryOpen[ind] !== false;
+    const header = document.createElement('div');
+    header.className = 'industry-header';
+    header.innerHTML = `
+      <div class="industry-label">
+        <div class="industry-dot ${IND_DOT[ind]}"></div>
+        ${IND_LABELS[ind]}
+        <span class="count" style="background:var(--surface2);border:1px solid var(--border);border-radius:99px;padding:1px 7px;font-size:10px;color:var(--text-dim);">${group.length}</span>
+      </div>
+      <svg class="industry-chevron ${isOpen ? 'open' : ''}" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    `;
+    header.onclick = () => {
+      industryOpen[ind] = !industryOpen[ind];
+      itemsDiv.classList.toggle('collapsed', !industryOpen[ind]);
+      header.querySelector('.industry-chevron').classList.toggle('open', industryOpen[ind]);
+    };
+
+    const itemsDiv = document.createElement('div');
+    itemsDiv.className = 'industry-items' + (isOpen ? '' : ' collapsed');
+
+    if (group.length === 0) {
+      const empty = document.createElement('div');
+      empty.style.cssText = 'padding:8px 0;font-size:12px;color:var(--text-muted);';
+      empty.textContent = 'No companies yet.';
+      itemsDiv.appendChild(empty);
+    }
+
+    const sgOrder = Object.keys(subgroups).sort((a,b) => a === '__general__' ? -1 : b === '__general__' ? 1 : a.localeCompare(b));
+
+    sgOrder.forEach(sg => {
+      if (sgOrder.length > 1 || sg !== '__general__') {
+        const sgLabel = document.createElement('div');
+        sgLabel.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.07em;margin-top:4px;margin-bottom:4px;';
+        sgLabel.textContent = sg === '__general__' ? 'General' : sg;
+        itemsDiv.appendChild(sgLabel);
+      }
+
+      subgroups[sg].forEach(c => {
+        const card = document.createElement('div');
+        card.className = 'company-card';
+        const commentCount = (c.comments || []).length;
+        card.innerHTML = `
+          <div class="card-top">
+            <div>
+              <div class="card-name">${miEsc(c.name)}</div>
+              <div class="card-type">${miEsc(c.type)}</div>
+            </div>
+            ${commentCount ? `<span class="pill pill-purple" style="flex-shrink:0;">${commentCount} note${commentCount>1?'s':''}</span>` : ''}
+          </div>
+          <div class="card-meta">
+            <span class="tag ${IND_CLASSES[c.industry]}">${IND_LABELS[c.industry]}</span>
+            ${c.subgroup ? `<span class="subgroup-badge">${miEsc(c.subgroup)}</span>` : ''}
+          </div>
+          ${c.partners ? `<div class="card-partners"><strong>Fin. Partners:</strong> ${miEsc(c.partners)}</div>` : ''}
+          ${c.notes ? `<div class="card-note">${miEsc(c.notes.slice(0,120))}${c.notes.length>120?'…':''}</div>` : ''}
+        `;
+        card.onclick = () => showCompanyDetail(c.id);
+        itemsDiv.appendChild(card);
+      });
+    });
+
+    block.appendChild(header);
+    block.appendChild(itemsDiv);
+    list.appendChild(block);
+  });
+
+  if (!anyShown || (q && !filtered.length)) {
+    if (companies.length === 0) {
+      list.innerHTML = `<div class="empty">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+        <p>No companies yet.<br>Tap + to add your first entry.</p>
+      </div>`;
+    } else if (q) {
+      list.innerHTML = `<div class="empty"><p>No results for "${miEsc(q)}"</p></div>`;
+    }
+  }
+}
+
+// ══════════════════════════════════════════
+// RENDER: DEALS (Bloomberg feed)
+// ══════════════════════════════════════════
+let dealFilterInd = '';
+let dealFilterType = '';
+
+const DEAL_TYPES = ['M&A', 'Financing', 'IPO', 'Recap', 'Other'];
+
+function renderDealFilterBar() {
+  const bar = document.getElementById('deal-filter-bar');
+  bar.innerHTML = '';
+
+  [['', 'All'], ...INDUSTRY_ORDER.map(k => [k, IND_LABELS[k]])].forEach(([val, label]) => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-chip' + (dealFilterInd === val ? ' active' : '');
+    btn.textContent = label;
+    btn.onclick = () => { dealFilterInd = val; renderDealFilterBar(); filterDeals(); };
+    bar.appendChild(btn);
+  });
+
+  const sep = document.createElement('span');
+  sep.style.cssText = 'flex-shrink:0;color:var(--border);align-self:center;font-size:16px;';
+  sep.textContent = '·';
+  bar.appendChild(sep);
+
+  [['', 'All Types'], ...DEAL_TYPES.map(t => [t, t])].forEach(([val, label]) => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-chip' + (dealFilterType === val ? ' active' : '');
+    btn.textContent = label;
+    btn.onclick = () => { dealFilterType = val; renderDealFilterBar(); filterDeals(); };
+    bar.appendChild(btn);
+  });
+}
+
+function filterDeals() {
+  renderDeals(document.getElementById('deal-search').value.trim().toLowerCase());
+}
+
+function formatFeedDate(ts) {
+  const d = new Date(ts);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diff = Math.round((today - dDay) / 86400000);
+  if (diff === 0) return 'TODAY';
+  if (diff === 1) return 'YESTERDAY';
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined }).toUpperCase();
+}
+
+function formatFeedTime(ts) {
+  return new Date(ts).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+}
+
+function renderDeals(q = '') {
+  const list = document.getElementById('deal-list');
+  list.innerHTML = '';
+
+  let filtered = [...deals];
+  if (dealFilterInd)  filtered = filtered.filter(d => d.industry === dealFilterInd);
+  if (dealFilterType) filtered = filtered.filter(d => d.type === dealFilterType);
+  if (q) {
+    filtered = filtered.filter(d =>
+      d.name.toLowerCase().includes(q) ||
+      (d.parties || '').toLowerCase().includes(q) ||
+      (d.notes || '').toLowerCase().includes(q) ||
+      d.type.toLowerCase().includes(q) ||
+      (d.subgroup || '').toLowerCase().includes(q) ||
+      IND_LABELS[d.industry].toLowerCase().includes(q) ||
+      (d.source || '').toLowerCase().includes(q)
+    );
+  }
+
+  filtered.sort((a, b) => b.createdAt - a.createdAt);
+
+  if (filtered.length === 0) {
+    list.innerHTML = deals.length === 0
+      ? `<div class="empty"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg><p>No intelligence yet.<br>Tap + to add your first entry.</p></div>`
+      : `<div class="empty"><p>No results${q ? ` for "${miEsc(q)}"` : ''}.</p></div>`;
+    return;
+  }
+
+  const feedDiv = document.createElement('div');
+  feedDiv.className = 'feed-list';
+
+  let lastDateLabel = '';
+
+  filtered.forEach(d => {
+    const dateLabel = formatFeedDate(d.createdAt);
+    if (dateLabel !== lastDateLabel) {
+      lastDateLabel = dateLabel;
+      const sep = document.createElement('div');
+      sep.className = 'feed-date-sep';
+      sep.textContent = dateLabel;
+      feedDiv.appendChild(sep);
+    }
+
+    const item = document.createElement('div');
+    item.className = 'feed-item';
+    item.innerHTML = `
+      <div class="feed-ts">
+        <div class="feed-ts-time">${formatFeedTime(d.createdAt)}</div>
+      </div>
+      <div class="feed-divider"></div>
+      <div class="feed-body">
+        <div class="feed-headline">${miEsc(d.name)}</div>
+        <div class="feed-tags">
+          <span class="tag ${IND_CLASSES[d.industry]}">${IND_LABELS[d.industry]}</span>
+          ${d.subgroup ? `<span class="subgroup-badge">${miEsc(d.subgroup)}</span>` : ''}
+          <span class="deal-type-badge ${DEAL_TYPE_CLASS[d.type] || 'dtype-other'}">${miEsc(d.type)}</span>
+          ${d.size ? `<span class="pill pill-green">${miEsc(d.size)}</span>` : ''}
+        </div>
+        ${d.parties ? `<div class="feed-snippet">${miEsc(d.parties)}</div>` : ''}
+        ${d.notes ? `<div class="feed-snippet" style="margin-top:2px;">${miEsc(d.notes.slice(0,100))}${d.notes.length>100?'…':''}</div>` : ''}
+        ${d.source ? `<div class="feed-source">${miEsc(d.source)}</div>` : ''}
+      </div>
+    `;
+    item.onclick = () => showDealDetail(d.id);
+    feedDiv.appendChild(item);
+  });
+
+  list.appendChild(feedDiv);
+}
+
+function renderAll() {
+  renderMap(document.getElementById('map-search').value.trim().toLowerCase());
+  renderDealFilterBar();
+  renderDeals(document.getElementById('deal-search').value.trim().toLowerCase());
+}
+
+// ══════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════
+function miEsc(s) {
+  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ══════════════════════════════════════════
+// SETTINGS — MANAGE SUB-VERTICALS
+// ══════════════════════════════════════════
+const settingsOpen = { tech: true, software: true, ai: true, media: true, other: true };
+
+function openSettings() {
+  renderSettings();
+  document.getElementById('settings-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeSettings() {
+  document.getElementById('settings-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function closeSettingsOnBackdrop(e) {
+  if (e.target === document.getElementById('settings-overlay')) closeSettings();
+}
+
+function renderSettings() {
+  const body = document.getElementById('settings-body');
+  body.innerHTML = '';
+
+  INDUSTRY_ORDER.forEach(ind => {
+    const sgs = SUBGROUPS[ind];
+    const block = document.createElement('div');
+    block.className = 'sv-industry-block';
+
+    const isOpen = settingsOpen[ind] !== false;
+    const header = document.createElement('div');
+    header.className = 'sv-industry-header';
+    header.innerHTML = `
+      <div class="sv-industry-label">
+        <div class="industry-dot ${IND_DOT[ind]}"></div>
+        ${IND_LABELS[ind]}
+        <span style="font-size:11px;color:var(--text-muted);font-weight:400;">${sgs.length} sub-verticals</span>
+      </div>
+      <svg class="sv-chevron ${isOpen ? 'open' : ''}" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    `;
+
+    const itemsDiv = document.createElement('div');
+    itemsDiv.className = 'sv-items' + (isOpen ? '' : ' collapsed');
+
+    header.onclick = () => {
+      settingsOpen[ind] = !settingsOpen[ind];
+      itemsDiv.classList.toggle('collapsed', !settingsOpen[ind]);
+      header.querySelector('.sv-chevron').classList.toggle('open', settingsOpen[ind]);
+    };
+
+    sgs.forEach((sg, idx) => {
+      const coCount = companies.filter(c => c.industry === ind && c.subgroup === sg).length;
+      const deCount = deals.filter(d => d.industry === ind && d.subgroup === sg).length;
+      const total = coCount + deCount;
+
+      const row = document.createElement('div');
+      row.className = 'sv-row';
+      row.innerHTML = `
+        <div class="sv-row-name">${miEsc(sg)}</div>
+        ${total ? `<div class="sv-row-count">${total} entr${total>1?'ies':'y'}</div>` : ''}
+        <button class="sv-btn sv-btn-rename" onclick="renameSV('${ind}',${idx})">Rename</button>
+        <button class="sv-btn sv-btn-delete" onclick="deleteSV('${ind}',${idx})">Delete</button>
+      `;
+      itemsDiv.appendChild(row);
+    });
+
+    const addRow = document.createElement('div');
+    addRow.className = 'sv-add-row';
+    addRow.innerHTML = `
+      <input type="text" id="sv-new-${ind}" placeholder="New sub-vertical…">
+      <button class="btn btn-primary btn-sm" onclick="addSV('${ind}')">Add</button>
+    `;
+    itemsDiv.appendChild(addRow);
+
+    block.appendChild(header);
+    block.appendChild(itemsDiv);
+    body.appendChild(block);
+  });
+}
+
+function addSV(ind) {
+  const input = document.getElementById('sv-new-' + ind);
+  const name = input.value.trim();
+  if (!name) return;
+  if (SUBGROUPS[ind].includes(name)) { alert('That sub-vertical already exists.'); return; }
+  SUBGROUPS[ind].push(name);
+  saveSubgroups();
+  input.value = '';
+  renderSettings();
+}
+
+function renameSV(ind, idx) {
+  const current = SUBGROUPS[ind][idx];
+  const next = prompt('Rename sub-vertical:', current);
+  if (!next || next.trim() === current) return;
+  const trimmed = next.trim();
+  if (SUBGROUPS[ind].includes(trimmed)) { alert('That name already exists.'); return; }
+  companies.forEach(c => { if (c.industry === ind && c.subgroup === current) c.subgroup = trimmed; });
+  deals.forEach(d => { if (d.industry === ind && d.subgroup === current) d.subgroup = trimmed; });
+  SUBGROUPS[ind][idx] = trimmed;
+  saveSubgroups();
+  saveCompanies();
+  saveDeals();
+  renderSettings();
+  renderAll();
+}
+
+function deleteSV(ind, idx) {
+  const sg = SUBGROUPS[ind][idx];
+  const affected = [
+    ...companies.filter(c => c.industry === ind && c.subgroup === sg),
+    ...deals.filter(d => d.industry === ind && d.subgroup === sg),
+  ];
+
+  if (affected.length === 0) {
+    document.getElementById('confirm-title').textContent = 'Delete Sub-Vertical';
+    document.getElementById('confirm-msg').textContent = `Remove "${sg}" from ${IND_LABELS[ind]}? No entries are assigned to it.`;
+    document.getElementById('confirm-ok').onclick = () => {
+      SUBGROUPS[ind].splice(idx, 1);
+      saveSubgroups();
+      closeConfirm();
+      renderSettings();
+      renderAll();
+    };
+    document.getElementById('confirm-overlay').classList.add('open');
+    return;
+  }
+
+  const others = SUBGROUPS[ind].filter((_, i) => i !== idx);
+  const sel = document.getElementById('reassign-select');
+  sel.innerHTML = '<option value="">— Unassigned (General) —</option>';
+  others.forEach(o => {
+    const opt = document.createElement('option'); opt.value = o; opt.textContent = o; sel.appendChild(opt);
+  });
+
+  document.getElementById('reassign-title').textContent = `Delete "${sg}"`;
+  document.getElementById('reassign-msg').textContent =
+    `${affected.length} entr${affected.length>1?'ies':'y'} ${affected.length>1?'are':'is'} assigned to this sub-vertical. Choose where to move them before deleting.`;
+
+  document.getElementById('reassign-ok').onclick = () => {
+    const dest = sel.value;
+    companies.forEach(c => { if (c.industry === ind && c.subgroup === sg) c.subgroup = dest; });
+    deals.forEach(d => { if (d.industry === ind && d.subgroup === sg) d.subgroup = dest; });
+    SUBGROUPS[ind].splice(idx, 1);
+    saveSubgroups();
+    saveCompanies();
+    saveDeals();
+    closeReassign();
+    renderSettings();
+    renderAll();
+  };
+
+  document.getElementById('reassign-overlay').classList.add('open');
+}
+
+function closeReassign() {
+  document.getElementById('reassign-overlay').classList.remove('open');
+}
+
+// ══════════════════════════════════════════
+// BOOT (render into the hidden panels; shown when the tab is opened)
+// ══════════════════════════════════════════
+renderAll();
 </script>
 </body>
 </html>
