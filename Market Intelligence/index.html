@@ -1,0 +1,1615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Market Intelligence</title>
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Market Intel">
+<meta name="theme-color" content="#6366f1">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%236366f1'/%3E%3Cpath d='M30 130 L60 90 L90 105 L120 60 L150 75' stroke='white' stroke-width='10' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3Ccircle cx='150' cy='75' r='8' fill='white'/%3E%3C/svg%3E">
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #232636;
+    --surface3: #2a2e42;
+    --border: #2e3149;
+    --text: #e8eaf0;
+    --text-muted: #6b7280;
+    --text-dim: #9ca3af;
+    --accent: #6366f1;
+    --accent-light: #818cf8;
+    --green: #10b981;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --blue: #3b82f6;
+    --purple: #a855f7;
+    --orange: #f97316;
+    --teal: #14b8a6;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --nav-h: 60px;
+    --header-h: 56px;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+    overscroll-behavior: none;
+  }
+
+  /* ── App shell ── */
+  .app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+
+  /* ── Header ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px;
+    display: flex; align-items: center; gap: 12px;
+    height: var(--header-h);
+    flex-shrink: 0;
+    padding-top: env(safe-area-inset-top);
+  }
+  .logo { font-size: 17px; font-weight: 700; color: var(--accent-light); flex: 1; }
+  .logo span { color: var(--text-muted); font-weight: 400; font-size: 12px; margin-left: 6px; }
+
+  /* ── Bottom nav ── */
+  .bottom-nav {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    height: var(--nav-h);
+    flex-shrink: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .nav-tab {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; cursor: pointer; border: none; background: transparent;
+    color: var(--text-muted); font-size: 10px; font-weight: 500; transition: color 0.15s;
+    padding: 0;
+  }
+  .nav-tab svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.7; }
+  .nav-tab.active { color: var(--accent-light); }
+
+  /* ── Content area ── */
+  .content { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── Shared components ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px; border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    border: none; transition: all 0.15s; white-space: nowrap;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:active { background: var(--accent-light); }
+  .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+  .btn-ghost:active { background: var(--surface2); color: var(--text); }
+  .btn-danger { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn-icon { padding: 7px; border-radius: var(--radius-sm); background: var(--surface2); border: 1px solid var(--border); color: var(--text-dim); cursor: pointer; }
+  .btn-icon svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; display: block; }
+
+  input, textarea, select {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); border-radius: var(--radius-sm);
+    font-family: inherit; font-size: 14px;
+    padding: 10px 12px; width: 100%; outline: none;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+  }
+  input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 80px; }
+  select option { background: var(--surface2); }
+
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-label { font-size: 12px; font-weight: 500; color: var(--text-dim); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600;
+  }
+  .tag-tech    { background: rgba(59,130,246,0.18); color: #60a5fa; }
+  .tag-software{ background: rgba(168,85,247,0.18); color: #c084fc; }
+  .tag-ai      { background: rgba(20,184,166,0.18); color: #2dd4bf; }
+  .tag-other   { background: rgba(107,114,128,0.18); color: #9ca3af; }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 500;
+  }
+  .pill-blue   { background: rgba(59,130,246,0.15); color: #93c5fd; }
+  .pill-green  { background: rgba(16,185,129,0.15); color: #6ee7b7; }
+  .pill-yellow { background: rgba(245,158,11,0.15); color: #fcd34d; }
+  .pill-red    { background: rgba(239,68,68,0.15); color: #fca5a5; }
+  .pill-purple { background: rgba(168,85,247,0.15); color: #d8b4fe; }
+  .pill-teal   { background: rgba(20,184,166,0.15); color: #5eead4; }
+
+  /* ── Search bar ── */
+  .search-wrap {
+    padding: 12px 16px; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .search-inner { position: relative; }
+  .search-inner svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; stroke: var(--text-muted); fill: none; stroke-width: 2; pointer-events: none; }
+  .search-inner input { padding-left: 34px; }
+
+  /* ── Section header ── */
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 16px 8px;
+  }
+  .section-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.09em; color: var(--text-muted);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title .count {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 99px; padding: 1px 7px; font-size: 10px; color: var(--text-dim);
+  }
+
+  /* ── Industry segment headers ── */
+  .industry-block { margin-bottom: 4px; }
+  .industry-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; cursor: pointer; user-select: none;
+    border-top: 1px solid var(--border);
+  }
+  .industry-header:first-child { border-top: none; }
+  .industry-label {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 600; color: var(--text);
+  }
+  .industry-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .ind-tech     { background: #3b82f6; }
+  .ind-software { background: #a855f7; }
+  .ind-ai       { background: #14b8a6; }
+  .ind-other    { background: #6b7280; }
+  .industry-chevron { width: 16px; height: 16px; stroke: var(--text-muted); fill: none; stroke-width: 2; transition: transform 0.2s; }
+  .industry-chevron.open { transform: rotate(90deg); }
+  .industry-items { padding: 0 16px 8px; display: flex; flex-direction: column; gap: 8px; }
+  .industry-items.collapsed { display: none; }
+
+  /* ── Company cards (Market Mapping) ── */
+  .company-card {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px;
+    cursor: pointer; transition: border-color 0.15s;
+  }
+  .company-card:active { border-color: var(--accent); }
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .card-name { font-size: 15px; font-weight: 600; color: var(--text); }
+  .card-type { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .card-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .card-note {
+    margin-top: 10px; font-size: 12px; color: var(--text-dim);
+    background: var(--surface); border-radius: var(--radius-sm);
+    padding: 8px 10px; border-left: 2px solid var(--accent);
+    white-space: pre-wrap;
+  }
+  .card-note.empty { display: none; }
+  .card-partners { margin-top: 8px; font-size: 12px; color: var(--text-dim); }
+  .card-partners strong { color: var(--text-dim); font-weight: 500; }
+
+  /* ── Filter chips ── */
+  .filter-bar {
+    display: flex; gap: 6px; overflow-x: auto; padding: 10px 16px;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  }
+  .filter-bar::-webkit-scrollbar { display: none; }
+  .filter-chip {
+    flex-shrink: 0; padding: 5px 12px; border-radius: 99px;
+    font-size: 12px; font-weight: 500; cursor: pointer; border: none;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text-muted); transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .filter-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* ── Bloomberg feed ── */
+  .feed-list { display: flex; flex-direction: column; }
+
+  .feed-item {
+    display: flex; gap: 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer; transition: background 0.1s;
+    padding: 0;
+  }
+  .feed-item:active { background: var(--surface2); }
+
+  .feed-ts {
+    flex-shrink: 0; width: 52px;
+    padding: 10px 0 10px 14px;
+    display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start;
+    gap: 2px;
+  }
+  .feed-ts-time { font-size: 10px; font-weight: 700; color: var(--accent-light); font-variant-numeric: tabular-nums; }
+  .feed-ts-date { font-size: 9px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+  .feed-divider { width: 1px; background: var(--border); margin: 8px 10px; flex-shrink: 0; }
+
+  .feed-body { flex: 1; padding: 10px 14px 10px 0; min-width: 0; }
+  .feed-headline {
+    font-size: 13px; font-weight: 600; color: var(--text);
+    line-height: 1.35; margin-bottom: 5px;
+  }
+  .feed-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; }
+  .feed-snippet { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+  .feed-source { font-size: 10px; color: var(--text-muted); margin-top: 3px; opacity: 0.7; }
+
+  /* date separator in feed */
+  .feed-date-sep {
+    padding: 8px 16px 4px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.09em; color: var(--text-muted);
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── Modals ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+    z-index: 200; display: flex; align-items: flex-end;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--surface); border-radius: 20px 20px 0 0;
+    width: 100%; max-height: 92dvh; overflow-y: auto;
+    padding: 0 0 env(safe-area-inset-bottom);
+    transform: translateY(100%); transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-drag { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 0; }
+  .modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px 12px; border-bottom: 1px solid var(--border);
+  }
+  .modal-title { font-size: 17px; font-weight: 700; }
+  .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+  .modal-actions { display: flex; gap: 10px; padding: 0 20px 20px; }
+  .modal-actions .btn { flex: 1; justify-content: center; }
+
+  /* Detail sheet */
+  .detail-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+    z-index: 300; display: flex; flex-direction: column;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .detail-overlay.open { opacity: 1; pointer-events: all; }
+  .detail-sheet {
+    background: var(--surface); flex: 1; overflow-y: auto;
+    margin-top: 40px; border-radius: 20px 20px 0 0;
+    transform: translateY(100%); transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .detail-overlay.open .detail-sheet { transform: translateY(0); }
+  .detail-drag { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 0; }
+  .detail-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px 12px; border-bottom: 1px solid var(--border);
+  }
+  .detail-title { font-size: 19px; font-weight: 700; }
+  .detail-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+  .detail-section { display: flex; flex-direction: column; gap: 8px; }
+  .detail-section-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--text-muted);
+  }
+  .detail-value { font-size: 14px; color: var(--text); white-space: pre-wrap; }
+  .detail-actions { display: flex; gap: 10px; padding: 0 20px 20px; }
+  .detail-actions .btn { flex: 1; justify-content: center; }
+
+  /* confirm delete */
+  .confirm-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+    z-index: 400; display: flex; align-items: center; justify-content: center; padding: 24px;
+    opacity: 0; pointer-events: none; transition: opacity 0.15s;
+  }
+  .confirm-overlay.open { opacity: 1; pointer-events: all; }
+  .confirm-box {
+    background: var(--surface); border-radius: var(--radius);
+    padding: 24px; width: 100%; max-width: 320px;
+    transform: scale(0.95); transition: transform 0.15s;
+  }
+  .confirm-overlay.open .confirm-box { transform: scale(1); }
+  .confirm-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+  .confirm-msg { font-size: 14px; color: var(--text-dim); margin-bottom: 20px; }
+  .confirm-actions { display: flex; gap: 10px; }
+  .confirm-actions .btn { flex: 1; justify-content: center; }
+
+  /* ── FAB ── */
+  .fab {
+    position: fixed; bottom: calc(var(--nav-h) + 16px + env(safe-area-inset-bottom));
+    right: 20px; width: 52px; height: 52px; border-radius: 50%;
+    background: var(--accent); color: #fff; border: none;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 20px rgba(99,102,241,0.45);
+    cursor: pointer; z-index: 50; transition: background 0.15s, transform 0.1s;
+  }
+  .fab:active { background: var(--accent-light); transform: scale(0.95); }
+  .fab svg { width: 24px; height: 24px; stroke: #fff; fill: none; stroke-width: 2.2; }
+
+  /* ── Empty state ── */
+  .empty {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 48px 24px; gap: 12px; color: var(--text-muted); text-align: center;
+  }
+  .empty svg { width: 40px; height: 40px; stroke: var(--border); fill: none; stroke-width: 1.5; }
+  .empty p { font-size: 13px; }
+
+  /* ── Add-on comments ── */
+  .comment-list { display: flex; flex-direction: column; gap: 8px; }
+  .comment-item {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 10px 12px;
+  }
+  .comment-item-text { font-size: 13px; color: var(--text); white-space: pre-wrap; }
+  .comment-item-meta { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+  .comment-input-row { display: flex; gap: 8px; align-items: flex-end; }
+  .comment-input-row textarea { flex: 1; min-height: 60px; }
+
+  /* ── Sub-group badge ── */
+  .subgroup-badge {
+    display: inline-flex; align-items: center;
+    padding: 2px 8px; border-radius: 99px;
+    font-size: 11px; font-weight: 500;
+    background: var(--surface3); border: 1px solid var(--border);
+    color: var(--text-dim);
+  }
+
+  /* ── Deal type badge ── */
+  .deal-type-badge {
+    padding: 2px 8px; border-radius: 99px;
+    font-size: 11px; font-weight: 600;
+  }
+  .dtype-ma { background: rgba(245,158,11,0.15); color: #fcd34d; }
+  .dtype-financing { background: rgba(16,185,129,0.15); color: #6ee7b7; }
+  .dtype-ipo { background: rgba(59,130,246,0.15); color: #93c5fd; }
+  .dtype-recap { background: rgba(168,85,247,0.15); color: #d8b4fe; }
+  .dtype-other { background: rgba(107,114,128,0.15); color: #9ca3af; }
+
+  /* ── Settings sheet ── */
+  .settings-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+    z-index: 350; display: flex; flex-direction: column;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .settings-overlay.open { opacity: 1; pointer-events: all; }
+  .settings-sheet {
+    background: var(--surface); flex: 1; overflow-y: auto;
+    margin-top: 40px; border-radius: 20px 20px 0 0;
+    transform: translateY(100%); transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .settings-overlay.open .settings-sheet { transform: translateY(0); }
+
+  .sv-industry-block { border-bottom: 1px solid var(--border); }
+  .sv-industry-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px; cursor: pointer; user-select: none;
+  }
+  .sv-industry-label { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+  .sv-chevron { width: 16px; height: 16px; stroke: var(--text-muted); fill: none; stroke-width: 2; transition: transform 0.2s; }
+  .sv-chevron.open { transform: rotate(90deg); }
+  .sv-items { padding: 0 20px 12px; display: flex; flex-direction: column; gap: 6px; }
+  .sv-items.collapsed { display: none; }
+
+  .sv-row {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 8px 10px;
+  }
+  .sv-row-name { flex: 1; font-size: 13px; color: var(--text); }
+  .sv-row-count { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+  .sv-btn { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 500; border: none; cursor: pointer; }
+  .sv-btn-rename { background: var(--surface3); color: var(--text-dim); }
+  .sv-btn-delete { background: rgba(239,68,68,0.15); color: var(--red); }
+
+  .sv-add-row { display: flex; gap: 8px; margin-top: 4px; }
+  .sv-add-row input { flex: 1; }
+  .sv-add-row .btn { flex-shrink: 0; }
+
+  /* reassign modal */
+  .reassign-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+    z-index: 500; display: flex; align-items: center; justify-content: center; padding: 24px;
+    opacity: 0; pointer-events: none; transition: opacity 0.15s;
+  }
+  .reassign-overlay.open { opacity: 1; pointer-events: all; }
+  .reassign-box {
+    background: var(--surface); border-radius: var(--radius);
+    padding: 24px; width: 100%; max-width: 340px;
+    transform: scale(0.95); transition: transform 0.15s;
+  }
+  .reassign-overlay.open .reassign-box { transform: scale(1); }
+  .reassign-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+  .reassign-msg { font-size: 13px; color: var(--text-dim); margin-bottom: 16px; }
+  .reassign-actions { display: flex; gap: 10px; margin-top: 16px; }
+  .reassign-actions .btn { flex: 1; justify-content: center; }
+
+  /* ── hidden ── */
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <header>
+    <div class="logo">Market Intel <span>IB Coverage</span></div>
+    <button class="btn-icon" onclick="openSearch()">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    </button>
+    <button class="btn-icon" onclick="openSettings()">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </header>
+
+  <!-- Content -->
+  <div class="content" id="content">
+
+    <!-- ══ TAB: Market Mapping ══ -->
+    <div class="tab-panel active" id="panel-map">
+      <div class="search-wrap" id="search-map">
+        <div class="search-inner">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="search" placeholder="Search companies…" id="map-search" oninput="filterMap()" autocomplete="off">
+        </div>
+      </div>
+      <div id="map-list"></div>
+    </div>
+
+    <!-- ══ TAB: Deal & Market Intelligence ══ -->
+    <div class="tab-panel" id="panel-deals">
+      <div class="search-wrap">
+        <div class="search-inner">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="search" placeholder="Search headlines, parties, notes…" id="deal-search" oninput="filterDeals()" autocomplete="off">
+        </div>
+      </div>
+      <div class="filter-bar" id="deal-filter-bar"></div>
+      <div id="deal-list"></div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav">
+    <button class="nav-tab active" id="nav-map" onclick="switchTab('map')">
+      <svg viewBox="0 0 24 24"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3V6z"/><path d="M9 3v15M15 6v15"/></svg>
+      Market Map
+    </button>
+    <button class="nav-tab" id="nav-deals" onclick="switchTab('deals')">
+      <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      Intelligence
+    </button>
+  </nav>
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fab" onclick="openAddModal()">
+  <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+
+<!-- ══ ADD COMPANY MODAL ══ -->
+<div class="modal-overlay" id="company-modal" onclick="closeOnBackdrop(event,'company-modal')">
+  <div class="modal">
+    <div class="modal-drag"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="company-modal-title">Add Company</div>
+      <button class="btn-icon" onclick="closeModal('company-modal')">
+        <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Company Name *</label>
+        <input type="text" id="c-name" placeholder="e.g. Acme Capital">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Industry *</label>
+          <select id="c-industry" onchange="updateSubgroups()">
+            <option value="">Select…</option>
+            <option value="tech">Tech Services</option>
+            <option value="software">Software</option>
+            <option value="ai">AI</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Sub-Group</label>
+          <select id="c-subgroup">
+            <option value="">Select industry first</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Company Type</label>
+        <select id="c-type">
+          <option value="Strategic">Strategic / Acquirer</option>
+          <option value="PE">Private Equity</option>
+          <option value="VC">Venture Capital</option>
+          <option value="Family Office">Family Office</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Financing Partners</label>
+        <input type="text" id="c-partners" placeholder="e.g. Goldman Sachs, JP Morgan (comma separated)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes / Conversation Summary</label>
+        <textarea id="c-notes" placeholder="Key conversation notes, add-on targets, thesis…"></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('company-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCompany()">Save Company</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADD DEAL MODAL ══ -->
+<div class="modal-overlay" id="deal-modal" onclick="closeOnBackdrop(event,'deal-modal')">
+  <div class="modal">
+    <div class="modal-drag"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="deal-modal-title">Add Deal / Intelligence</div>
+      <button class="btn-icon" onclick="closeModal('deal-modal')">
+        <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Headline *</label>
+        <input type="text" id="d-name" placeholder="e.g. Acme acquires Target Co.">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Industry *</label>
+          <select id="d-industry" onchange="updateDealSubgroups()">
+            <option value="">Select…</option>
+            <option value="tech">Tech Services</option>
+            <option value="software">Software</option>
+            <option value="ai">AI</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Sub-Group</label>
+          <select id="d-subgroup">
+            <option value="">Select industry first</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Deal Type *</label>
+          <select id="d-type">
+            <option value="">Select…</option>
+            <option value="M&A">M&A</option>
+            <option value="Financing">Financing</option>
+            <option value="IPO">IPO / Public Markets</option>
+            <option value="Recap">Recapitalization</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Deal Size</label>
+          <input type="text" id="d-size" placeholder="e.g. $250M">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Parties Involved</label>
+        <input type="text" id="d-parties" placeholder="Buyer, seller, advisors…">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Source / Date</label>
+        <input type="text" id="d-source" placeholder="e.g. WSJ, Jun 2025">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Intelligence Notes</label>
+        <textarea id="d-notes" placeholder="Market implications, relevance to coverage, follow-up…"></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('deal-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDeal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ COMPANY DETAIL SHEET ══ -->
+<div class="detail-overlay" id="company-detail" onclick="closeDetailOnBackdrop(event,'company-detail')">
+  <div class="detail-sheet">
+    <div class="detail-drag"></div>
+    <div class="detail-header">
+      <div class="detail-title" id="cd-title">Company</div>
+      <button class="btn-icon" onclick="closeDetail('company-detail')">
+        <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="detail-body">
+      <div id="cd-tags" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+
+      <div class="detail-section" id="cd-partners-sec">
+        <div class="detail-section-label">Financing Partners</div>
+        <div class="detail-value" id="cd-partners"></div>
+      </div>
+
+      <div class="detail-section" id="cd-notes-sec">
+        <div class="detail-section-label">Notes</div>
+        <div class="detail-value" id="cd-notes"></div>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-section-label" style="margin-bottom:8px;">Comments & Add-Ons</div>
+        <div class="comment-list" id="cd-comments"></div>
+        <div class="comment-input-row" style="margin-top:8px;">
+          <textarea id="cd-comment-input" placeholder="Add a comment or add-on note…"></textarea>
+          <button class="btn btn-primary btn-sm" style="height:60px;align-self:flex-end;" onclick="addComment()">Add</button>
+        </div>
+      </div>
+    </div>
+    <div class="detail-actions">
+      <button class="btn btn-ghost" onclick="openEditCompany()">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Edit
+      </button>
+      <button class="btn btn-danger" onclick="confirmDeleteCompany()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DEAL DETAIL SHEET ══ -->
+<div class="detail-overlay" id="deal-detail" onclick="closeDetailOnBackdrop(event,'deal-detail')">
+  <div class="detail-sheet">
+    <div class="detail-drag"></div>
+    <div class="detail-header">
+      <div class="detail-title" id="dd-title">Deal</div>
+      <button class="btn-icon" onclick="closeDetail('deal-detail')">
+        <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="detail-body">
+      <div id="dd-tags" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+
+      <div class="detail-section" id="dd-size-sec">
+        <div class="detail-section-label">Deal Size</div>
+        <div class="detail-value" id="dd-size"></div>
+      </div>
+
+      <div class="detail-section" id="dd-parties-sec">
+        <div class="detail-section-label">Parties Involved</div>
+        <div class="detail-value" id="dd-parties"></div>
+      </div>
+
+      <div class="detail-section" id="dd-source-sec">
+        <div class="detail-section-label">Source / Date</div>
+        <div class="detail-value" id="dd-source"></div>
+      </div>
+
+      <div class="detail-section" id="dd-notes-sec">
+        <div class="detail-section-label">Intelligence Notes</div>
+        <div class="detail-value" id="dd-notes"></div>
+      </div>
+    </div>
+    <div class="detail-actions">
+      <button class="btn btn-ghost" onclick="openEditDeal()">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Edit
+      </button>
+      <button class="btn btn-danger" onclick="confirmDeleteDeal()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SETTINGS: MANAGE SUB-VERTICALS ══ -->
+<div class="settings-overlay" id="settings-overlay" onclick="closeSettingsOnBackdrop(event)">
+  <div class="settings-sheet">
+    <div class="detail-drag"></div>
+    <div class="detail-header">
+      <div class="detail-title">Manage Sub-Verticals</div>
+      <button class="btn-icon" onclick="closeSettings()">
+        <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div id="settings-body" style="padding-bottom:40px;"></div>
+  </div>
+</div>
+
+<!-- ══ REASSIGN MODAL ══ -->
+<div class="reassign-overlay" id="reassign-overlay">
+  <div class="reassign-box">
+    <div class="reassign-title" id="reassign-title">Reassign before deleting</div>
+    <div class="reassign-msg" id="reassign-msg"></div>
+    <div class="form-group">
+      <label class="form-label">Move affected entries to</label>
+      <select id="reassign-select"></select>
+    </div>
+    <div class="reassign-actions">
+      <button class="btn btn-ghost" onclick="closeReassign()">Cancel</button>
+      <button class="btn btn-danger" id="reassign-ok">Delete &amp; Reassign</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CONFIRM DELETE ══ -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-title" id="confirm-title">Delete?</div>
+    <div class="confirm-msg" id="confirm-msg">This cannot be undone.</div>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-danger" id="confirm-ok">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════
+const SUBGROUPS_DEFAULT = {
+  tech: [
+    'Digital Engineering',
+    'Data Services',
+    'VAR',
+    'Platform Engineering',
+    'Managed Services',
+    'Data Center',
+    'Vertical IT Services',
+    'Hardware',
+    'Cyberrisk & Intelligence',
+    'Staffing',
+    'Communications',
+  ],
+  software: [
+    'Data',
+    'Infrastructure',
+    'DevOps / Engineering',
+    'Vertical Market',
+    'Ecommerce',
+    'Workflows (HR)',
+    'Workflows (Office of CFO & Compliance)',
+    'Workflows (Sales & Other)',
+    'ERP',
+    'AdTech',
+    'Cyber',
+    'Payments / FinTech',
+    'Education',
+    'Supply Chain & Logistics',
+    'HCIT',
+    'InsurTech',
+    'Real Estate / Construction',
+    'Media / Gaming',
+    'Physical Infrastructure & Public Safety',
+    'Energy & Utility',
+    'Tax & Legal',
+    'Telco',
+    'Wealth Tech',
+    'Design / CAD',
+  ],
+  ai: [
+    'Infrastructure',
+    'Modeling & Analytics',
+    'GRC',
+    'S&M',
+    'Cyber',
+    'Vertical',
+  ],
+  other: [
+    'Media - Production & Entertainment',
+    'Media - Agency',
+    'Media - Digital Media',
+    'Gaming',
+    'All Other Verticals',
+  ],
+};
+
+// Load from localStorage or fall back to defaults
+let SUBGROUPS = JSON.parse(localStorage.getItem('mi_subgroups') || 'null') || JSON.parse(JSON.stringify(SUBGROUPS_DEFAULT));
+function saveSubgroups() { localStorage.setItem('mi_subgroups', JSON.stringify(SUBGROUPS)); }
+
+const IND_LABELS = { tech: 'Tech Services', software: 'Software', ai: 'AI', other: 'Other' };
+const IND_CLASSES = { tech: 'tag-tech', software: 'tag-software', ai: 'tag-ai', other: 'tag-other' };
+const IND_DOT = { tech: 'ind-tech', software: 'ind-software', ai: 'ind-ai', other: 'ind-other' };
+
+const DEAL_TYPE_CLASS = { 'M&A': 'dtype-ma', 'Financing': 'dtype-financing', 'IPO': 'dtype-ipo', 'Recap': 'dtype-recap', 'Other': 'dtype-other' };
+
+let companies = JSON.parse(localStorage.getItem('mi_companies') || '[]');
+let deals = JSON.parse(localStorage.getItem('mi_deals') || '[]');
+
+function saveCompanies() { localStorage.setItem('mi_companies', JSON.stringify(companies)); }
+function saveDeals() { localStorage.setItem('mi_deals', JSON.stringify(deals)); }
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+// ══════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════
+let currentTab = 'map';
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+  document.getElementById('nav-' + tab).classList.add('active');
+  renderAll();
+}
+
+// ══════════════════════════════════════════
+// SUB-GROUP SELECTS
+// ══════════════════════════════════════════
+function populateSubgroups(selectId, industry) {
+  const sel = document.getElementById(selectId);
+  sel.innerHTML = '<option value="">General</option>';
+  if (industry && SUBGROUPS[industry]) {
+    SUBGROUPS[industry].forEach(sg => {
+      const o = document.createElement('option'); o.value = sg; o.textContent = sg; sel.appendChild(o);
+    });
+  }
+}
+
+function updateSubgroups() {
+  const ind = document.getElementById('c-industry').value;
+  populateSubgroups('c-subgroup', ind);
+}
+function updateDealSubgroups() {
+  const ind = document.getElementById('d-industry').value;
+  populateSubgroups('d-subgroup', ind);
+}
+
+// ══════════════════════════════════════════
+// MODALS
+// ══════════════════════════════════════════
+let editingCompanyId = null;
+let editingDealId = null;
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+function closeOnBackdrop(e, id) {
+  if (e.target === document.getElementById(id)) closeModal(id);
+}
+
+function openAddModal() {
+  if (currentTab === 'map') openAddCompany();
+  else openAddDeal();
+}
+
+// Company modal
+function openAddCompany(prefillInd) {
+  editingCompanyId = null;
+  document.getElementById('company-modal-title').textContent = 'Add Company';
+  document.getElementById('c-name').value = '';
+  document.getElementById('c-industry').value = prefillInd || '';
+  updateSubgroups();
+  document.getElementById('c-subgroup').value = '';
+  document.getElementById('c-type').value = 'Strategic';
+  document.getElementById('c-partners').value = '';
+  document.getElementById('c-notes').value = '';
+  openModal('company-modal');
+}
+
+function openEditCompany() {
+  if (!activeCompany) return;
+  const c = companies.find(x => x.id === activeCompany);
+  if (!c) return;
+  editingCompanyId = c.id;
+  document.getElementById('company-modal-title').textContent = 'Edit Company';
+  document.getElementById('c-name').value = c.name;
+  document.getElementById('c-industry').value = c.industry;
+  updateSubgroups();
+  document.getElementById('c-subgroup').value = c.subgroup || '';
+  document.getElementById('c-type').value = c.type;
+  document.getElementById('c-partners').value = c.partners;
+  document.getElementById('c-notes').value = c.notes;
+  closeDetail('company-detail');
+  openModal('company-modal');
+}
+
+function saveCompany() {
+  const name = document.getElementById('c-name').value.trim();
+  const industry = document.getElementById('c-industry').value;
+  if (!name) { alert('Company name is required.'); return; }
+  if (!industry) { alert('Please select an industry.'); return; }
+
+  const data = {
+    name, industry,
+    subgroup: document.getElementById('c-subgroup').value,
+    type: document.getElementById('c-type').value,
+    partners: document.getElementById('c-partners').value.trim(),
+    notes: document.getElementById('c-notes').value.trim(),
+  };
+
+  if (editingCompanyId) {
+    const idx = companies.findIndex(x => x.id === editingCompanyId);
+    if (idx > -1) { companies[idx] = { ...companies[idx], ...data }; }
+  } else {
+    companies.push({ id: uid(), ...data, comments: [], createdAt: Date.now() });
+  }
+  saveCompanies();
+  closeModal('company-modal');
+  renderMap();
+}
+
+// Deal modal
+function openAddDeal() {
+  editingDealId = null;
+  document.getElementById('deal-modal-title').textContent = 'Add Deal / Intelligence';
+  document.getElementById('d-name').value = '';
+  document.getElementById('d-industry').value = '';
+  updateDealSubgroups();
+  document.getElementById('d-subgroup').value = '';
+  document.getElementById('d-type').value = '';
+  document.getElementById('d-size').value = '';
+  document.getElementById('d-parties').value = '';
+  document.getElementById('d-source').value = '';
+  document.getElementById('d-notes').value = '';
+  openModal('deal-modal');
+}
+
+function openEditDeal() {
+  if (!activeDeal) return;
+  const d = deals.find(x => x.id === activeDeal);
+  if (!d) return;
+  editingDealId = d.id;
+  document.getElementById('deal-modal-title').textContent = 'Edit Deal';
+  document.getElementById('d-name').value = d.name;
+  document.getElementById('d-industry').value = d.industry;
+  updateDealSubgroups();
+  document.getElementById('d-subgroup').value = d.subgroup || '';
+  document.getElementById('d-type').value = d.type;
+  document.getElementById('d-size').value = d.size || '';
+  document.getElementById('d-parties').value = d.parties || '';
+  document.getElementById('d-source').value = d.source || '';
+  document.getElementById('d-notes').value = d.notes || '';
+  closeDetail('deal-detail');
+  openModal('deal-modal');
+}
+
+function saveDeal() {
+  const name = document.getElementById('d-name').value.trim();
+  const industry = document.getElementById('d-industry').value;
+  const type = document.getElementById('d-type').value;
+  if (!name) { alert('Headline is required.'); return; }
+  if (!industry) { alert('Please select an industry.'); return; }
+  if (!type) { alert('Please select a deal type.'); return; }
+
+  const data = {
+    name, industry, type,
+    subgroup: document.getElementById('d-subgroup').value,
+    size: document.getElementById('d-size').value.trim(),
+    parties: document.getElementById('d-parties').value.trim(),
+    source: document.getElementById('d-source').value.trim(),
+    notes: document.getElementById('d-notes').value.trim(),
+  };
+
+  if (editingDealId) {
+    const idx = deals.findIndex(x => x.id === editingDealId);
+    if (idx > -1) { deals[idx] = { ...deals[idx], ...data }; }
+  } else {
+    deals.push({ id: uid(), ...data, createdAt: Date.now() });
+  }
+  saveDeals();
+  closeModal('deal-modal');
+  renderDeals();
+}
+
+// ══════════════════════════════════════════
+// DETAIL SHEETS
+// ══════════════════════════════════════════
+let activeCompany = null;
+let activeDeal = null;
+
+function openDetail(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeDetail(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+function closeDetailOnBackdrop(e, id) {
+  if (e.target === document.getElementById(id)) closeDetail(id);
+}
+
+function showCompanyDetail(id) {
+  const c = companies.find(x => x.id === id);
+  if (!c) return;
+  activeCompany = id;
+
+  document.getElementById('cd-title').textContent = c.name;
+
+  // Tags
+  const tagsEl = document.getElementById('cd-tags');
+  tagsEl.innerHTML = `
+    <span class="tag ${IND_CLASSES[c.industry]}">${IND_LABELS[c.industry]}</span>
+    ${c.subgroup ? `<span class="subgroup-badge">${c.subgroup}</span>` : ''}
+    <span class="pill pill-blue">${c.type}</span>
+  `;
+
+  // Partners
+  const pSec = document.getElementById('cd-partners-sec');
+  if (c.partners) {
+    document.getElementById('cd-partners').textContent = c.partners;
+    pSec.style.display = '';
+  } else { pSec.style.display = 'none'; }
+
+  // Notes
+  const nSec = document.getElementById('cd-notes-sec');
+  if (c.notes) {
+    document.getElementById('cd-notes').textContent = c.notes;
+    nSec.style.display = '';
+  } else { nSec.style.display = 'none'; }
+
+  // Comments
+  renderComments(c);
+
+  openDetail('company-detail');
+}
+
+function renderComments(c) {
+  const list = document.getElementById('cd-comments');
+  list.innerHTML = '';
+  (c.comments || []).forEach((cm, i) => {
+    const el = document.createElement('div');
+    el.className = 'comment-item';
+    el.innerHTML = `
+      <div class="comment-item-text">${escHtml(cm.text)}</div>
+      <div class="comment-item-meta">${new Date(cm.ts).toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'})}</div>
+    `;
+    list.appendChild(el);
+  });
+  document.getElementById('cd-comment-input').value = '';
+}
+
+function addComment() {
+  const text = document.getElementById('cd-comment-input').value.trim();
+  if (!text || !activeCompany) return;
+  const idx = companies.findIndex(x => x.id === activeCompany);
+  if (idx < 0) return;
+  if (!companies[idx].comments) companies[idx].comments = [];
+  companies[idx].comments.push({ text, ts: Date.now() });
+  saveCompanies();
+  renderComments(companies[idx]);
+  renderMap();
+}
+
+function showDealDetail(id) {
+  const d = deals.find(x => x.id === id);
+  if (!d) return;
+  activeDeal = id;
+
+  document.getElementById('dd-title').textContent = d.name;
+
+  const tagsEl = document.getElementById('dd-tags');
+  tagsEl.innerHTML = `
+    <span class="tag ${IND_CLASSES[d.industry]}">${IND_LABELS[d.industry]}</span>
+    ${d.subgroup ? `<span class="subgroup-badge">${d.subgroup}</span>` : ''}
+    <span class="deal-type-badge ${DEAL_TYPE_CLASS[d.type] || 'dtype-other'}">${d.type}</span>
+  `;
+
+  const sizeSec = document.getElementById('dd-size-sec');
+  if (d.size) { document.getElementById('dd-size').textContent = d.size; sizeSec.style.display = ''; }
+  else { sizeSec.style.display = 'none'; }
+
+  const pSec = document.getElementById('dd-parties-sec');
+  if (d.parties) { document.getElementById('dd-parties').textContent = d.parties; pSec.style.display = ''; }
+  else { pSec.style.display = 'none'; }
+
+  const sSec = document.getElementById('dd-source-sec');
+  if (d.source) { document.getElementById('dd-source').textContent = d.source; sSec.style.display = ''; }
+  else { sSec.style.display = 'none'; }
+
+  const nSec = document.getElementById('dd-notes-sec');
+  if (d.notes) { document.getElementById('dd-notes').textContent = d.notes; nSec.style.display = ''; }
+  else { nSec.style.display = 'none'; }
+
+  openDetail('deal-detail');
+}
+
+// ══════════════════════════════════════════
+// DELETE
+// ══════════════════════════════════════════
+function confirmDeleteCompany() {
+  document.getElementById('confirm-title').textContent = 'Delete Company';
+  document.getElementById('confirm-msg').textContent = 'Remove this company from your market map? This cannot be undone.';
+  document.getElementById('confirm-ok').onclick = () => {
+    companies = companies.filter(x => x.id !== activeCompany);
+    saveCompanies();
+    closeConfirm();
+    closeDetail('company-detail');
+    renderMap();
+  };
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+
+function confirmDeleteDeal() {
+  document.getElementById('confirm-title').textContent = 'Delete Deal';
+  document.getElementById('confirm-msg').textContent = 'Remove this deal entry? This cannot be undone.';
+  document.getElementById('confirm-ok').onclick = () => {
+    deals = deals.filter(x => x.id !== activeDeal);
+    saveDeals();
+    closeConfirm();
+    closeDetail('deal-detail');
+    renderDeals();
+  };
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+
+function closeConfirm() {
+  document.getElementById('confirm-overlay').classList.remove('open');
+}
+
+// ══════════════════════════════════════════
+// RENDER: MARKET MAP
+// ══════════════════════════════════════════
+const INDUSTRY_ORDER = ['tech', 'software', 'ai', 'other'];
+const industryOpen = { tech: true, software: true, ai: true, other: true };
+
+function filterMap() {
+  renderMap(document.getElementById('map-search').value.trim().toLowerCase());
+}
+
+function renderMap(q = '') {
+  const list = document.getElementById('map-list');
+  list.innerHTML = '';
+
+  const filtered = q
+    ? companies.filter(c =>
+        c.name.toLowerCase().includes(q) ||
+        c.partners.toLowerCase().includes(q) ||
+        c.notes.toLowerCase().includes(q) ||
+        (c.subgroup || '').toLowerCase().includes(q) ||
+        IND_LABELS[c.industry].toLowerCase().includes(q)
+      )
+    : companies;
+
+  let anyShown = false;
+
+  INDUSTRY_ORDER.forEach(ind => {
+    const group = filtered.filter(c => c.industry === ind);
+    if (!group.length && !q) return;
+
+    anyShown = true;
+    const block = document.createElement('div');
+    block.className = 'industry-block';
+
+    // Sub-groups within this industry
+    const subgroups = {};
+    group.forEach(c => {
+      const sg = c.subgroup || '__general__';
+      if (!subgroups[sg]) subgroups[sg] = [];
+      subgroups[sg].push(c);
+    });
+
+    const isOpen = industryOpen[ind] !== false;
+    const header = document.createElement('div');
+    header.className = 'industry-header';
+    header.innerHTML = `
+      <div class="industry-label">
+        <div class="industry-dot ${IND_DOT[ind]}"></div>
+        ${IND_LABELS[ind]}
+        <span class="count" style="background:var(--surface2);border:1px solid var(--border);border-radius:99px;padding:1px 7px;font-size:10px;color:var(--text-dim);">${group.length}</span>
+      </div>
+      <svg class="industry-chevron ${isOpen ? 'open' : ''}" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    `;
+    header.onclick = () => {
+      industryOpen[ind] = !industryOpen[ind];
+      itemsDiv.classList.toggle('collapsed', !industryOpen[ind]);
+      header.querySelector('.industry-chevron').classList.toggle('open', industryOpen[ind]);
+    };
+
+    const itemsDiv = document.createElement('div');
+    itemsDiv.className = 'industry-items' + (isOpen ? '' : ' collapsed');
+
+    if (group.length === 0) {
+      const empty = document.createElement('div');
+      empty.style.cssText = 'padding:8px 0;font-size:12px;color:var(--text-muted);';
+      empty.textContent = 'No companies yet.';
+      itemsDiv.appendChild(empty);
+    }
+
+    // Render by sub-group
+    const sgOrder = Object.keys(subgroups).sort((a,b) => a === '__general__' ? -1 : b === '__general__' ? 1 : a.localeCompare(b));
+
+    sgOrder.forEach(sg => {
+      if (sgOrder.length > 1 || sg !== '__general__') {
+        const sgLabel = document.createElement('div');
+        sgLabel.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.07em;margin-top:4px;margin-bottom:4px;';
+        sgLabel.textContent = sg === '__general__' ? 'General' : sg;
+        itemsDiv.appendChild(sgLabel);
+      }
+
+      subgroups[sg].forEach(c => {
+        const card = document.createElement('div');
+        card.className = 'company-card';
+        const commentCount = (c.comments || []).length;
+        card.innerHTML = `
+          <div class="card-top">
+            <div>
+              <div class="card-name">${escHtml(c.name)}</div>
+              <div class="card-type">${escHtml(c.type)}</div>
+            </div>
+            ${commentCount ? `<span class="pill pill-purple" style="flex-shrink:0;">${commentCount} note${commentCount>1?'s':''}</span>` : ''}
+          </div>
+          <div class="card-meta">
+            <span class="tag ${IND_CLASSES[c.industry]}">${IND_LABELS[c.industry]}</span>
+            ${c.subgroup ? `<span class="subgroup-badge">${escHtml(c.subgroup)}</span>` : ''}
+          </div>
+          ${c.partners ? `<div class="card-partners"><strong>Fin. Partners:</strong> ${escHtml(c.partners)}</div>` : ''}
+          ${c.notes ? `<div class="card-note">${escHtml(c.notes.slice(0,120))}${c.notes.length>120?'…':''}</div>` : ''}
+        `;
+        card.onclick = () => showCompanyDetail(c.id);
+        itemsDiv.appendChild(card);
+      });
+    });
+
+    block.appendChild(header);
+    block.appendChild(itemsDiv);
+    list.appendChild(block);
+  });
+
+  if (!anyShown || (q && !filtered.length)) {
+    if (companies.length === 0) {
+      list.innerHTML = `<div class="empty">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+        <p>No companies yet.<br>Tap + to add your first entry.</p>
+      </div>`;
+    } else if (q) {
+      list.innerHTML = `<div class="empty"><p>No results for "${escHtml(q)}"</p></div>`;
+    }
+  }
+}
+
+// ══════════════════════════════════════════
+// RENDER: DEALS (Bloomberg feed)
+// ══════════════════════════════════════════
+let dealFilterInd = '';   // '' = All
+let dealFilterType = '';  // '' = All types
+
+const DEAL_TYPES = ['M&A', 'Financing', 'IPO', 'Recap', 'Other'];
+
+function renderDealFilterBar() {
+  const bar = document.getElementById('deal-filter-bar');
+  bar.innerHTML = '';
+
+  // Industry chips
+  [['', 'All'], ...INDUSTRY_ORDER.map(k => [k, IND_LABELS[k]])].forEach(([val, label]) => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-chip' + (dealFilterInd === val ? ' active' : '');
+    btn.textContent = label;
+    btn.onclick = () => { dealFilterInd = val; renderDealFilterBar(); filterDeals(); };
+    bar.appendChild(btn);
+  });
+
+  // Divider dot
+  const sep = document.createElement('span');
+  sep.style.cssText = 'flex-shrink:0;color:var(--border);align-self:center;font-size:16px;';
+  sep.textContent = '·';
+  bar.appendChild(sep);
+
+  // Type chips
+  [['', 'All Types'], ...DEAL_TYPES.map(t => [t, t])].forEach(([val, label]) => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-chip' + (dealFilterType === val ? ' active' : '');
+    btn.textContent = label;
+    btn.onclick = () => { dealFilterType = val; renderDealFilterBar(); filterDeals(); };
+    bar.appendChild(btn);
+  });
+}
+
+function filterDeals() {
+  renderDeals(document.getElementById('deal-search').value.trim().toLowerCase());
+}
+
+function formatFeedDate(ts) {
+  const d = new Date(ts);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diff = Math.round((today - dDay) / 86400000);
+  if (diff === 0) return 'TODAY';
+  if (diff === 1) return 'YESTERDAY';
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined }).toUpperCase();
+}
+
+function formatFeedTime(ts) {
+  return new Date(ts).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+}
+
+function renderDeals(q = '') {
+  const list = document.getElementById('deal-list');
+  list.innerHTML = '';
+
+  let filtered = [...deals];
+  if (dealFilterInd)  filtered = filtered.filter(d => d.industry === dealFilterInd);
+  if (dealFilterType) filtered = filtered.filter(d => d.type === dealFilterType);
+  if (q) {
+    filtered = filtered.filter(d =>
+      d.name.toLowerCase().includes(q) ||
+      (d.parties || '').toLowerCase().includes(q) ||
+      (d.notes || '').toLowerCase().includes(q) ||
+      d.type.toLowerCase().includes(q) ||
+      (d.subgroup || '').toLowerCase().includes(q) ||
+      IND_LABELS[d.industry].toLowerCase().includes(q) ||
+      (d.source || '').toLowerCase().includes(q)
+    );
+  }
+
+  // Sort newest first
+  filtered.sort((a, b) => b.createdAt - a.createdAt);
+
+  if (filtered.length === 0) {
+    list.innerHTML = deals.length === 0
+      ? `<div class="empty"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg><p>No intelligence yet.<br>Tap + to add your first entry.</p></div>`
+      : `<div class="empty"><p>No results${q ? ` for "${escHtml(q)}"` : ''}.</p></div>`;
+    return;
+  }
+
+  const feedDiv = document.createElement('div');
+  feedDiv.className = 'feed-list';
+
+  let lastDateLabel = '';
+
+  filtered.forEach(d => {
+    const dateLabel = formatFeedDate(d.createdAt);
+    if (dateLabel !== lastDateLabel) {
+      lastDateLabel = dateLabel;
+      const sep = document.createElement('div');
+      sep.className = 'feed-date-sep';
+      sep.textContent = dateLabel;
+      feedDiv.appendChild(sep);
+    }
+
+    const item = document.createElement('div');
+    item.className = 'feed-item';
+    item.innerHTML = `
+      <div class="feed-ts">
+        <div class="feed-ts-time">${formatFeedTime(d.createdAt)}</div>
+      </div>
+      <div class="feed-divider"></div>
+      <div class="feed-body">
+        <div class="feed-headline">${escHtml(d.name)}</div>
+        <div class="feed-tags">
+          <span class="tag ${IND_CLASSES[d.industry]}">${IND_LABELS[d.industry]}</span>
+          ${d.subgroup ? `<span class="subgroup-badge">${escHtml(d.subgroup)}</span>` : ''}
+          <span class="deal-type-badge ${DEAL_TYPE_CLASS[d.type] || 'dtype-other'}">${escHtml(d.type)}</span>
+          ${d.size ? `<span class="pill pill-green">${escHtml(d.size)}</span>` : ''}
+        </div>
+        ${d.parties ? `<div class="feed-snippet">${escHtml(d.parties)}</div>` : ''}
+        ${d.notes ? `<div class="feed-snippet" style="margin-top:2px;">${escHtml(d.notes.slice(0,100))}${d.notes.length>100?'…':''}</div>` : ''}
+        ${d.source ? `<div class="feed-source">${escHtml(d.source)}</div>` : ''}
+      </div>
+    `;
+    item.onclick = () => showDealDetail(d.id);
+    feedDiv.appendChild(item);
+  });
+
+  list.appendChild(feedDiv);
+}
+
+function renderAll() {
+  renderMap(document.getElementById('map-search').value.trim().toLowerCase());
+  renderDealFilterBar();
+  renderDeals(document.getElementById('deal-search').value.trim().toLowerCase());
+}
+
+// ══════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════
+function escHtml(s) {
+  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function openSearch() {
+  const inp = currentTab === 'map'
+    ? document.getElementById('map-search')
+    : document.getElementById('deal-search');
+  inp.focus();
+  inp.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ══════════════════════════════════════════
+// SETTINGS — MANAGE SUB-VERTICALS
+// ══════════════════════════════════════════
+const settingsOpen = { tech: true, software: true, ai: true, other: true };
+
+function openSettings() {
+  renderSettings();
+  document.getElementById('settings-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeSettings() {
+  document.getElementById('settings-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function closeSettingsOnBackdrop(e) {
+  if (e.target === document.getElementById('settings-overlay')) closeSettings();
+}
+
+function renderSettings() {
+  const body = document.getElementById('settings-body');
+  body.innerHTML = '';
+
+  INDUSTRY_ORDER.forEach(ind => {
+    const sgs = SUBGROUPS[ind];
+    const block = document.createElement('div');
+    block.className = 'sv-industry-block';
+
+    const isOpen = settingsOpen[ind] !== false;
+    const header = document.createElement('div');
+    header.className = 'sv-industry-header';
+    header.innerHTML = `
+      <div class="sv-industry-label">
+        <div class="industry-dot ${IND_DOT[ind]}"></div>
+        ${IND_LABELS[ind]}
+        <span style="font-size:11px;color:var(--text-muted);font-weight:400;">${sgs.length} sub-verticals</span>
+      </div>
+      <svg class="sv-chevron ${isOpen ? 'open' : ''}" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    `;
+
+    const itemsDiv = document.createElement('div');
+    itemsDiv.className = 'sv-items' + (isOpen ? '' : ' collapsed');
+
+    header.onclick = () => {
+      settingsOpen[ind] = !settingsOpen[ind];
+      itemsDiv.classList.toggle('collapsed', !settingsOpen[ind]);
+      header.querySelector('.sv-chevron').classList.toggle('open', settingsOpen[ind]);
+    };
+
+    sgs.forEach((sg, idx) => {
+      const coCount = companies.filter(c => c.industry === ind && c.subgroup === sg).length;
+      const deCount = deals.filter(d => d.industry === ind && d.subgroup === sg).length;
+      const total = coCount + deCount;
+
+      const row = document.createElement('div');
+      row.className = 'sv-row';
+      row.innerHTML = `
+        <div class="sv-row-name">${escHtml(sg)}</div>
+        ${total ? `<div class="sv-row-count">${total} entr${total>1?'ies':'y'}</div>` : ''}
+        <button class="sv-btn sv-btn-rename" onclick="renameSV('${ind}',${idx})">Rename</button>
+        <button class="sv-btn sv-btn-delete" onclick="deleteSV('${ind}',${idx})">Delete</button>
+      `;
+      itemsDiv.appendChild(row);
+    });
+
+    // Add new sub-vertical
+    const addRow = document.createElement('div');
+    addRow.className = 'sv-add-row';
+    addRow.innerHTML = `
+      <input type="text" id="sv-new-${ind}" placeholder="New sub-vertical…">
+      <button class="btn btn-primary btn-sm" onclick="addSV('${ind}')">Add</button>
+    `;
+    itemsDiv.appendChild(addRow);
+
+    block.appendChild(header);
+    block.appendChild(itemsDiv);
+    body.appendChild(block);
+  });
+}
+
+function addSV(ind) {
+  const input = document.getElementById('sv-new-' + ind);
+  const name = input.value.trim();
+  if (!name) return;
+  if (SUBGROUPS[ind].includes(name)) { alert('That sub-vertical already exists.'); return; }
+  SUBGROUPS[ind].push(name);
+  saveSubgroups();
+  input.value = '';
+  renderSettings();
+}
+
+function renameSV(ind, idx) {
+  const current = SUBGROUPS[ind][idx];
+  const next = prompt('Rename sub-vertical:', current);
+  if (!next || next.trim() === current) return;
+  const trimmed = next.trim();
+  if (SUBGROUPS[ind].includes(trimmed)) { alert('That name already exists.'); return; }
+  // Update all companies and deals that used the old name
+  companies.forEach(c => { if (c.industry === ind && c.subgroup === current) c.subgroup = trimmed; });
+  deals.forEach(d => { if (d.industry === ind && d.subgroup === current) d.subgroup = trimmed; });
+  SUBGROUPS[ind][idx] = trimmed;
+  saveSubgroups();
+  saveCompanies();
+  saveDeals();
+  renderSettings();
+  renderAll();
+}
+
+function deleteSV(ind, idx) {
+  const sg = SUBGROUPS[ind][idx];
+  const affected = [
+    ...companies.filter(c => c.industry === ind && c.subgroup === sg),
+    ...deals.filter(d => d.industry === ind && d.subgroup === sg),
+  ];
+
+  if (affected.length === 0) {
+    // Nothing assigned — just delete
+    document.getElementById('confirm-title').textContent = 'Delete Sub-Vertical';
+    document.getElementById('confirm-msg').textContent = `Remove "${sg}" from ${IND_LABELS[ind]}? No entries are assigned to it.`;
+    document.getElementById('confirm-ok').onclick = () => {
+      SUBGROUPS[ind].splice(idx, 1);
+      saveSubgroups();
+      closeConfirm();
+      renderSettings();
+      renderAll();
+    };
+    document.getElementById('confirm-overlay').classList.add('open');
+    return;
+  }
+
+  // Entries need reassignment
+  const others = SUBGROUPS[ind].filter((_, i) => i !== idx);
+  const sel = document.getElementById('reassign-select');
+  sel.innerHTML = '<option value="">— Unassigned (General) —</option>';
+  others.forEach(o => {
+    const opt = document.createElement('option'); opt.value = o; opt.textContent = o; sel.appendChild(opt);
+  });
+
+  document.getElementById('reassign-title').textContent = `Delete "${sg}"`;
+  document.getElementById('reassign-msg').textContent =
+    `${affected.length} entr${affected.length>1?'ies':'y'} ${affected.length>1?'are':'is'} assigned to this sub-vertical. Choose where to move them before deleting.`;
+
+  document.getElementById('reassign-ok').onclick = () => {
+    const dest = sel.value;
+    companies.forEach(c => { if (c.industry === ind && c.subgroup === sg) c.subgroup = dest; });
+    deals.forEach(d => { if (d.industry === ind && d.subgroup === sg) d.subgroup = dest; });
+    SUBGROUPS[ind].splice(idx, 1);
+    saveSubgroups();
+    saveCompanies();
+    saveDeals();
+    closeReassign();
+    renderSettings();
+    renderAll();
+  };
+
+  document.getElementById('reassign-overlay').classList.add('open');
+}
+
+function closeReassign() {
+  document.getElementById('reassign-overlay').classList.remove('open');
+}
+
+// ══════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════
+renderAll();
+
+// Register service worker for PWA / offline
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>

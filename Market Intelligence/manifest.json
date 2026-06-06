@@ -1,0 +1,24 @@
+{
+  "name": "Market Intelligence",
+  "short_name": "Market Intel",
+  "description": "IB market mapping and deal coverage tracker",
+  "start_url": "/Market Intelligence/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f1117",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='42' fill='%236366f1'/%3E%3Cpath d='M30 140 L65 95 L96 112 L128 62 L162 78' stroke='white' stroke-width='11' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3Ccircle cx='162' cy='78' r='9' fill='white'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%236366f1'/%3E%3Cpath d='M80 370 L172 250 L256 295 L340 165 L432 205' stroke='white' stroke-width='28' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3Ccircle cx='432' cy='205' r='24' fill='white'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
