@@ -410,10 +410,12 @@ header {
 
 /* Place category colors */
 .place-card.cat-restaurant::before { background: #f97316; }
+.place-card.cat-bar::before        { background: #ec4899; }
 .place-card.cat-activity::before   { background: #10b981; }
 .place-card.cat-hotel::before      { background: #3b82f6; }
 .place-card.cat-other::before      { background: #a855f7; }
 .cat-badge.cat-restaurant { background: #431407; color: #fb923c; }
+.cat-badge.cat-bar        { background: #500724; color: #f9a8d4; }
 .cat-badge.cat-activity   { background: #064e3b; color: #34d399; }
 .cat-badge.cat-hotel      { background: #1e3a5f; color: #60a5fa; }
 .cat-badge.cat-other      { background: #4c1d95; color: #c084fc; }
@@ -757,6 +759,7 @@ header {
         <div class="widget-title">By Type</div>
         <div class="type-bars">
           <div class="type-bar-row"><div class="type-bar-label">Restaurants</div><div class="type-bar-track"><div class="type-bar-fill" id="pbar-restaurant" style="width:0%;background:#f97316"></div></div><div class="type-bar-count" id="pcount-restaurant">0</div></div>
+          <div class="type-bar-row"><div class="type-bar-label">Bars / Nightlife</div><div class="type-bar-track"><div class="type-bar-fill" id="pbar-bar" style="width:0%;background:#ec4899"></div></div><div class="type-bar-count" id="pcount-bar">0</div></div>
           <div class="type-bar-row"><div class="type-bar-label">Activities</div><div class="type-bar-track"><div class="type-bar-fill" id="pbar-activity" style="width:0%;background:#10b981"></div></div><div class="type-bar-count" id="pcount-activity">0</div></div>
           <div class="type-bar-row"><div class="type-bar-label">Hotels</div><div class="type-bar-track"><div class="type-bar-fill" id="pbar-hotel" style="width:0%;background:#3b82f6"></div></div><div class="type-bar-count" id="pcount-hotel">0</div></div>
           <div class="type-bar-row"><div class="type-bar-label">Other</div><div class="type-bar-track"><div class="type-bar-fill" id="pbar-other" style="width:0%;background:#a855f7"></div></div><div class="type-bar-count" id="pcount-other">0</div></div>
@@ -782,6 +785,7 @@ header {
         <div class="toolbar-row filter-chips-wrap">
           <button class="filter-chip active" data-filter="all" onclick="setPlaceFilter('all',this)">All</button>
           <button class="filter-chip" data-filter="restaurant" onclick="setPlaceFilter('restaurant',this)">Restaurants</button>
+          <button class="filter-chip" data-filter="bar" onclick="setPlaceFilter('bar',this)">Bars / Nightlife</button>
           <button class="filter-chip" data-filter="activity" onclick="setPlaceFilter('activity',this)">Activities</button>
           <button class="filter-chip" data-filter="hotel" onclick="setPlaceFilter('hotel',this)">Hotels</button>
           <button class="filter-chip" data-filter="other" onclick="setPlaceFilter('other',this)">Other</button>
@@ -1179,6 +1183,7 @@ header {
       <div class="form-group form-full"><label class="form-label">Category <span style="color:#ef4444">*</span></label>
         <select class="form-select" id="p-category">
           <option value="restaurant">🍽️ Restaurant</option>
+          <option value="bar">🍸 Bars / Nightlife</option>
           <option value="activity">🎯 Activity</option>
           <option value="hotel">🏨 Hotel</option>
           <option value="other">✨ Other</option>
@@ -1332,9 +1337,9 @@ let activeMobTab  = 'contacts';
 const WARMTH_COLORS = ['','#374151','#b45309','#d97706','#f59e0b','#10b981'];
 const WARMTH_LABELS = ['','Cold','Lukewarm','Warm','Close','Strong'];
 const TYPE_LABELS   = { professional:'Professional', personal:'Personal', lead:'Prospect', investor:'Investor/Advisor' };
-const CAT_LABELS    = { restaurant:'Restaurant', activity:'Activity', hotel:'Hotel', other:'Other' };
-const CAT_ICONS     = { restaurant:'🍽️', activity:'🎯', hotel:'🏨', other:'✨' };
-const CAT_BG        = { restaurant:'#431407', activity:'#064e3b', hotel:'#1e3a5f', other:'#4c1d95' };
+const CAT_LABELS    = { restaurant:'Restaurant', bar:'Bars / Nightlife', activity:'Activity', hotel:'Hotel', other:'Other' };
+const CAT_ICONS     = { restaurant:'🍽️', bar:'🍸', activity:'🎯', hotel:'🏨', other:'✨' };
+const CAT_BG        = { restaurant:'#431407', bar:'#500724', activity:'#064e3b', hotel:'#1e3a5f', other:'#4c1d95' };
 
 // ═══════════════════════════════════════════════════════════════
 // PERSISTENCE
@@ -1686,7 +1691,7 @@ function renderPlaceWidgets() {
   document.getElementById('pstat-cities').textContent  = new Set(places.map(p=>p.city).filter(Boolean)).size;
   document.getElementById('pstat-toprated').textContent= places.filter(p=>(p.rating||0)===5).length;
 
-  const counts={restaurant:0,activity:0,hotel:0,other:0};
+  const counts={restaurant:0,bar:0,activity:0,hotel:0,other:0};
   places.forEach(p=>{if(counts[p.category]!==undefined)counts[p.category]++;});
   const max=Math.max(...Object.values(counts),1);
   Object.entries(counts).forEach(([t,n])=>{
@@ -2145,6 +2150,7 @@ function csvTypeMap(s) {
 }
 function csvCatMap(s) {
   s = (s||'').toLowerCase();
+  if (s.includes('night') || s === 'bars / nightlife') return 'bar';
   if (s.includes('restaur') || s.includes('food') || s.includes('dining')) return 'restaurant';
   if (s.includes('activ') || s.includes('tour') || s.includes('sport')) return 'activity';
   if (s.includes('hotel') || s.includes('stay') || s.includes('lodge')) return 'hotel';
