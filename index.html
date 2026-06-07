@@ -730,6 +730,7 @@ header {
           <button class="filter-chip" data-isector="tech" onclick="setInvestorSector('tech',this)">Tech Services</button>
           <button class="filter-chip" data-isector="media" onclick="setInvestorSector('media',this)">Media</button>
           <button class="filter-chip" data-isector="other" onclick="setInvestorSector('other',this)">Other</button>
+          <button class="filter-chip" data-isector="debt" onclick="setInvestorSector('debt',this)">Debt</button>
         </div>
         <div class="toolbar-row">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-muted);flex-shrink:0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -1160,6 +1161,7 @@ header {
           <option value="tech">Tech Services</option>
           <option value="media">Media</option>
           <option value="other">Other</option>
+          <option value="debt">Debt</option>
         </select>
       </div>
       <div class="form-group"><label class="form-label">Warmth <span class="form-opt">(optional)</span></label>
@@ -1536,9 +1538,10 @@ function updatePlaceLocUI(count) {
 // ═══════════════════════════════════════════════════════════════
 // ── Investor sector (market-map style filter on the Investors tab) ──
 let activeInvestorSector = 'all';
-const SECTOR_LABELS = { software:'Software', tech:'Tech Services', media:'Media', other:'Other' };
+const SECTOR_LABELS = { software:'Software', tech:'Tech Services', media:'Media', other:'Other', debt:'Debt' };
 function inferSector(c) {
   const t = `${c.org||''} ${c.role||''} ${c.tags||''} ${c.howMet||''} ${c.notes||''}`.toLowerCase();
+  if (/(\bdebt\b|credit|direct lending|mezzanine|\blender\b|high yield)/.test(t)) return 'debt';
   if (/(software|saas|\bvms\b|\berp\b|application)/.test(t)) return 'software';
   if (/(it services|tech|technolog|data center|datacenter|infrastructure|managed services|cyber|\bai\b|analytics|digital|cloud|data services)/.test(t)) return 'tech';
   if (/(media|advertis|content|gaming|entertainment|publish|telecom|broadcast)/.test(t)) return 'media';
