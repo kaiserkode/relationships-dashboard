@@ -717,12 +717,19 @@ header {
             <option value="added">Recently Added</option>
           </select>
         </div>
-        <div class="toolbar-row filter-chips-wrap">
+        <div class="toolbar-row filter-chips-wrap" id="rel-type-bar">
           <button class="filter-chip active" data-filter="all" onclick="setRelFilter('all',this)">All</button>
           <button class="filter-chip" data-filter="professional" onclick="setRelFilter('professional',this)">Professional</button>
           <button class="filter-chip" data-filter="personal" onclick="setRelFilter('personal',this)">Personal</button>
           <button class="filter-chip" data-filter="lead" onclick="setRelFilter('lead',this)">Prospects</button>
           <button class="filter-chip" data-filter="investor" onclick="setRelFilter('investor',this)">Investors</button>
+        </div>
+        <div class="toolbar-row filter-chips-wrap" id="investor-sector-bar" style="display:none">
+          <button class="filter-chip active" data-isector="all" onclick="setInvestorSector('all',this)">All</button>
+          <button class="filter-chip" data-isector="software" onclick="setInvestorSector('software',this)">Software</button>
+          <button class="filter-chip" data-isector="tech" onclick="setInvestorSector('tech',this)">Tech Services</button>
+          <button class="filter-chip" data-isector="media" onclick="setInvestorSector('media',this)">Media</button>
+          <button class="filter-chip" data-isector="other" onclick="setInvestorSector('other',this)">Other</button>
         </div>
         <div class="toolbar-row">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-muted);flex-shrink:0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -1146,6 +1153,15 @@ header {
           <option value="investor">Investor / Advisor</option>
         </select>
       </div>
+      <div class="form-group"><label class="form-label">Investor Focus <span class="form-opt">(sector)</span></label>
+        <select class="form-select" id="f-sector">
+          <option value="">Auto / Unset</option>
+          <option value="software">Software</option>
+          <option value="tech">Tech Services</option>
+          <option value="media">Media</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
       <div class="form-group"><label class="form-label">Warmth <span class="form-opt">(optional)</span></label>
         <div class="warmth-picker">
           <button class="warmth-btn" data-v="1" onclick="setWarmth(1)">1</button>
@@ -1518,10 +1534,32 @@ function updatePlaceLocUI(count) {
 // ═══════════════════════════════════════════════════════════════
 // RELATIONSHIPS — FILTER & RENDER
 // ═══════════════════════════════════════════════════════════════
+// ── Investor sector (market-map style filter on the Investors tab) ──
+let activeInvestorSector = 'all';
+const SECTOR_LABELS = { software:'Software', tech:'Tech Services', media:'Media', other:'Other' };
+function inferSector(c) {
+  const t = `${c.org||''} ${c.role||''} ${c.tags||''} ${c.howMet||''} ${c.notes||''}`.toLowerCase();
+  if (/(software|saas|\bvms\b|\berp\b|application)/.test(t)) return 'software';
+  if (/(it services|tech|technolog|data center|datacenter|infrastructure|managed services|cyber|\bai\b|analytics|digital|cloud|data services)/.test(t)) return 'tech';
+  if (/(media|advertis|content|gaming|entertainment|publish|telecom|broadcast)/.test(t)) return 'media';
+  return 'other';
+}
+function getInvestorSector(c) { return (c.sector && c.sector !== '') ? c.sector : inferSector(c); }
+function setInvestorSector(val, btn) {
+  activeInvestorSector = val;
+  document.querySelectorAll('#investor-sector-bar .filter-chip').forEach(c=>c.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderContacts();
+}
+
 function setRelFilter(val, btn) {
   activeRelFilter = val;
-  document.querySelectorAll('#screen-relationships .filter-chip').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('#rel-type-bar .filter-chip').forEach(c=>c.classList.remove('active'));
   btn.classList.add('active');
+  if(val !== 'investor') {
+    activeInvestorSector = 'all';
+    document.querySelectorAll('#investor-sector-bar .filter-chip').forEach(c=>c.classList.toggle('active', c.dataset.isector==='all'));
+  }
   renderContacts();
 }
 
@@ -1532,8 +1570,14 @@ function renderContacts() {
   const cf   = document.getElementById('rel-filter-city').value;
   const sf   = document.getElementById('rel-filter-state').value;
 
+  // Investor sector filter bar shows only on the Investors tab
+  const showInvestorBar = activeRelFilter === 'investor';
+  const isBar = document.getElementById('investor-sector-bar');
+  if(isBar) isBar.style.display = showInvestorBar ? '' : 'none';
+
   let list = contacts.filter(c => {
     if(activeRelFilter !== 'all' && c.type !== activeRelFilter) return false;
+    if(showInvestorBar && activeInvestorSector !== 'all' && getInvestorSector(c) !== activeInvestorSector) return false;
     if(cf && (c.city||'').toLowerCase() !== cf.toLowerCase()) return false;
     if(sf && (c.state||'').toLowerCase() !== sf.toLowerCase()) return false;
     if(q) {
@@ -1570,12 +1614,22 @@ function renderContacts() {
     const dueCls = days!==null?(days<0?'overdue':days<=7?'soon':''):'';
     const color  = avatarColor(c.first+c.last);
     const tags   = (c.tags||'').split(',').map(t=>t.trim()).filter(Boolean);
+    // Investors lead with the fund (org) as the primary name, the person as secondary
+    const isInvestor = c.type === 'investor';
+    const personName = `${escHtml(c.first)} ${escHtml(c.last||'')}`.trim();
+    const primaryName = (isInvestor && c.org) ? escHtml(c.org) : personName;
+    const subLine = (isInvestor && c.org)
+      ? [personName, escHtml(c.role||'')].filter(Boolean).join(' · ')
+      : (escHtml([c.role,c.org].filter(Boolean).join(' · '))||'—');
+    const sectorTag = isInvestor
+      ? `<span class="tag" style="background:rgba(99,102,241,0.15);color:var(--accent-light)">${SECTOR_LABELS[getInvestorSector(c)]}</span>`
+      : '';
     return `<div class="contact-card type-${c.type}" onclick="openContactDetail('${c.id}')">
       <div class="card-header">
         <div class="avatar" style="background:${color}22;color:${color}">${initials(c)}</div>
         <div style="flex:1;min-width:0">
-          <div class="card-name">${escHtml(c.first)} ${escHtml(c.last||'')}</div>
-          <div class="card-sub">${escHtml([c.role,c.org].filter(Boolean).join(' · ')||'—')}</div>
+          <div class="card-name">${primaryName}</div>
+          <div class="card-sub">${subLine}</div>
           ${warmthDots(c.warmth||0)}
         </div>
         <div class="type-badge type-${c.type}">${TYPE_LABELS[c.type]}</div>
@@ -1585,7 +1639,7 @@ function renderContacts() {
         ${c.followup?`<div class="meta-row ${dueCls}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Follow-up: ${relativeDate(days)}</div>`:''}
       </div>
       ${c.howMet?`<div class="card-snippet">"${escHtml(c.howMet)}"</div>`:''}
-      <div class="card-tags">${locTag(c.city,c.state)}${tags.map(t=>`<span class="tag">${escHtml(t)}</span>`).join('')}</div>
+      <div class="card-tags">${sectorTag}${locTag(c.city,c.state)}${tags.map(t=>`<span class="tag">${escHtml(t)}</span>`).join('')}</div>
     </div>`;
   }).join('');
   renderRelWidgets();
@@ -1713,6 +1767,7 @@ function openContactModal(id) {
   document.getElementById('f-last-contact').value = c?.lastContact||'';
   document.getElementById('f-followup').value     = c?.followup||'';
   document.getElementById('f-type').value         = c?.type||'professional';
+  document.getElementById('f-sector').value       = c?.sector||'';
   setWarmth(c?.warmth||3);
   document.getElementById('contact-modal-overlay').classList.remove('hidden');
 }
@@ -1743,6 +1798,7 @@ function saveContact() {
     email: document.getElementById('f-email').value.trim(),
     phone: document.getElementById('f-phone').value.trim(),
     type: document.getElementById('f-type').value,
+    sector: document.getElementById('f-sector').value,
     lastContact: document.getElementById('f-last-contact').value,
     followup: document.getElementById('f-followup').value,
     warmth: selectedWarmth,
