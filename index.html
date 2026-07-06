@@ -414,6 +414,18 @@ header {
 .place-card.cat-activity::before   { background: #10b981; }
 .place-card.cat-hotel::before      { background: #3b82f6; }
 .place-card.cat-other::before      { background: #a855f7; }
+.place-card.cat-golf::before       { background: #22c55e; }
+.place-card.cat-red::before        { background: #991b1b; }
+.place-card.cat-white::before      { background: #eab308; }
+.place-card.cat-whiskey::before    { background: #b45309; }
+.place-card.cat-tequila::before    { background: #06b6d4; }
+.place-card.cat-beer::before       { background: #fbbf24; }
+.cat-badge.cat-golf    { background: #052e16; color: #4ade80; }
+.cat-badge.cat-red     { background: #450a0a; color: #f87171; }
+.cat-badge.cat-white   { background: #422006; color: #fde047; }
+.cat-badge.cat-whiskey { background: #431407; color: #fbbf24; }
+.cat-badge.cat-tequila { background: #042f2e; color: #2dd4bf; }
+.cat-badge.cat-beer    { background: #451a03; color: #fcd34d; }
 .cat-badge.cat-restaurant { background: #431407; color: #fb923c; }
 .cat-badge.cat-bar        { background: #500724; color: #f9a8d4; }
 .cat-badge.cat-activity   { background: #064e3b; color: #34d399; }
@@ -656,6 +668,7 @@ header {
       <button class="app-tab" id="apptab-places" onclick="switchAppTab('places')">Places</button>
       <button class="app-tab" id="apptab-marketmap" onclick="switchAppTab('marketmap')">Market Map</button>
       <button class="app-tab" id="apptab-intel" onclick="switchAppTab('intel')">Intel</button>
+      <button class="app-tab" id="apptab-hobbies" onclick="switchAppTab('hobbies')">Hobbies</button>
     </div>
     <button class="btn btn-ghost btn-icon" id="mi-settings-btn" onclick="openSettings()" title="Manage Sub-Verticals" style="margin-right:4px;display:none">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -810,6 +823,31 @@ header {
       </div>
       <div class="card-area scroll-hidden">
         <div class="cards-grid" id="places-grid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Hobbies Screen ════════════════════════════════════════ -->
+<div class="screen hidden" id="screen-hobbies">
+  <div class="screen-inner">
+    <div class="content">
+      <div class="toolbar">
+        <div class="toolbar-row filter-chips-wrap">
+          <button class="filter-chip active" id="hobbytab-golf" onclick="switchHobbyKind('golf')">⛳ Golf</button>
+          <button class="filter-chip" id="hobbytab-alcohol" onclick="switchHobbyKind('alcohol')">🥃 Alcohol</button>
+        </div>
+        <div class="toolbar-row">
+          <div class="search-wrap">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input class="search-input" id="hobby-search" placeholder="Search golf courses…" oninput="renderHobbies()">
+          </div>
+        </div>
+        <div class="toolbar-row filter-chips-wrap" id="hobby-category-bar" style="display:none"></div>
+        <div class="toolbar-row filter-chips-wrap" id="hobby-status-bar"></div>
+      </div>
+      <div class="card-area scroll-hidden">
+        <div class="cards-grid" id="hobbies-grid"></div>
       </div>
     </div>
   </div>
@@ -1235,6 +1273,56 @@ header {
   </div>
 </div>
 
+<!-- ══ Hobby Modal (Golf / Alcohol) ══════════════════════════════ -->
+<div class="modal-overlay hidden" id="hobby-modal-overlay" onclick="if(event.target===this)closeHobbyModal()">
+  <div class="modal scroll-hidden" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="hobby-modal-title">Add Golf Course</div>
+      <button class="modal-close" onclick="closeHobbyModal()">×</button>
+    </div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">Fields marked <span style="color:#ef4444">*</span> are required</div>
+    <div class="form-grid">
+      <div class="form-group form-full"><label class="form-label" id="hobby-name-label">Course Name <span style="color:#ef4444">*</span></label><input class="form-input" id="hobby-name" placeholder="Pebble Beach Golf Links"></div>
+      <div class="form-group" id="hobby-city-group"><label class="form-label">City <span class="form-opt">(optional)</span></label><input class="form-input" id="hobby-city" placeholder="Pebble Beach"></div>
+      <div class="form-group" id="hobby-state-group"><label class="form-label">State <span class="form-opt">(optional)</span></label><input class="form-input" id="hobby-state" placeholder="CA"></div>
+      <div class="form-group form-full" id="hobby-category-group" style="display:none">
+        <label class="form-label">Type <span style="color:#ef4444">*</span></label>
+        <select class="form-select" id="hobby-category">
+          <option value="red">🍷 Red Wine</option>
+          <option value="white">🥂 White Wine</option>
+          <option value="whiskey">🥃 Whiskey</option>
+          <option value="tequila">🌵 Tequila</option>
+          <option value="beer">🍺 Beer</option>
+          <option value="other">🍹 Other</option>
+        </select>
+      </div>
+      <div class="section-div"><div class="section-div-label">Optional Details</div></div>
+      <div class="form-group form-full"><label class="form-label">Rating <span class="form-opt">(optional)</span></label>
+        <div class="star-picker" id="hobby-star-picker">
+          <button class="star-pick-btn" data-v="1" onclick="setHobbyStars(1)">★</button>
+          <button class="star-pick-btn" data-v="2" onclick="setHobbyStars(2)">★</button>
+          <button class="star-pick-btn" data-v="3" onclick="setHobbyStars(3)">★</button>
+          <button class="star-pick-btn" data-v="4" onclick="setHobbyStars(4)">★</button>
+          <button class="star-pick-btn" data-v="5" onclick="setHobbyStars(5)">★</button>
+        </div>
+      </div>
+      <div class="form-group form-full">
+        <div class="toggle-row">
+          <span class="toggle-label" id="hobby-status-label">Played</span>
+          <button class="toggle" id="hobby-status-toggle" onclick="toggleHobbyStatus()"></button>
+        </div>
+      </div>
+      <div class="form-group form-full"><label class="form-label">Tags <span class="form-opt">(optional, comma-separated)</span></label><input class="form-input" id="hobby-tags" placeholder="links course, bucket list"></div>
+      <div class="form-group form-full"><label class="form-label">Notes <span class="form-opt">(optional)</span></label><textarea class="form-textarea" id="hobby-notes" placeholder="Who you played with, tasting notes, must-try…"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeHobbyModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveHobby()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ Data / Backup Modal ════════════════════════════════════ -->
 <div class="modal-overlay hidden" id="data-modal-overlay" onclick="if(event.target===this)closeDataModal()">
   <div class="modal scroll-hidden" onclick="event.stopPropagation()">
@@ -1342,6 +1430,8 @@ header {
 // ═══════════════════════════════════════════════════════════════
 let contacts = JSON.parse(localStorage.getItem('relationships_v1') || '[]');
 let places   = JSON.parse(localStorage.getItem('places_v1') || '[]');
+let golf     = JSON.parse(localStorage.getItem('hobbies_golf_v1') || '[]');
+let drinks   = JSON.parse(localStorage.getItem('hobbies_alcohol_v1') || '[]');
 let activeRelFilter   = 'all';
 let activePlaceFilter = 'all';
 let selectedWarmth = 3;
@@ -1351,6 +1441,14 @@ let editingContactId = null;
 let editingPlaceId   = null;
 let activeAppTab  = 'relationships';
 let activeMobTab  = 'contacts';
+let activeHobbyKind     = 'golf';   // 'golf' | 'alcohol'
+let activeGolfStatus    = 'all';    // all | played | want
+let activeDrinkCategory = 'all';    // all | red | white | whiskey | tequila | beer | other
+let activeDrinkStatus   = 'all';    // all | tried | want
+let editingGolfId  = null;
+let editingDrinkId = null;
+let hobbySelectedStars = 0;
+let hobbyStatusOn = false;
 
 const WARMTH_COLORS = ['','#374151','#b45309','#d97706','#f59e0b','#10b981'];
 const WARMTH_LABELS = ['','Cold','Lukewarm','Warm','Close','Strong'];
@@ -1358,12 +1456,17 @@ const TYPE_LABELS   = { professional:'Professional', personal:'Personal', lead:'
 const CAT_LABELS    = { restaurant:'Restaurant', bar:'Bars / Nightlife', activity:'Activity', hotel:'Hotel', other:'Other' };
 const CAT_ICONS     = { restaurant:'🍽️', bar:'🍸', activity:'🎯', hotel:'🏨', other:'✨' };
 const CAT_BG        = { restaurant:'#431407', bar:'#500724', activity:'#064e3b', hotel:'#1e3a5f', other:'#4c1d95' };
+const DRINK_LABELS  = { red:'Red Wine', white:'White Wine', whiskey:'Whiskey', tequila:'Tequila', beer:'Beer', other:'Other' };
+const DRINK_ICONS   = { red:'🍷', white:'🥂', whiskey:'🥃', tequila:'🌵', beer:'🍺', other:'🍹' };
+const DRINK_BG       = { red:'#450a0a', white:'#422006', whiskey:'#431407', tequila:'#042f2e', beer:'#451a03', other:'#4c1d95' };
 
 // ═══════════════════════════════════════════════════════════════
 // PERSISTENCE
 // ═══════════════════════════════════════════════════════════════
 function saveContacts() { localStorage.setItem('relationships_v1', JSON.stringify(contacts)); }
 function savePlaces()   { localStorage.setItem('places_v1', JSON.stringify(places)); }
+function saveGolf()     { localStorage.setItem('hobbies_golf_v1', JSON.stringify(golf)); }
+function saveDrinks()   { localStorage.setItem('hobbies_alcohol_v1', JSON.stringify(drinks)); }
 function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1411,26 +1514,31 @@ function locTag(city, state) {
 // ═══════════════════════════════════════════════════════════════
 function switchAppTab(tab) {
   activeAppTab = tab;
-  const isRel = tab === 'relationships', isPl = tab === 'places';
+  const isRel = tab === 'relationships', isPl = tab === 'places', isHob = tab === 'hobbies';
   const isMM = tab === 'marketmap', isIntel = tab === 'intel';
   const isMI = isMM || isIntel;
   document.getElementById('screen-relationships').classList.toggle('hidden', !isRel);
   document.getElementById('screen-places').classList.toggle('hidden', !isPl);
+  document.getElementById('screen-hobbies').classList.toggle('hidden', !isHob);
   document.getElementById('mi-app').classList.toggle('hidden', !isMI);
-  ['relationships','places','marketmap','intel'].forEach(t => {
+  ['relationships','places','marketmap','intel','hobbies'].forEach(t => {
     const b = document.getElementById('apptab-' + t);
     if(b) b.classList.toggle('active', t === tab);
   });
-  const labels = { relationships:'Add Contact', places:'Add Place', marketmap:'Add Company', intel:'Add Deal' };
+  const labels = { relationships:'Add Contact', places:'Add Place', marketmap:'Add Company', intel:'Add Deal', hobbies: activeHobbyKind==='golf' ? 'Add Course' : 'Add Drink' };
   document.getElementById('header-add-label').textContent = labels[tab] || 'Add';
   // MI settings gear only on Market Intelligence tabs
   const gear = document.getElementById('mi-settings-btn');
   if(gear) gear.style.display = isMI ? '' : 'none';
-  // hide the relationship bottom-nav while in Market Intelligence
+  // hide the relationship bottom-nav while in Market Intelligence or Hobbies
   const bn = document.querySelector('.bottom-nav');
-  if(bn) bn.style.display = isMI ? 'none' : '';
+  if(bn) bn.style.display = (isMI || isHob) ? 'none' : '';
   if(isMI) {
     miSwitchPanel(isMM ? 'map' : 'deals');
+  } else if(isHob) {
+    renderHobbyCategoryBar();
+    renderHobbyStatusBar();
+    renderHobbies();
   } else if(isMobile()) {
     // reset mobile tab to contacts view when switching app tab
     switchMobileTab('contacts');
@@ -1441,6 +1549,7 @@ function openAddModal() {
   if(activeAppTab === 'places') openPlaceModal();
   else if(activeAppTab === 'marketmap') openAddCompany();
   else if(activeAppTab === 'intel') openAddDeal();
+  else if(activeAppTab === 'hobbies') openHobbyModal();
   else openContactModal();
 }
 
@@ -1531,6 +1640,305 @@ function updatePlaceLocUI(count) {
   const el = document.getElementById('places-loc-count');
   if(active) { el.textContent=`${count} place${count!==1?'s':''} in ${[cf,sf].filter(Boolean).join(', ')}`; el.style.display=''; }
   else el.style.display='none';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HOBBIES — GOLF & ALCOHOL
+// ═══════════════════════════════════════════════════════════════
+function switchHobbyKind(kind) {
+  activeHobbyKind = kind;
+  document.getElementById('hobbytab-golf').classList.toggle('active', kind==='golf');
+  document.getElementById('hobbytab-alcohol').classList.toggle('active', kind==='alcohol');
+  document.getElementById('hobby-search').placeholder = kind==='golf' ? 'Search golf courses…' : 'Search drinks…';
+  document.getElementById('hobby-search').value = '';
+  document.getElementById('header-add-label').textContent = kind==='golf' ? 'Add Course' : 'Add Drink';
+  renderHobbyCategoryBar();
+  renderHobbyStatusBar();
+  renderHobbies();
+}
+
+function renderHobbyCategoryBar() {
+  const bar = document.getElementById('hobby-category-bar');
+  if (activeHobbyKind !== 'alcohol') { bar.style.display = 'none'; bar.innerHTML = ''; return; }
+  bar.style.display = '';
+  bar.innerHTML = '';
+  [['all','All'],['red','Red Wine'],['white','White Wine'],['whiskey','Whiskey'],['tequila','Tequila'],['beer','Beer'],['other','Other']].forEach(([val,label]) => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-chip' + (activeDrinkCategory===val ? ' active' : '');
+    btn.textContent = label;
+    btn.onclick = () => { activeDrinkCategory = val; renderHobbyCategoryBar(); renderHobbies(); };
+    bar.appendChild(btn);
+  });
+}
+
+function renderHobbyStatusBar() {
+  const bar = document.getElementById('hobby-status-bar');
+  bar.innerHTML = '';
+  const opts = activeHobbyKind==='golf'
+    ? [['all','All'],['played','Played'],['want','Want to Play']]
+    : [['all','All'],['tried','Tried'],['want','Want to Try']];
+  const active = activeHobbyKind==='golf' ? activeGolfStatus : activeDrinkStatus;
+  opts.forEach(([val,label]) => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-chip' + (active===val ? ' active' : '');
+    btn.textContent = label;
+    btn.onclick = () => {
+      if(activeHobbyKind==='golf') activeGolfStatus = val; else activeDrinkStatus = val;
+      renderHobbyStatusBar(); renderHobbies();
+    };
+    bar.appendChild(btn);
+  });
+}
+
+function renderHobbies() {
+  const q = document.getElementById('hobby-search').value.toLowerCase();
+  const grid = document.getElementById('hobbies-grid');
+
+  if (activeHobbyKind === 'golf') {
+    let list = golf.filter(g => {
+      if(activeGolfStatus!=='all' && g.status!==activeGolfStatus) return false;
+      if(q) { const s=`${g.name} ${g.city} ${g.state} ${g.tags} ${g.notes}`.toLowerCase(); if(!s.includes(q)) return false; }
+      return true;
+    });
+    list.sort((a,b) => (a.name||'').localeCompare(b.name||''));
+
+    if(!list.length) {
+      grid.innerHTML = `<div class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        <h3>${golf.length===0?'No golf courses yet':'No results'}</h3>
+        <p style="font-size:13px">${golf.length===0?'Tap Add Course to get started.':'Try a different search or filter.'}</p>
+      </div>`;
+      return;
+    }
+
+    grid.innerHTML = list.map(g => {
+      const tags = (g.tags||'').split(',').map(t=>t.trim()).filter(Boolean);
+      return `<div class="place-card cat-golf" onclick="openGolfDetail('${g.id}')">
+        <div class="card-header">
+          <div class="place-icon" style="background:#052e16">⛳</div>
+          <div style="flex:1;min-width:0">
+            <div class="place-name">${escHtml(g.name)}</div>
+            <div class="place-loc">${escHtml([g.city,g.state].filter(Boolean).join(', ')||'—')}</div>
+            ${g.rating ? starRow(g.rating) : ''}
+          </div>
+          <span class="visited-badge ${g.status==='played'?'visited-yes':'visited-no'}">${g.status==='played'?'Played':'Want to Play'}</span>
+        </div>
+        ${g.notes?`<div class="card-snippet">${escHtml(g.notes)}</div>`:''}
+        <div class="card-tags">${tags.map(t=>`<span class="tag">${escHtml(t)}</span>`).join('')}</div>
+      </div>`;
+    }).join('');
+
+  } else {
+    let list = drinks.filter(d => {
+      if(activeDrinkCategory!=='all' && d.category!==activeDrinkCategory) return false;
+      if(activeDrinkStatus!=='all' && d.status!==activeDrinkStatus) return false;
+      if(q) { const s=`${d.name} ${DRINK_LABELS[d.category]||''} ${d.tags} ${d.notes}`.toLowerCase(); if(!s.includes(q)) return false; }
+      return true;
+    });
+    list.sort((a,b) => (a.name||'').localeCompare(b.name||''));
+
+    if(!list.length) {
+      grid.innerHTML = `<div class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 3h14l-1 8a6 6 0 0 1-12 0L5 3z"/><path d="M12 17v4M8 21h8"/></svg>
+        <h3>${drinks.length===0?'No drinks saved yet':'No results'}</h3>
+        <p style="font-size:13px">${drinks.length===0?'Tap Add Drink to get started.':'Try a different search or filter.'}</p>
+      </div>`;
+      return;
+    }
+
+    grid.innerHTML = list.map(d => {
+      const tags = (d.tags||'').split(',').map(t=>t.trim()).filter(Boolean);
+      const bg = DRINK_BG[d.category]||'#1a1d27';
+      return `<div class="place-card cat-${d.category}" onclick="openDrinkDetail('${d.id}')">
+        <div class="card-header">
+          <div class="place-icon" style="background:${bg}">${DRINK_ICONS[d.category]||'🍹'}</div>
+          <div style="flex:1;min-width:0">
+            <div class="place-name">${escHtml(d.name)}</div>
+            <div class="place-loc">${DRINK_LABELS[d.category]||''}</div>
+            ${d.rating ? starRow(d.rating) : ''}
+          </div>
+          <span class="visited-badge ${d.status==='tried'?'visited-yes':'visited-no'}">${d.status==='tried'?'Tried':'Want to Try'}</span>
+        </div>
+        ${d.notes?`<div class="card-snippet">${escHtml(d.notes)}</div>`:''}
+        <div class="card-tags">
+          <span class="tag cat-badge cat-${d.category}">${DRINK_LABELS[d.category]}</span>
+          ${tags.map(t=>`<span class="tag">${escHtml(t)}</span>`).join('')}
+        </div>
+      </div>`;
+    }).join('');
+  }
+}
+
+function openHobbyModal(id) {
+  const kind = activeHobbyKind;
+  if (kind === 'golf') {
+    editingGolfId = id || null;
+    const g = id ? golf.find(x=>x.id===id) : null;
+    document.getElementById('hobby-modal-title').textContent = g ? 'Edit Golf Course' : 'Add Golf Course';
+    document.getElementById('hobby-name-label').textContent = 'Course Name';
+    document.getElementById('hobby-name').placeholder = 'Pebble Beach Golf Links';
+    document.getElementById('hobby-name').value = g ? (g.name||'') : '';
+    document.getElementById('hobby-city-group').style.display = '';
+    document.getElementById('hobby-state-group').style.display = '';
+    document.getElementById('hobby-city').value = g ? (g.city||'') : '';
+    document.getElementById('hobby-state').value = g ? (g.state||'') : '';
+    document.getElementById('hobby-category-group').style.display = 'none';
+    document.getElementById('hobby-status-label').textContent = 'Played';
+    hobbyStatusOn = g ? g.status==='played' : false;
+    document.getElementById('hobby-tags').value = g ? (g.tags||'') : '';
+    document.getElementById('hobby-notes').value = g ? (g.notes||'') : '';
+    setHobbyStars(g ? (g.rating||0) : 0);
+  } else {
+    editingDrinkId = id || null;
+    const d = id ? drinks.find(x=>x.id===id) : null;
+    document.getElementById('hobby-modal-title').textContent = d ? 'Edit Drink' : 'Add Drink';
+    document.getElementById('hobby-name-label').textContent = 'Name';
+    document.getElementById('hobby-name').placeholder = 'Buffalo Trace';
+    document.getElementById('hobby-name').value = d ? (d.name||'') : '';
+    document.getElementById('hobby-city-group').style.display = 'none';
+    document.getElementById('hobby-state-group').style.display = 'none';
+    document.getElementById('hobby-category-group').style.display = '';
+    document.getElementById('hobby-category').value = d ? (d.category||'red') : 'red';
+    document.getElementById('hobby-status-label').textContent = 'Tried';
+    hobbyStatusOn = d ? d.status==='tried' : false;
+    document.getElementById('hobby-tags').value = d ? (d.tags||'') : '';
+    document.getElementById('hobby-notes').value = d ? (d.notes||'') : '';
+    setHobbyStars(d ? (d.rating||0) : 0);
+  }
+  document.getElementById('hobby-status-toggle').classList.toggle('on', hobbyStatusOn);
+  document.getElementById('hobby-modal-overlay').classList.remove('hidden');
+}
+function closeHobbyModal() { document.getElementById('hobby-modal-overlay').classList.add('hidden'); }
+
+function setHobbyStars(val) {
+  hobbySelectedStars = val;
+  document.querySelectorAll('#hobby-star-picker .star-pick-btn').forEach(b=>{
+    b.classList.toggle('selected', parseInt(b.dataset.v)<=val);
+  });
+}
+function toggleHobbyStatus() {
+  hobbyStatusOn = !hobbyStatusOn;
+  document.getElementById('hobby-status-toggle').classList.toggle('on', hobbyStatusOn);
+}
+
+function saveHobby() {
+  const name = document.getElementById('hobby-name').value.trim();
+  if(!name) { alert(activeHobbyKind==='golf' ? 'Course name is required.' : 'Name is required.'); return; }
+
+  if (activeHobbyKind === 'golf') {
+    const data = {
+      name,
+      city: document.getElementById('hobby-city').value.trim(),
+      state: document.getElementById('hobby-state').value.trim(),
+      status: hobbyStatusOn ? 'played' : 'want',
+      rating: hobbySelectedStars,
+      tags: document.getElementById('hobby-tags').value.trim(),
+      notes: document.getElementById('hobby-notes').value.trim(),
+    };
+    if(editingGolfId) {
+      const i = golf.findIndex(g=>g.id===editingGolfId);
+      if(i>=0) golf[i] = {...golf[i], ...data};
+    } else {
+      golf.push({id:genId(), added:new Date().toISOString(), ...data});
+    }
+    saveGolf();
+  } else {
+    const data = {
+      name,
+      category: document.getElementById('hobby-category').value,
+      status: hobbyStatusOn ? 'tried' : 'want',
+      rating: hobbySelectedStars,
+      tags: document.getElementById('hobby-tags').value.trim(),
+      notes: document.getElementById('hobby-notes').value.trim(),
+    };
+    if(editingDrinkId) {
+      const i = drinks.findIndex(d=>d.id===editingDrinkId);
+      if(i>=0) drinks[i] = {...drinks[i], ...data};
+    } else {
+      drinks.push({id:genId(), added:new Date().toISOString(), ...data});
+    }
+    saveDrinks();
+  }
+  closeHobbyModal();
+  renderHobbies();
+}
+
+function openGolfDetail(id) {
+  const g = golf.find(x=>x.id===id); if(!g) return;
+  const tags = (g.tags||'').split(',').map(t=>t.trim()).filter(Boolean);
+  const loc  = [g.city,g.state].filter(Boolean).join(', ');
+
+  document.getElementById('detail-header').innerHTML = `
+    <div class="detail-place-icon" style="background:#052e16">⛳</div>
+    <div style="flex:1;min-width:0">
+      <div class="detail-name">${escHtml(g.name)}</div>
+      <div class="detail-sub">Golf Course</div>
+      ${loc?`<div style="font-size:12px;color:#818cf8;margin-top:2px">📍 ${escHtml(loc)}</div>`:''}
+      <div style="margin-top:5px;display:flex;align-items:center;gap:8px">
+        ${g.rating?starRow(g.rating):''}
+        <span class="visited-badge ${g.status==='played'?'visited-yes':'visited-no'}">${g.status==='played'?'✓ Played':'Want to Play'}</span>
+      </div>
+    </div>
+    <div class="detail-actions">
+      <button class="action-btn action-btn-edit" onclick="closeDetail();openHobbyModal('${g.id}')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit
+      </button>
+      <button class="action-btn action-btn-delete" onclick="confirmDelete('${g.id}','golf')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg> Delete
+      </button>
+    </div>`;
+
+  document.getElementById('detail-body').innerHTML = `
+    ${g.notes?`<div><div class="detail-section-title">Notes</div><div class="detail-notes-text">${escHtml(g.notes).replace(/\n/g,'<br>')}</div></div>`:''}
+    ${tags.length?`<div><div class="detail-section-title">Tags</div><div class="detail-tags">${tags.map(t=>`<span class="tag">${escHtml(t)}</span>`).join('')}</div></div>`:''}
+    <div style="font-size:11px;color:var(--text-muted)">Added ${formatDate(g.added?.slice(0,10))}</div>`;
+
+  document.getElementById('detail-footer').innerHTML = '';
+  showDetail();
+}
+
+function openDrinkDetail(id) {
+  const d = drinks.find(x=>x.id===id); if(!d) return;
+  const tags = (d.tags||'').split(',').map(t=>t.trim()).filter(Boolean);
+  const bg = DRINK_BG[d.category]||'#1a1d27';
+
+  document.getElementById('detail-header').innerHTML = `
+    <div class="detail-place-icon" style="background:${bg}">${DRINK_ICONS[d.category]||'🍹'}</div>
+    <div style="flex:1;min-width:0">
+      <div class="detail-name">${escHtml(d.name)}</div>
+      <div class="detail-sub">${DRINK_LABELS[d.category]||''}</div>
+      <div style="margin-top:5px;display:flex;align-items:center;gap:8px">
+        ${d.rating?starRow(d.rating):''}
+        <span class="visited-badge ${d.status==='tried'?'visited-yes':'visited-no'}">${d.status==='tried'?'✓ Tried':'Want to Try'}</span>
+      </div>
+    </div>
+    <div class="detail-actions">
+      <button class="action-btn action-btn-edit" onclick="closeDetail();openHobbyModal('${d.id}')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit
+      </button>
+      <button class="action-btn action-btn-delete" onclick="confirmDelete('${d.id}','alcohol')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg> Delete
+      </button>
+    </div>`;
+
+  document.getElementById('detail-body').innerHTML = `
+    ${d.notes?`<div><div class="detail-section-title">Notes</div><div class="detail-notes-text">${escHtml(d.notes).replace(/\n/g,'<br>')}</div></div>`:''}
+    ${tags.length?`<div><div class="detail-section-title">Tags</div><div class="detail-tags">${tags.map(t=>`<span class="tag">${escHtml(t)}</span>`).join('')}</div></div>`:''}
+    <div style="font-size:11px;color:var(--text-muted)">Added ${formatDate(d.added?.slice(0,10))}</div>`;
+
+  document.getElementById('detail-footer').innerHTML = '';
+  showDetail();
+}
+
+function doDeleteGolf(id) {
+  golf = golf.filter(g=>g.id!==id);
+  saveGolf(); closeDetail();
+  renderHobbies();
+}
+function doDeleteDrink(id) {
+  drinks = drinks.filter(d=>d.id!==id);
+  saveDrinks(); closeDetail();
+  renderHobbies();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1991,6 +2399,8 @@ function confirmDelete(id, type) {
   newConfirm.addEventListener('click', () => {
     modal.style.display = 'none';
     if (type === 'contact') doDeleteContact(id);
+    else if (type === 'golf') doDeleteGolf(id);
+    else if (type === 'alcohol') doDeleteDrink(id);
     else doDeletePlace(id);
   });
   newCancel.addEventListener('click', () => {
@@ -2049,12 +2459,14 @@ function exportJSON(scope) {
     companies: (typeof companies !== 'undefined') ? companies : [],
     deals: (typeof deals !== 'undefined') ? deals : [],
     subgroups: (typeof SUBGROUPS !== 'undefined') ? SUBGROUPS : undefined,
+    golf: (typeof golf !== 'undefined') ? golf : [],
+    drinks: (typeof drinks !== 'undefined') ? drinks : [],
   };
   const json = JSON.stringify(payload, null, 2);
   const filename = `my-world-backup-${new Date().toISOString().slice(0,10)}.json`;
   downloadFile(json, filename, 'application/json');
   localStorage.setItem('last_backup_ts', new Date().toISOString());
-  showDataStatus(`✓ Backup exported — ${contacts.length} contacts, ${places.length} places, ${payload.companies.length} companies. Save this file somewhere safe!`, true);
+  showDataStatus(`✓ Backup exported — ${contacts.length} contacts, ${places.length} places, ${payload.companies.length} companies, ${payload.golf.length} golf courses, ${payload.drinks.length} drinks. Save this file somewhere safe!`, true);
   updateLastBackupInfo();
 }
 
@@ -2226,12 +2638,12 @@ function importJSON(event) {
       const data = JSON.parse(e.target.result);
 
       // Validate
-      if (!data.contacts && !data.places && !data.companies && !data.deals) {
+      if (!data.contacts && !data.places && !data.companies && !data.deals && !data.golf && !data.drinks) {
         showDataStatus('❌ Invalid file — this does not look like a My World backup.', false);
         return;
       }
 
-      let addedContacts = 0, addedPlaces = 0, addedCompanies = 0, addedDeals = 0;
+      let addedContacts = 0, addedPlaces = 0, addedCompanies = 0, addedDeals = 0, addedGolf = 0, addedDrinks = 0;
 
       // Merge contacts (skip any with same id to avoid duplicates)
       if (Array.isArray(data.contacts)) {
@@ -2277,11 +2689,30 @@ function importJSON(event) {
         saveSubgroups();
       }
 
+      // Merge golf courses (skip duplicate ids)
+      if (Array.isArray(data.golf)) {
+        const existingIds = new Set(golf.map(g => g.id));
+        const newGolf = data.golf.filter(g => !existingIds.has(g.id));
+        golf = [...golf, ...newGolf];
+        addedGolf = newGolf.length;
+        saveGolf();
+      }
+
+      // Merge alcohol entries (skip duplicate ids)
+      if (Array.isArray(data.drinks)) {
+        const existingIds = new Set(drinks.map(d => d.id));
+        const newDrinks = data.drinks.filter(d => !existingIds.has(d.id));
+        drinks = [...drinks, ...newDrinks];
+        addedDrinks = newDrinks.length;
+        saveDrinks();
+      }
+      if (activeAppTab === 'hobbies') renderHobbies();
+
       // Re-render the Market Map / Intel feeds if those functions are loaded
       if (typeof renderAll === 'function') renderAll();
 
       showDataStatus(
-        `✓ Restore complete — added ${addedContacts} contact${addedContacts!==1?'s':''}, ${addedPlaces} place${addedPlaces!==1?'s':''}, ${addedCompanies} compan${addedCompanies!==1?'ies':'y'}, and ${addedDeals} deal${addedDeals!==1?'s':''}.`,
+        `✓ Restore complete — added ${addedContacts} contact${addedContacts!==1?'s':''}, ${addedPlaces} place${addedPlaces!==1?'s':''}, ${addedCompanies} compan${addedCompanies!==1?'ies':'y'}, ${addedDeals} deal${addedDeals!==1?'s':''}, ${addedGolf} golf course${addedGolf!==1?'s':''}, and ${addedDrinks} drink${addedDrinks!==1?'s':''}.`,
         true
       );
 
@@ -2300,7 +2731,7 @@ function importJSON(event) {
 document.addEventListener('keydown', e => {
   if(e.key==='Escape') {
     document.getElementById('delete-modal').style.display = 'none';
-    closeContactModal(); closePlaceModal(); closeDetail(); closeDataModal();
+    closeContactModal(); closePlaceModal(); closeHobbyModal(); closeDetail(); closeDataModal();
   }
 });
 
