@@ -1825,7 +1825,7 @@ function openPlaceModal(id) {
   const p = id ? places.find(x=>x.id===id) : null;
   document.getElementById('place-modal-title').textContent = p ? 'Edit Place' : 'Add Place';
   ['name','city','state','address','website','tags','notes'].forEach(f=>{
-    document.getElementById('p-'+f).value = p?.(p[f]||'') ?? '';
+    document.getElementById('p-'+f).value = p ? (p[f]||'') : '';
   });
   document.getElementById('p-category').value = p?.category||'restaurant';
   setStars(p?.rating||0);
