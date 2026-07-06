@@ -467,6 +467,17 @@ header {
   .form-full, .section-div { grid-column: 1; }
 }
 
+/* Phone-width header: shrink tab pills and collapse the Add button to an
+   icon so more of the 5-tab row (Contacts/Places/Market/Intel/Hobbies)
+   fits without scrolling. */
+@media (max-width: 480px) {
+  .app-tab { padding: 5px 9px; font-size: 12.5px; }
+  .app-tabs { gap: 3px; }
+  #header-add-label { display: none; }
+  #header-add-btn { padding: 8px; }
+  #header-add-btn svg { width: 15px; height: 15px; }
+}
+
 /* ════════════════════════════════════════════════════════════════
    MARKET INTELLIGENCE — all rules scoped under #mi-app so they never
    collide with the relationship dashboard's own classes.
@@ -664,9 +675,9 @@ header {
 <header>
   <div class="header-top">
     <div class="app-tabs">
-      <button class="app-tab active" id="apptab-relationships" onclick="switchAppTab('relationships')">Relationships</button>
+      <button class="app-tab active" id="apptab-relationships" onclick="switchAppTab('relationships')">Contacts</button>
       <button class="app-tab" id="apptab-places" onclick="switchAppTab('places')">Places</button>
-      <button class="app-tab" id="apptab-marketmap" onclick="switchAppTab('marketmap')">Market Map</button>
+      <button class="app-tab" id="apptab-marketmap" onclick="switchAppTab('marketmap')">Market</button>
       <button class="app-tab" id="apptab-intel" onclick="switchAppTab('intel')">Intel</button>
       <button class="app-tab" id="apptab-hobbies" onclick="switchAppTab('hobbies')">Hobbies</button>
     </div>
