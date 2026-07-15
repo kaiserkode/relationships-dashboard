@@ -407,6 +407,10 @@ header {
 .type-badge.type-personal     { background: #064e3b; color: #34d399; }
 .type-badge.type-lead         { background: #78350f; color: #fbbf24; }
 .type-badge.type-investor     { background: #4c1d95; color: #c084fc; }
+.type-badge.idea-new     { background: #1e3a5f; color: #60a5fa; }
+.type-badge.idea-active  { background: #064e3b; color: #34d399; }
+.type-badge.idea-parked  { background: #3f3f46; color: #a1a1aa; }
+.type-badge.idea-done    { background: #4c1d95; color: #c084fc; }
 
 /* Place category colors */
 .place-card.cat-restaurant::before { background: #f97316; }
@@ -416,6 +420,7 @@ header {
 .place-card.cat-other::before      { background: #a855f7; }
 .place-card.cat-golf::before       { background: #22c55e; }
 .place-card.cat-cooking::before    { background: #f97316; }
+.place-card.cat-idea::before       { background: #eab308; }
 .place-card.cat-red::before        { background: #991b1b; }
 .place-card.cat-white::before      { background: #eab308; }
 .place-card.cat-whiskey::before    { background: #b45309; }
@@ -681,6 +686,7 @@ header {
       <button class="app-tab" id="apptab-marketmap" onclick="switchAppTab('marketmap')">Market</button>
       <button class="app-tab" id="apptab-intel" onclick="switchAppTab('intel')">Intel</button>
       <button class="app-tab" id="apptab-hobbies" onclick="switchAppTab('hobbies')">Hobbies</button>
+      <button class="app-tab" id="apptab-ideas" onclick="switchAppTab('ideas')">Ideas</button>
     </div>
     <button class="btn btn-ghost btn-icon" id="mi-settings-btn" onclick="openSettings()" title="Manage Sub-Verticals" style="margin-right:4px;display:none">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -862,6 +868,37 @@ header {
       </div>
       <div class="card-area scroll-hidden">
         <div class="cards-grid" id="hobbies-grid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Ideas Screen ══════════════════════════════════════════ -->
+<div class="screen hidden" id="screen-ideas">
+  <div class="screen-inner">
+    <div class="content">
+      <div class="toolbar">
+        <div class="toolbar-row">
+          <div class="search-wrap">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input class="search-input" id="ideas-search" placeholder="Search ideas…" oninput="renderIdeas()">
+          </div>
+          <select class="sort-select" id="ideas-sort" onchange="renderIdeas()">
+            <option value="updated">Last Updated</option>
+            <option value="added">Recently Added</option>
+            <option value="title">Title</option>
+          </select>
+        </div>
+        <div class="toolbar-row filter-chips-wrap" id="idea-status-bar">
+          <button class="filter-chip active" data-istatus="all" onclick="setIdeaStatus('all',this)">All</button>
+          <button class="filter-chip" data-istatus="new" onclick="setIdeaStatus('new',this)">New</button>
+          <button class="filter-chip" data-istatus="active" onclick="setIdeaStatus('active',this)">Active</button>
+          <button class="filter-chip" data-istatus="parked" onclick="setIdeaStatus('parked',this)">Parked</button>
+          <button class="filter-chip" data-istatus="done" onclick="setIdeaStatus('done',this)">Done</button>
+        </div>
+      </div>
+      <div class="card-area scroll-hidden">
+        <div class="cards-grid" id="ideas-grid"></div>
       </div>
     </div>
   </div>
@@ -1337,6 +1374,35 @@ header {
   </div>
 </div>
 
+<!-- ══ Idea Modal ═════════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="idea-modal-overlay" onclick="if(event.target===this)closeIdeaModal()">
+  <div class="modal scroll-hidden" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="idea-modal-title">Add Idea</div>
+      <button class="modal-close" onclick="closeIdeaModal()">×</button>
+    </div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">Fields marked <span style="color:#ef4444">*</span> are required</div>
+    <div class="form-grid">
+      <div class="form-group form-full"><label class="form-label">Title <span style="color:#ef4444">*</span></label><input class="form-input" id="idea-title" placeholder="Data center services white paper"></div>
+      <div class="form-group form-full"><label class="form-label">Status</label>
+        <select class="form-select" id="idea-status">
+          <option value="new">New</option>
+          <option value="active">Active</option>
+          <option value="parked">Parked</option>
+          <option value="done">Done</option>
+        </select>
+      </div>
+      <div class="form-group form-full"><label class="form-label">Tags <span class="form-opt">(optional, comma-separated)</span></label><input class="form-input" id="idea-tags" placeholder="content, data center, thought leadership"></div>
+      <div class="form-group form-full"><label class="form-label">Details <span class="form-opt">(edit and refine anytime)</span></label><textarea class="form-textarea" id="idea-notes" style="min-height:160px" placeholder="Outline, angle, who to involve, next steps…"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeIdeaModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveIdea()">Save Idea</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ Data / Backup Modal ════════════════════════════════════ -->
 <div class="modal-overlay hidden" id="data-modal-overlay" onclick="if(event.target===this)closeDataModal()">
   <div class="modal scroll-hidden" onclick="event.stopPropagation()">
@@ -1448,6 +1514,7 @@ let golf     = JSON.parse(localStorage.getItem('hobbies_golf_v1') || '[]');
 let drinks   = JSON.parse(localStorage.getItem('hobbies_alcohol_v1') || '[]');
 let cooking  = JSON.parse(localStorage.getItem('hobbies_cooking_v1') || '[]');
 let otherHobbies = JSON.parse(localStorage.getItem('hobbies_other_v1') || '[]');
+let ideas    = JSON.parse(localStorage.getItem('ideas_v1') || '[]');
 let activeRelFilter   = 'all';
 let activePlaceFilter = 'all';
 let selectedWarmth = 3;
@@ -1463,6 +1530,8 @@ let activeDrinkCategory = 'all';    // all | red | white | whiskey | tequila | b
 let editingHobbyId = null;
 let hobbySelectedStars = 0;
 let hobbyStatusOn = false;
+let activeIdeaStatus = 'all';
+let editingIdeaId = null;
 
 const WARMTH_COLORS = ['','#374151','#b45309','#d97706','#f59e0b','#10b981'];
 const WARMTH_LABELS = ['','Cold','Lukewarm','Warm','Close','Strong'];
@@ -1473,6 +1542,7 @@ const CAT_BG        = { restaurant:'#431407', bar:'#500724', activity:'#064e3b',
 const DRINK_LABELS  = { red:'Red Wine', white:'White Wine', whiskey:'Whiskey', tequila:'Tequila', beer:'Beer', other:'Other' };
 const DRINK_ICONS   = { red:'🍷', white:'🥂', whiskey:'🥃', tequila:'🌵', beer:'🍺', other:'🍹' };
 const DRINK_BG       = { red:'#450a0a', white:'#422006', whiskey:'#431407', tequila:'#042f2e', beer:'#451a03', other:'#4c1d95' };
+const IDEA_STATUS_LABELS = { new:'New', active:'Active', parked:'Parked', done:'Done' };
 
 // ═══════════════════════════════════════════════════════════════
 // PERSISTENCE
@@ -1483,6 +1553,7 @@ function saveGolf()     { localStorage.setItem('hobbies_golf_v1', JSON.stringify
 function saveDrinks()   { localStorage.setItem('hobbies_alcohol_v1', JSON.stringify(drinks)); }
 function saveCooking()  { localStorage.setItem('hobbies_cooking_v1', JSON.stringify(cooking)); }
 function saveOtherHobbies() { localStorage.setItem('hobbies_other_v1', JSON.stringify(otherHobbies)); }
+function saveIdeas() { localStorage.setItem('ideas_v1', JSON.stringify(ideas)); }
 function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1530,31 +1601,34 @@ function locTag(city, state) {
 // ═══════════════════════════════════════════════════════════════
 function switchAppTab(tab) {
   activeAppTab = tab;
-  const isRel = tab === 'relationships', isPl = tab === 'places', isHob = tab === 'hobbies';
+  const isRel = tab === 'relationships', isPl = tab === 'places', isHob = tab === 'hobbies', isIdeas = tab === 'ideas';
   const isMM = tab === 'marketmap', isIntel = tab === 'intel';
   const isMI = isMM || isIntel;
   document.getElementById('screen-relationships').classList.toggle('hidden', !isRel);
   document.getElementById('screen-places').classList.toggle('hidden', !isPl);
   document.getElementById('screen-hobbies').classList.toggle('hidden', !isHob);
+  document.getElementById('screen-ideas').classList.toggle('hidden', !isIdeas);
   document.getElementById('mi-app').classList.toggle('hidden', !isMI);
-  ['relationships','places','marketmap','intel','hobbies'].forEach(t => {
+  ['relationships','places','marketmap','intel','hobbies','ideas'].forEach(t => {
     const b = document.getElementById('apptab-' + t);
     if(b) b.classList.toggle('active', t === tab);
   });
-  const labels = { relationships:'Add Contact', places:'Add Place', marketmap:'Add Company', intel:'Add Deal', hobbies: activeHobbyKind==='golf' ? 'Add Course' : 'Add Drink' };
+  const labels = { relationships:'Add Contact', places:'Add Place', marketmap:'Add Company', intel:'Add Deal', hobbies: 'Add ' + (HOBBY_META[activeHobbyKind] ? HOBBY_META[activeHobbyKind].singular : ''), ideas:'Add Idea' };
   document.getElementById('header-add-label').textContent = labels[tab] || 'Add';
   // MI settings gear only on Market Intelligence tabs
   const gear = document.getElementById('mi-settings-btn');
   if(gear) gear.style.display = isMI ? '' : 'none';
-  // hide the relationship bottom-nav while in Market Intelligence or Hobbies
+  // hide the relationship bottom-nav while in Market Intelligence, Hobbies, or Ideas
   const bn = document.querySelector('.bottom-nav');
-  if(bn) bn.style.display = (isMI || isHob) ? 'none' : '';
+  if(bn) bn.style.display = (isMI || isHob || isIdeas) ? 'none' : '';
   if(isMI) {
     miSwitchPanel(isMM ? 'map' : 'deals');
   } else if(isHob) {
     renderHobbyCategoryBar();
     renderHobbyStatusBar();
     renderHobbies();
+  } else if(isIdeas) {
+    renderIdeas();
   } else if(isMobile()) {
     // reset mobile tab to contacts view when switching app tab
     switchMobileTab('contacts');
@@ -1566,6 +1640,7 @@ function openAddModal() {
   else if(activeAppTab === 'marketmap') openAddCompany();
   else if(activeAppTab === 'intel') openAddDeal();
   else if(activeAppTab === 'hobbies') openHobbyModal();
+  else if(activeAppTab === 'ideas') openIdeaModal();
   else openContactModal();
 }
 
@@ -1908,6 +1983,131 @@ function doDeleteHobby(kind, id) {
   saveHobbyList(kind);
   closeDetail();
   renderHobbies();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// IDEAS
+// ═══════════════════════════════════════════════════════════════
+function setIdeaStatus(val, btn) {
+  activeIdeaStatus = val;
+  document.querySelectorAll('#idea-status-bar .filter-chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  renderIdeas();
+}
+
+function renderIdeas() {
+  const q = document.getElementById('ideas-search').value.toLowerCase();
+  const sort = document.getElementById('ideas-sort').value;
+  const grid = document.getElementById('ideas-grid');
+
+  let list = ideas.filter(i => {
+    if(activeIdeaStatus!=='all' && i.status!==activeIdeaStatus) return false;
+    if(q) { const s = `${i.title} ${i.tags} ${i.notes}`.toLowerCase(); if(!s.includes(q)) return false; }
+    return true;
+  });
+
+  list.sort((a,b) => {
+    if(sort==='title') return (a.title||'').localeCompare(b.title||'');
+    if(sort==='added') return new Date(b.added)-new Date(a.added);
+    return new Date(b.updated||b.added)-new Date(a.updated||a.added); // 'updated' default
+  });
+
+  if(!list.length) {
+    grid.innerHTML = `<div class="empty-state">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>
+      <h3>${ideas.length===0?'No ideas yet':'No results'}</h3>
+      <p style="font-size:13px">${ideas.length===0?'Tap Add Idea to capture your first one.':'Try a different search or filter.'}</p>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map(i => {
+    const tags = (i.tags||'').split(',').map(t=>t.trim()).filter(Boolean);
+    const preview = (i.notes||'').slice(0,140);
+    return `<div class="place-card cat-idea" onclick="openIdeaDetail('${i.id}')">
+      <div class="card-header">
+        <div class="place-icon" style="background:#422006">💡</div>
+        <div style="flex:1;min-width:0">
+          <div class="place-name">${escHtml(i.title)}</div>
+          <div class="place-loc">Updated ${formatDate((i.updated||i.added)?.slice(0,10))}</div>
+        </div>
+        <span class="type-badge idea-${i.status}">${IDEA_STATUS_LABELS[i.status]}</span>
+      </div>
+      ${preview?`<div class="card-snippet">${escHtml(preview)}${(i.notes||'').length>140?'…':''}</div>`:''}
+      <div class="card-tags">${tags.map(t=>`<span class="tag">${escHtml(t)}</span>`).join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+function openIdeaModal(id) {
+  editingIdeaId = id || null;
+  const i = id ? ideas.find(x=>x.id===id) : null;
+  document.getElementById('idea-modal-title').textContent = i ? 'Edit Idea' : 'Add Idea';
+  document.getElementById('idea-title').value = i ? (i.title||'') : '';
+  document.getElementById('idea-status').value = i ? (i.status||'new') : 'new';
+  document.getElementById('idea-tags').value = i ? (i.tags||'') : '';
+  document.getElementById('idea-notes').value = i ? (i.notes||'') : '';
+  document.getElementById('idea-modal-overlay').classList.remove('hidden');
+}
+function closeIdeaModal() { document.getElementById('idea-modal-overlay').classList.add('hidden'); }
+
+function saveIdea() {
+  const title = document.getElementById('idea-title').value.trim();
+  if(!title) { alert('Title is required.'); return; }
+  const now = new Date().toISOString();
+  const data = {
+    title,
+    status: document.getElementById('idea-status').value,
+    tags: document.getElementById('idea-tags').value.trim(),
+    notes: document.getElementById('idea-notes').value.trim(),
+    updated: now,
+  };
+  if(editingIdeaId) {
+    const i = ideas.findIndex(x=>x.id===editingIdeaId);
+    if(i>=0) ideas[i] = {...ideas[i], ...data};
+  } else {
+    ideas.push({id:genId(), added:now, ...data});
+  }
+  saveIdeas();
+  closeIdeaModal();
+  renderIdeas();
+}
+
+function openIdeaDetail(id) {
+  const i = ideas.find(x=>x.id===id); if(!i) return;
+  const tags = (i.tags||'').split(',').map(t=>t.trim()).filter(Boolean);
+
+  document.getElementById('detail-header').innerHTML = `
+    <div class="detail-place-icon" style="background:#422006">💡</div>
+    <div style="flex:1;min-width:0">
+      <div class="detail-name">${escHtml(i.title)}</div>
+      <div class="detail-sub">Updated ${formatDate((i.updated||i.added)?.slice(0,10))}</div>
+      <div style="margin-top:5px">
+        <span class="type-badge idea-${i.status}">${IDEA_STATUS_LABELS[i.status]}</span>
+      </div>
+    </div>
+    <div class="detail-actions">
+      <button class="action-btn action-btn-edit" onclick="closeDetail();openIdeaModal('${i.id}')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit
+      </button>
+      <button class="action-btn action-btn-delete" onclick="confirmDelete('${i.id}','idea')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg> Delete
+      </button>
+    </div>`;
+
+  document.getElementById('detail-body').innerHTML = `
+    ${i.notes?`<div><div class="detail-section-title">Details</div><div class="detail-notes-text">${escHtml(i.notes).replace(/\n/g,'<br>')}</div></div>`:''}
+    ${tags.length?`<div><div class="detail-section-title">Tags</div><div class="detail-tags">${tags.map(t=>`<span class="tag">${escHtml(t)}</span>`).join('')}</div></div>`:''}
+    <div style="font-size:11px;color:var(--text-muted)">Added ${formatDate(i.added?.slice(0,10))}</div>`;
+
+  document.getElementById('detail-footer').innerHTML = '';
+  showDetail();
+}
+
+function doDeleteIdea(id) {
+  ideas = ideas.filter(x=>x.id!==id);
+  saveIdeas(); closeDetail();
+  renderIdeas();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -2369,6 +2569,7 @@ function confirmDelete(id, type) {
     modal.style.display = 'none';
     if (type === 'contact') doDeleteContact(id);
     else if (['golf','alcohol','cooking','other'].includes(type)) doDeleteHobby(type, id);
+    else if (type === 'idea') doDeleteIdea(id);
     else doDeletePlace(id);
   });
   newCancel.addEventListener('click', () => {
@@ -2431,12 +2632,13 @@ function exportJSON(scope) {
     drinks: (typeof drinks !== 'undefined') ? drinks : [],
     cooking: (typeof cooking !== 'undefined') ? cooking : [],
     otherHobbies: (typeof otherHobbies !== 'undefined') ? otherHobbies : [],
+    ideas: (typeof ideas !== 'undefined') ? ideas : [],
   };
   const json = JSON.stringify(payload, null, 2);
   const filename = `my-world-backup-${new Date().toISOString().slice(0,10)}.json`;
   downloadFile(json, filename, 'application/json');
   localStorage.setItem('last_backup_ts', new Date().toISOString());
-  showDataStatus(`✓ Backup exported — ${contacts.length} contacts, ${places.length} places, ${payload.companies.length} companies, ${payload.golf.length} golf courses, ${payload.drinks.length} drinks, ${payload.cooking.length} dishes, ${payload.otherHobbies.length} other activities. Save this file somewhere safe!`, true);
+  showDataStatus(`✓ Backup exported — ${contacts.length} contacts, ${places.length} places, ${payload.companies.length} companies, ${payload.golf.length} golf courses, ${payload.drinks.length} drinks, ${payload.cooking.length} dishes, ${payload.otherHobbies.length} other activities, ${payload.ideas.length} ideas. Save this file somewhere safe!`, true);
   updateLastBackupInfo();
 }
 
@@ -2608,12 +2810,12 @@ function importJSON(event) {
       const data = JSON.parse(e.target.result);
 
       // Validate
-      if (!data.contacts && !data.places && !data.companies && !data.deals && !data.golf && !data.drinks && !data.cooking && !data.otherHobbies) {
+      if (!data.contacts && !data.places && !data.companies && !data.deals && !data.golf && !data.drinks && !data.cooking && !data.otherHobbies && !data.ideas) {
         showDataStatus('❌ Invalid file — this does not look like a My World backup.', false);
         return;
       }
 
-      let addedContacts = 0, addedPlaces = 0, addedCompanies = 0, addedDeals = 0, addedGolf = 0, addedDrinks = 0, addedCooking = 0, addedOtherHobbies = 0;
+      let addedContacts = 0, addedPlaces = 0, addedCompanies = 0, addedDeals = 0, addedGolf = 0, addedDrinks = 0, addedCooking = 0, addedOtherHobbies = 0, addedIdeas = 0;
 
       // Merge contacts (skip any with same id to avoid duplicates)
       if (Array.isArray(data.contacts)) {
@@ -2694,13 +2896,22 @@ function importJSON(event) {
         addedOtherHobbies = newOther.length;
         saveOtherHobbies();
       }
+      // Merge ideas (skip duplicate ids)
+      if (Array.isArray(data.ideas)) {
+        const existingIds = new Set(ideas.map(i => i.id));
+        const newIdeas = data.ideas.filter(i => !existingIds.has(i.id));
+        ideas = [...ideas, ...newIdeas];
+        addedIdeas = newIdeas.length;
+        saveIdeas();
+      }
       if (activeAppTab === 'hobbies') renderHobbies();
+      if (activeAppTab === 'ideas') renderIdeas();
 
       // Re-render the Market Map / Intel feeds if those functions are loaded
       if (typeof renderAll === 'function') renderAll();
 
       showDataStatus(
-        `✓ Restore complete — added ${addedContacts} contact${addedContacts!==1?'s':''}, ${addedPlaces} place${addedPlaces!==1?'s':''}, ${addedCompanies} compan${addedCompanies!==1?'ies':'y'}, ${addedDeals} deal${addedDeals!==1?'s':''}, ${addedGolf} golf course${addedGolf!==1?'s':''}, ${addedDrinks} drink${addedDrinks!==1?'s':''}, ${addedCooking} dish${addedCooking!==1?'es':''}, and ${addedOtherHobbies} other activit${addedOtherHobbies!==1?'ies':'y'}.`,
+        `✓ Restore complete — added ${addedContacts} contact${addedContacts!==1?'s':''}, ${addedPlaces} place${addedPlaces!==1?'s':''}, ${addedCompanies} compan${addedCompanies!==1?'ies':'y'}, ${addedDeals} deal${addedDeals!==1?'s':''}, ${addedGolf} golf course${addedGolf!==1?'s':''}, ${addedDrinks} drink${addedDrinks!==1?'s':''}, ${addedCooking} dish${addedCooking!==1?'es':''}, ${addedOtherHobbies} other activit${addedOtherHobbies!==1?'ies':'y'}, and ${addedIdeas} idea${addedIdeas!==1?'s':''}.`,
         true
       );
 
@@ -2719,7 +2930,7 @@ function importJSON(event) {
 document.addEventListener('keydown', e => {
   if(e.key==='Escape') {
     document.getElementById('delete-modal').style.display = 'none';
-    closeContactModal(); closePlaceModal(); closeHobbyModal(); closeDetail(); closeDataModal();
+    closeContactModal(); closePlaceModal(); closeHobbyModal(); closeIdeaModal(); closeDetail(); closeDataModal();
   }
 });
 
