@@ -421,6 +421,7 @@ header {
 .place-card.cat-golf::before       { background: #22c55e; }
 .place-card.cat-cooking::before    { background: #f97316; }
 .place-card.cat-idea::before       { background: #eab308; }
+.place-card.cat-movies::before     { background: #3b82f6; }
 .place-card.cat-red::before        { background: #991b1b; }
 .place-card.cat-white::before      { background: #eab308; }
 .place-card.cat-whiskey::before    { background: #b45309; }
@@ -855,6 +856,7 @@ header {
           <button class="filter-chip active" id="hobbytab-golf" onclick="switchHobbyKind('golf')">⛳ Golf</button>
           <button class="filter-chip" id="hobbytab-alcohol" onclick="switchHobbyKind('alcohol')">🥃 Alcohol</button>
           <button class="filter-chip" id="hobbytab-cooking" onclick="switchHobbyKind('cooking')">🔥 Grilling / Cooking</button>
+          <button class="filter-chip" id="hobbytab-movies" onclick="switchHobbyKind('movies')">🎬 Movies</button>
           <button class="filter-chip" id="hobbytab-other" onclick="switchHobbyKind('other')">✨ Other</button>
         </div>
         <div class="toolbar-row">
@@ -1514,6 +1516,7 @@ let golf     = JSON.parse(localStorage.getItem('hobbies_golf_v1') || '[]');
 let drinks   = JSON.parse(localStorage.getItem('hobbies_alcohol_v1') || '[]');
 let cooking  = JSON.parse(localStorage.getItem('hobbies_cooking_v1') || '[]');
 let otherHobbies = JSON.parse(localStorage.getItem('hobbies_other_v1') || '[]');
+let movies   = JSON.parse(localStorage.getItem('hobbies_movies_v1') || '[]');
 let ideas    = JSON.parse(localStorage.getItem('ideas_v1') || '[]');
 let activeRelFilter   = 'all';
 let activePlaceFilter = 'all';
@@ -1525,7 +1528,7 @@ let editingPlaceId   = null;
 let activeAppTab  = 'relationships';
 let activeMobTab  = 'contacts';
 let activeHobbyKind     = 'golf';   // 'golf' | 'alcohol' | 'cooking' | 'other'
-let activeHobbyStatus   = { golf:'all', alcohol:'all', cooking:'all', other:'all' };
+let activeHobbyStatus   = { golf:'all', alcohol:'all', cooking:'all', movies:'all', other:'all' };
 let activeDrinkCategory = 'all';    // all | red | white | whiskey | tequila | beer | other
 let editingHobbyId = null;
 let hobbySelectedStars = 0;
@@ -1553,6 +1556,7 @@ function saveGolf()     { localStorage.setItem('hobbies_golf_v1', JSON.stringify
 function saveDrinks()   { localStorage.setItem('hobbies_alcohol_v1', JSON.stringify(drinks)); }
 function saveCooking()  { localStorage.setItem('hobbies_cooking_v1', JSON.stringify(cooking)); }
 function saveOtherHobbies() { localStorage.setItem('hobbies_other_v1', JSON.stringify(otherHobbies)); }
+function saveMovies() { localStorage.setItem('hobbies_movies_v1', JSON.stringify(movies)); }
 function saveIdeas() { localStorage.setItem('ideas_v1', JSON.stringify(ideas)); }
 function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
 
@@ -1740,6 +1744,7 @@ const HOBBY_META = {
   golf:    { icon:'⛳', singular:'Golf Course', nameLabel:'Course Name', namePh:'Pebble Beach Golf Links', hasLocation:true,  hasCategory:false, onVal:'played', offVal:'want', onLabel:'Played',   offLabel:'Want to Play', searchPh:'Search golf courses…',  bg:'#052e16' },
   alcohol: { icon:'🍹', singular:'Drink',       nameLabel:'Name',        namePh:'Buffalo Trace',           hasLocation:false, hasCategory:true,  onVal:'tried',  offVal:'want', onLabel:'Tried',    offLabel:'Want to Try',  searchPh:'Search drinks…',        bg:'#3a2e1a' },
   cooking: { icon:'🔥', singular:'Dish',        nameLabel:'Dish / Recipe', namePh:'Smoked Brisket',        hasLocation:false, hasCategory:false, onVal:'made',   offVal:'want', onLabel:'Made It',  offLabel:'Want to Try',  searchPh:'Search dishes…',        bg:'#431407' },
+  movies:  { icon:'🎬', singular:'Movie',       nameLabel:'Title',       namePh:'The Godfather',           hasLocation:false, hasCategory:false, onVal:'watched',offVal:'want', onLabel:'Watched',  offLabel:'Want to Watch',searchPh:'Search movies…',        bg:'#1e1b4b' },
   other:   { icon:'✨', singular:'Activity',    nameLabel:'Name',        namePh:'Skydiving',               hasLocation:false, hasCategory:false, onVal:'done',   offVal:'want', onLabel:'Done',     offLabel:'Want to Try',  searchPh:'Search activities…',   bg:'#2e1065' },
 };
 
@@ -1747,18 +1752,21 @@ function hobbyList(kind) {
   if(kind==='golf') return golf;
   if(kind==='alcohol') return drinks;
   if(kind==='cooking') return cooking;
+  if(kind==='movies') return movies;
   return otherHobbies;
 }
 function setHobbyList(kind, arr) {
   if(kind==='golf') golf = arr;
   else if(kind==='alcohol') drinks = arr;
   else if(kind==='cooking') cooking = arr;
+  else if(kind==='movies') movies = arr;
   else otherHobbies = arr;
 }
 function saveHobbyList(kind) {
   if(kind==='golf') saveGolf();
   else if(kind==='alcohol') saveDrinks();
   else if(kind==='cooking') saveCooking();
+  else if(kind==='movies') saveMovies();
   else saveOtherHobbies();
 }
 
@@ -2568,7 +2576,7 @@ function confirmDelete(id, type) {
   newConfirm.addEventListener('click', () => {
     modal.style.display = 'none';
     if (type === 'contact') doDeleteContact(id);
-    else if (['golf','alcohol','cooking','other'].includes(type)) doDeleteHobby(type, id);
+    else if (['golf','alcohol','cooking','movies','other'].includes(type)) doDeleteHobby(type, id);
     else if (type === 'idea') doDeleteIdea(id);
     else doDeletePlace(id);
   });
@@ -2632,13 +2640,14 @@ function exportJSON(scope) {
     drinks: (typeof drinks !== 'undefined') ? drinks : [],
     cooking: (typeof cooking !== 'undefined') ? cooking : [],
     otherHobbies: (typeof otherHobbies !== 'undefined') ? otherHobbies : [],
+    movies: (typeof movies !== 'undefined') ? movies : [],
     ideas: (typeof ideas !== 'undefined') ? ideas : [],
   };
   const json = JSON.stringify(payload, null, 2);
   const filename = `my-world-backup-${new Date().toISOString().slice(0,10)}.json`;
   downloadFile(json, filename, 'application/json');
   localStorage.setItem('last_backup_ts', new Date().toISOString());
-  showDataStatus(`✓ Backup exported — ${contacts.length} contacts, ${places.length} places, ${payload.companies.length} companies, ${payload.golf.length} golf courses, ${payload.drinks.length} drinks, ${payload.cooking.length} dishes, ${payload.otherHobbies.length} other activities, ${payload.ideas.length} ideas. Save this file somewhere safe!`, true);
+  showDataStatus(`✓ Backup exported — ${contacts.length} contacts, ${places.length} places, ${payload.companies.length} companies, ${payload.golf.length} golf courses, ${payload.drinks.length} drinks, ${payload.cooking.length} dishes, ${payload.otherHobbies.length} other activities, ${payload.movies.length} movies, ${payload.ideas.length} ideas. Save this file somewhere safe!`, true);
   updateLastBackupInfo();
 }
 
@@ -2810,12 +2819,12 @@ function importJSON(event) {
       const data = JSON.parse(e.target.result);
 
       // Validate
-      if (!data.contacts && !data.places && !data.companies && !data.deals && !data.golf && !data.drinks && !data.cooking && !data.otherHobbies && !data.ideas) {
+      if (!data.contacts && !data.places && !data.companies && !data.deals && !data.golf && !data.drinks && !data.cooking && !data.otherHobbies && !data.movies && !data.ideas) {
         showDataStatus('❌ Invalid file — this does not look like a My World backup.', false);
         return;
       }
 
-      let addedContacts = 0, addedPlaces = 0, addedCompanies = 0, addedDeals = 0, addedGolf = 0, addedDrinks = 0, addedCooking = 0, addedOtherHobbies = 0, addedIdeas = 0;
+      let addedContacts = 0, addedPlaces = 0, addedCompanies = 0, addedDeals = 0, addedGolf = 0, addedDrinks = 0, addedCooking = 0, addedOtherHobbies = 0, addedMovies = 0, addedIdeas = 0;
 
       // Merge contacts (skip any with same id to avoid duplicates)
       if (Array.isArray(data.contacts)) {
@@ -2896,6 +2905,15 @@ function importJSON(event) {
         addedOtherHobbies = newOther.length;
         saveOtherHobbies();
       }
+      // Merge movies (skip duplicate ids)
+      if (Array.isArray(data.movies)) {
+        const existingIds = new Set(movies.map(m => m.id));
+        const newMovies = data.movies.filter(m => !existingIds.has(m.id));
+        movies = [...movies, ...newMovies];
+        addedMovies = newMovies.length;
+        saveMovies();
+      }
+
       // Merge ideas (skip duplicate ids)
       if (Array.isArray(data.ideas)) {
         const existingIds = new Set(ideas.map(i => i.id));
@@ -2911,7 +2929,7 @@ function importJSON(event) {
       if (typeof renderAll === 'function') renderAll();
 
       showDataStatus(
-        `✓ Restore complete — added ${addedContacts} contact${addedContacts!==1?'s':''}, ${addedPlaces} place${addedPlaces!==1?'s':''}, ${addedCompanies} compan${addedCompanies!==1?'ies':'y'}, ${addedDeals} deal${addedDeals!==1?'s':''}, ${addedGolf} golf course${addedGolf!==1?'s':''}, ${addedDrinks} drink${addedDrinks!==1?'s':''}, ${addedCooking} dish${addedCooking!==1?'es':''}, ${addedOtherHobbies} other activit${addedOtherHobbies!==1?'ies':'y'}, and ${addedIdeas} idea${addedIdeas!==1?'s':''}.`,
+        `✓ Restore complete — added ${addedContacts} contact${addedContacts!==1?'s':''}, ${addedPlaces} place${addedPlaces!==1?'s':''}, ${addedCompanies} compan${addedCompanies!==1?'ies':'y'}, ${addedDeals} deal${addedDeals!==1?'s':''}, ${addedGolf} golf course${addedGolf!==1?'s':''}, ${addedDrinks} drink${addedDrinks!==1?'s':''}, ${addedCooking} dish${addedCooking!==1?'es':''}, ${addedOtherHobbies} other activit${addedOtherHobbies!==1?'ies':'y'}, ${addedMovies} movie${addedMovies!==1?'s':''}, and ${addedIdeas} idea${addedIdeas!==1?'s':''}.`,
         true
       );
 
