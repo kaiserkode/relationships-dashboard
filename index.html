@@ -690,6 +690,29 @@ header {
 #mi-app .reassign-actions .btn { flex: 1; justify-content: center; }
 
 /* ── Today / Assistant ─────────────────────────────────────── */
+/* Personal / Work segmented control — the primary split on this tab. */
+#screen-today .td-scope-bar {
+  display: flex; margin-bottom: 12px; padding: 3px;
+  background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+}
+#screen-today .td-scope {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
+  min-height: 38px; padding: 8px 10px; border: none; background: transparent;
+  color: var(--text-muted); font-family: inherit; font-size: 13px; font-weight: 600;
+  border-radius: 6px; cursor: pointer;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+#screen-today .td-scope.active { background: var(--accent); color: #fff; }
+#screen-today .td-scope:active { transform: scale(0.985); }
+/* Count of overdue + due-today in the OTHER tab too, so a hard split never
+   hides something that needs attention today. */
+#screen-today .td-scope-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
+  background: var(--red); color: #fff; font-size: 11px; font-weight: 700; line-height: 1;
+}
+#screen-today .td-scope.active .td-scope-count { background: rgba(0,0,0,0.28); }
+
 #screen-today .td-quickadd-wrap { display: flex; gap: 8px; margin-bottom: 10px; }
 #screen-today .td-quickadd {
   flex: 1; min-width: 0; background: var(--surface2); border: 1px solid var(--border);
@@ -701,7 +724,12 @@ header {
 #screen-today .td-quickadd-btn {
   flex-shrink: 0; background: var(--accent); color: #fff; border: none; cursor: pointer;
   border-radius: var(--radius-sm); padding: 0 16px; font-size: 13px; font-weight: 600;
+  /* iOS: kill the 300ms double-tap delay so a single tap registers immediately,
+     and give visible feedback so the button never feels dead. */
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  min-height: 38px;
 }
+#screen-today .td-quickadd-btn:active { background: #4f52d4; transform: scale(0.97); }
 #screen-today .td-hint { font-size: 11px; color: var(--text-muted); margin-bottom: 12px; }
 
 #screen-today .td-section { margin-bottom: 22px; }
@@ -730,7 +758,9 @@ header {
   border: 2px solid var(--text-muted); border-radius: 6px;
   background: transparent; cursor: pointer; display: flex;
   align-items: center; justify-content: center; color: transparent; padding: 0;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
 }
+#screen-today .td-check:active { transform: scale(0.9); }
 #screen-today .td-check:hover { border-color: var(--green); }
 #screen-today .td-item.td-done .td-check { border-color: var(--green); background: var(--green); color: #fff; }
 
@@ -753,8 +783,10 @@ header {
 #screen-today .td-snooze {
   flex-shrink: 0; background: none; border: none; color: var(--text-muted);
   cursor: pointer; padding: 3px 5px; font-size: 11px; border-radius: 5px;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent; min-height: 30px; min-width: 30px;
 }
 #screen-today .td-snooze:hover { background: var(--surface3); color: var(--text-dim); }
+#screen-today .td-snooze:active { background: var(--surface3); color: var(--text-dim); }
 
 #screen-today .td-allclear {
   text-align: center; padding: 34px 20px; color: var(--text-muted);
@@ -769,6 +801,20 @@ header {
   font-size: 10px; font-weight: 700; line-height: 1;
 }
 .app-tab.active .today-badge { background: rgba(0,0,0,0.3); }
+
+/* The header Add button renders icon-only (~31px) on phones, under the 44px
+   tap-target minimum. Widen the touch area with a transparent border so the
+   visual size is unchanged, and drop the iOS tap delay. */
+#header-add-btn {
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  position: relative;
+}
+#header-add-btn::after {
+  content: ''; position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px; height: 44px; min-width: 100%; min-height: 100%;
+}
+#header-add-btn:active { opacity: 0.75; }
 </style>
 </head>
 <body>
@@ -979,6 +1025,10 @@ header {
   <div class="screen-inner">
     <div class="content">
       <div class="toolbar">
+        <div class="td-scope-bar" id="td-scope-bar">
+          <button class="td-scope active" data-tdscope="personal" onclick="tdSetScope('personal')">🏡 Personal<span class="td-scope-count hidden" id="td-count-personal"></span></button>
+          <button class="td-scope" data-tdscope="work" onclick="tdSetScope('work')">💼 Work<span class="td-scope-count hidden" id="td-count-work"></span></button>
+        </div>
         <div class="td-quickadd-wrap">
           <input class="td-quickadd" id="td-quickadd" placeholder="Remind me every 6 months to change the air filters…"
                  onkeydown="if(event.key==='Enter')tdQuickAdd()">
@@ -1534,7 +1584,13 @@ header {
     <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">Fields marked <span style="color:#ef4444">*</span> are required</div>
     <div class="form-grid">
       <div class="form-group form-full"><label class="form-label">What <span style="color:#ef4444">*</span></label><input class="form-input" id="td-title" placeholder="Change the air filters"></div>
-      <div class="form-group form-full"><label class="form-label">Folder</label>
+      <div class="form-group"><label class="form-label">Personal or Work</label>
+        <select class="form-select" id="td-scope">
+          <option value="personal">🏡 Personal</option>
+          <option value="work">💼 Work</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Folder</label>
         <select class="form-select" id="td-folder"></select>
       </div>
       <div class="form-group"><label class="form-label">Next due <span style="color:#ef4444">*</span></label><input class="form-input" type="date" id="td-due"></div>
@@ -1853,7 +1909,7 @@ function switchAppTab(tab) {
   if(isMI) {
     miSwitchPanel(isMM ? 'map' : 'deals');
   } else if(isToday) {
-    tdRender();
+    tdSetScope(tdScope);   // restore the remembered side, then render
   } else if(isJournal) {
     renderJournal();
   } else if(isHob) {
@@ -2496,6 +2552,12 @@ const TD_FOLDER_BY_ID = Object.fromEntries(TD_FOLDERS.map(f => [f.id, f]));
 let tdView = 'today';
 let tdFolder = 'all';
 let tdEditingId = null;
+// Personal / Work is a hard split — the two lists never appear together. The
+// last-used side is remembered so the app opens where you left it.
+let tdScope = localStorage.getItem('todos_scope_v1') || 'personal';
+// Anything saved before the split existed (or with a bad value) reads as
+// personal, so no reminder can silently vanish into an unreachable scope.
+function tdScopeOf(t) { return t.scope === 'work' ? 'work' : 'personal'; }
 
 // ── Date helpers (all local-time, YYYY-MM-DD strings) ─────────
 function tdYMD(d) {
@@ -2609,8 +2671,12 @@ function tdParseNL(input) {
   title = title.replace(/[\s,]+$/,'').replace(/\s+(to|on|by|and)$/i,'');
   out.title = title.charAt(0).toUpperCase() + title.slice(1);
 
-  // ── folder ──
+  // ── folder & scope ──
   out.folder = tdGuessFolder(input);
+  // Default to the side you're on, but if the wording is plainly work-related
+  // ("send the client proposal"), suggest Work. It's only a suggestion — the
+  // modal always opens for confirmation before anything is saved.
+  out.scope = out.folder === 'work' ? 'work' : tdScope;
   // A recurrence with no stated start begins today.
   if (!out.due) out.due = tdToday();
   return out;
@@ -2645,7 +2711,9 @@ function tdGuessFolder(text) {
 function tdQuickAdd() {
   const box = document.getElementById('td-quickadd');
   const raw = box.value.trim();
-  if (!raw) return;
+  // An empty box still opens the blank form — tapping Add should never feel
+  // like nothing happened.
+  if (!raw) { tdOpenModal(); return; }
   const p = tdParseNL(raw);
   box.value = '';
   tdOpenModal(null, p);   // pre-filled, user confirms
@@ -2662,6 +2730,8 @@ function tdOpenModal(id, prefill) {
 
   document.getElementById('td-modal-title').textContent = t ? 'Edit Reminder' : 'Add Reminder';
   document.getElementById('td-title').value  = src.title || '';
+  // New items land on whichever side you're currently looking at.
+  document.getElementById('td-scope').value = src.scope || tdScope;
   sel.value = src.folder || 'other';
   document.getElementById('td-due').value    = src.due || tdToday();
   document.getElementById('td-priority').value = src.priority || 'normal';
@@ -2693,6 +2763,7 @@ function tdSave() {
   const now = new Date().toISOString();
   const data = {
     title, due,
+    scope:    document.getElementById('td-scope').value,
     folder:   document.getElementById('td-folder').value,
     priority: document.getElementById('td-priority').value,
     repeatUnit:  unit,
@@ -2708,7 +2779,10 @@ function tdSave() {
   }
   saveTodos();
   tdCloseModal();
-  tdRender();
+  // If it was filed to the other side, follow it there rather than letting it
+  // vanish from the list the user is looking at.
+  if (data.scope !== tdScope) tdSetScope(data.scope);
+  else tdRender();
 }
 
 // ── Completing, snoozing, deleting ────────────────────────────
@@ -2756,6 +2830,17 @@ function doDeleteTodo(id) {
 }
 
 // ── Rendering ─────────────────────────────────────────────────
+function tdSetScope(s) {
+  tdScope = s;
+  localStorage.setItem('todos_scope_v1', s);
+  document.querySelectorAll('#td-scope-bar .td-scope').forEach(b =>
+    b.classList.toggle('active', b.dataset.tdscope === s));
+  // Folders differ between the two sides, so a folder filter from the other
+  // side would otherwise leave an empty list with no obvious cause.
+  tdFolder = 'all';
+  tdRender();
+}
+
 function tdSetView(v, btn) {
   tdView = v;
   document.querySelectorAll('#td-view-bar .filter-chip').forEach(c => c.classList.remove('active'));
@@ -2771,7 +2856,7 @@ function tdSetFolder(f, btn) {
 
 function tdRenderFolderBar() {
   const bar = document.getElementById('td-folder-bar');
-  const open = todos.filter(t => t.status !== 'done');
+  const open = todos.filter(t => t.status !== 'done' && tdScopeOf(t) === tdScope);
   const used = TD_FOLDERS.filter(f => open.some(t => t.folder === f.id));
   if (!used.length) { bar.innerHTML = ''; return; }
   bar.innerHTML =
@@ -2810,9 +2895,13 @@ function tdSection(title, items, urgency) {
 }
 
 function tdRender() {
+  tdRenderScopeCounts();
   tdRenderFolderBar();
   const list = document.getElementById('td-list');
-  const inFolder = t => tdFolder === 'all' || t.folder === tdFolder;
+  // Every view on this tab is scoped — Personal and Work never mix.
+  const inScope = t => tdScopeOf(t) === tdScope;
+  const inFolder = t => inScope(t) && (tdFolder === 'all' || t.folder === tdFolder);
+  const scopeWord = tdScope === 'work' ? 'work' : 'personal';
   const byDue = (a,b) => a.due === b.due
     ? (b.priority === 'high') - (a.priority === 'high')
     : a.due.localeCompare(b.due);
@@ -2822,7 +2911,7 @@ function tdRender() {
                       .sort((a,b) => (b.doneOn||'').localeCompare(a.doneOn||''));
     list.innerHTML = done.length
       ? tdSection('Completed', done, '')
-      : `<div class="td-allclear"><div class="td-allclear-mark">📭</div><h3>Nothing completed yet</h3></div>`;
+      : `<div class="td-allclear"><div class="td-allclear-mark">📭</div><h3>Nothing ${scopeWord} completed yet</h3></div>`;
     tdUpdateBadge();
     return;
   }
@@ -2832,7 +2921,7 @@ function tdRender() {
   if (tdView === 'all') {
     list.innerHTML = open.length
       ? tdSection('All open', open, '')
-      : `<div class="td-allclear"><div class="td-allclear-mark">🗒️</div><h3>Nothing on the list</h3><p style="font-size:13px">Add something using the box above.</p></div>`;
+      : `<div class="td-allclear"><div class="td-allclear-mark">🗒️</div><h3>Nothing on your ${scopeWord} list</h3><p style="font-size:13px">Add something using the box above.</p></div>`;
     tdUpdateBadge();
     return;
   }
@@ -2847,12 +2936,24 @@ function tdRender() {
   const heading = d.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' });
   const actionable = overdue.length + today.length;
 
+  // With a hard split, "all clear" on one side is misleading if the other side
+  // has something due — so say so explicitly.
+  const otherScope = tdScope === 'work' ? 'personal' : 'work';
+  const otherDue = todos.filter(t => t.status !== 'done' && tdScopeOf(t) === otherScope
+                                     && tdDaysUntil(t.due) <= 0).length;
+  const otherNote = otherDue
+    ? `<p style="font-size:13px;margin-top:6px">
+         <button class="btn btn-ghost" style="font-size:12.5px;padding:6px 12px" onclick="tdSetScope('${otherScope}')">
+           ${otherDue} ${otherScope} item${otherDue>1?'s':''} need${otherDue>1?'':'s'} attention →
+         </button></p>` : '';
+
   let body = '';
   if (!actionable && !soon.length) {
     body = `<div class="td-allclear">
       <div class="td-allclear-mark">✅</div>
-      <h3>You're all clear today</h3>
+      <h3>You're all clear on ${scopeWord} today</h3>
       <p style="font-size:13px">${later.length ? `${later.length} item${later.length>1?'s':''} further out.` : 'Nothing scheduled.'}</p>
+      ${otherNote}
     </div>`;
   } else {
     body = tdSection('⚠️ Overdue', overdue, 'td-overdue')
@@ -2861,8 +2962,8 @@ function tdRender() {
   }
 
   const summary = actionable
-    ? `${actionable} thing${actionable>1?'s':''} to handle today`
-    : 'Nothing due today';
+    ? `${actionable} ${scopeWord} thing${actionable>1?'s':''} to handle today`
+    : `Nothing ${scopeWord} due today`;
 
   list.innerHTML = `<div style="margin-bottom:16px">
       <div style="font-size:17px;font-weight:700">${heading}</div>
@@ -2871,7 +2972,25 @@ function tdRender() {
   tdUpdateBadge();
 }
 
-// Badge on the Today tab so the daily summary is visible from any tab.
+// Actionable count per side, shown on the segments. Because Personal and Work
+// never appear together, this is the only way to see that the other side needs
+// something without switching to it.
+function tdScopeCount(scope) {
+  return todos.filter(t => t.status !== 'done' && tdScopeOf(t) === scope
+                           && tdDaysUntil(t.due) <= 0).length;
+}
+function tdRenderScopeCounts() {
+  ['personal','work'].forEach(s => {
+    const el = document.getElementById('td-count-' + s);
+    if (!el) return;
+    const n = tdScopeCount(s);
+    el.textContent = n > 99 ? '99+' : n;
+    el.classList.toggle('hidden', n === 0);
+  });
+}
+
+// Badge on the Today tab. Deliberately spans BOTH sides — from another tab you
+// want one number for everything outstanding, not just the side you last used.
 function tdUpdateBadge() {
   const badge = document.getElementById('today-badge');
   if (!badge) return;
@@ -2891,7 +3010,7 @@ function tdOpenDetail(id) {
     <div class="detail-place-icon" style="background:var(--surface3)">${f.icon}</div>
     <div style="flex:1;min-width:0">
       <div class="detail-name">${escHtml(t.title)}</div>
-      <div class="detail-sub">${f.label} · ${t.status === 'done' ? `Done ${formatDate(t.doneOn)}` : when.text}</div>
+      <div class="detail-sub">${tdScopeOf(t) === 'work' ? '💼 Work' : '🏡 Personal'} · ${f.label} · ${t.status === 'done' ? `Done ${formatDate(t.doneOn)}` : when.text}</div>
       ${rep ? `<div style="margin-top:5px;font-size:12px;color:var(--accent-light)">${rep}</div>` : ''}
     </div>
     <div class="detail-actions">
