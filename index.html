@@ -269,6 +269,20 @@ header {
   -webkit-overflow-scrolling: touch;
 }
 .modal-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 16px; }
+/* Tall editor variant: the modal itself is a fixed-height flex column that
+   does NOT scroll — the text field inside flexes to fill it and scrolls on
+   its own, so a long journal entry stays fully readable while typing. */
+.modal.modal-tall { height: 92dvh; display: flex; flex-direction: column; overflow: hidden; }
+.modal.modal-tall .modal-body-flex { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 13px; }
+.modal.modal-tall .form-group-grow { flex: 1; min-height: 0; }
+/* Selector is intentionally more specific than `.form-textarea`, which is
+   defined later in this file and would otherwise win on source order and
+   re-impose min-height:75px / resize:vertical, breaking the flex fill. */
+.modal.modal-tall textarea.journal-textarea {
+  flex: 1; min-height: 0; width: 100%; resize: none;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  line-height: 1.65;
+}
 .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
 .modal-title { font-size: 18px; font-weight: 700; }
 .modal-close { background: var(--surface2); border: none; color: var(--text-muted); cursor: pointer; font-size: 18px; padding: 5px 10px; border-radius: var(--radius-sm); }
@@ -422,6 +436,7 @@ header {
 .place-card.cat-cooking::before    { background: #f97316; }
 .place-card.cat-idea::before       { background: #eab308; }
 .place-card.cat-movies::before     { background: #3b82f6; }
+.place-card.cat-journal::before    { background: #14b8a6; }
 .place-card.cat-red::before        { background: #991b1b; }
 .place-card.cat-white::before      { background: #eab308; }
 .place-card.cat-whiskey::before    { background: #b45309; }
@@ -673,6 +688,87 @@ header {
 #mi-app .reassign-msg { font-size: 13px; color: var(--text-dim); margin-bottom: 16px; }
 #mi-app .reassign-actions { display: flex; gap: 10px; margin-top: 16px; }
 #mi-app .reassign-actions .btn { flex: 1; justify-content: center; }
+
+/* ── Today / Assistant ─────────────────────────────────────── */
+#screen-today .td-quickadd-wrap { display: flex; gap: 8px; margin-bottom: 10px; }
+#screen-today .td-quickadd {
+  flex: 1; min-width: 0; background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 13px;
+  font-family: inherit;
+}
+#screen-today .td-quickadd:focus { outline: none; border-color: var(--accent); }
+#screen-today .td-quickadd::placeholder { color: var(--text-muted); }
+#screen-today .td-quickadd-btn {
+  flex-shrink: 0; background: var(--accent); color: #fff; border: none; cursor: pointer;
+  border-radius: var(--radius-sm); padding: 0 16px; font-size: 13px; font-weight: 600;
+}
+#screen-today .td-hint { font-size: 11px; color: var(--text-muted); margin-bottom: 12px; }
+
+#screen-today .td-section { margin-bottom: 22px; }
+#screen-today .td-section-head {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+  font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
+}
+#screen-today .td-count {
+  background: var(--surface3); color: var(--text-dim); border-radius: 10px;
+  padding: 1px 7px; font-size: 11px; font-weight: 600; letter-spacing: 0;
+}
+
+#screen-today .td-item {
+  display: flex; align-items: flex-start; gap: 11px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-left: 3px solid var(--border);
+  border-radius: var(--radius-sm); padding: 11px 12px; margin-bottom: 8px;
+}
+#screen-today .td-item.td-overdue { border-left-color: var(--red); }
+#screen-today .td-item.td-due     { border-left-color: var(--yellow); }
+#screen-today .td-item.td-soon    { border-left-color: var(--accent); }
+#screen-today .td-item.td-done    { opacity: 0.5; }
+
+#screen-today .td-check {
+  flex-shrink: 0; width: 21px; height: 21px; margin-top: 1px;
+  border: 2px solid var(--text-muted); border-radius: 6px;
+  background: transparent; cursor: pointer; display: flex;
+  align-items: center; justify-content: center; color: transparent; padding: 0;
+}
+#screen-today .td-check:hover { border-color: var(--green); }
+#screen-today .td-item.td-done .td-check { border-color: var(--green); background: var(--green); color: #fff; }
+
+#screen-today .td-body { flex: 1; min-width: 0; cursor: pointer; }
+#screen-today .td-title { font-size: 13.5px; font-weight: 600; line-height: 1.35; }
+#screen-today .td-item.td-done .td-title { text-decoration: line-through; }
+#screen-today .td-meta {
+  display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+  margin-top: 4px; font-size: 11px; color: var(--text-muted);
+}
+#screen-today .td-folder {
+  border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px;
+  font-size: 10.5px; font-weight: 600; color: var(--text-dim);
+}
+#screen-today .td-when-overdue { color: var(--red); font-weight: 600; }
+#screen-today .td-when-today   { color: var(--yellow); font-weight: 600; }
+#screen-today .td-repeat { color: var(--accent-light); }
+#screen-today .td-prio-high { color: var(--orange); font-weight: 600; }
+
+#screen-today .td-snooze {
+  flex-shrink: 0; background: none; border: none; color: var(--text-muted);
+  cursor: pointer; padding: 3px 5px; font-size: 11px; border-radius: 5px;
+}
+#screen-today .td-snooze:hover { background: var(--surface3); color: var(--text-dim); }
+
+#screen-today .td-allclear {
+  text-align: center; padding: 34px 20px; color: var(--text-muted);
+}
+#screen-today .td-allclear .td-allclear-mark { font-size: 40px; margin-bottom: 8px; }
+#screen-today .td-allclear h3 { font-size: 15px; color: var(--text-dim); margin-bottom: 4px; }
+
+.today-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 16px; height: 16px; padding: 0 4px; margin-left: 5px;
+  background: var(--red); color: #fff; border-radius: 8px;
+  font-size: 10px; font-weight: 700; line-height: 1;
+}
+.app-tab.active .today-badge { background: rgba(0,0,0,0.3); }
 </style>
 </head>
 <body>
@@ -682,12 +778,14 @@ header {
 <header>
   <div class="header-top">
     <div class="app-tabs">
-      <button class="app-tab active" id="apptab-relationships" onclick="switchAppTab('relationships')">Contacts</button>
+      <button class="app-tab active" id="apptab-today" onclick="switchAppTab('today')">Today<span id="today-badge" class="today-badge hidden"></span></button>
+      <button class="app-tab" id="apptab-relationships" onclick="switchAppTab('relationships')">Contacts</button>
       <button class="app-tab" id="apptab-places" onclick="switchAppTab('places')">Places</button>
       <button class="app-tab" id="apptab-marketmap" onclick="switchAppTab('marketmap')">Market</button>
       <button class="app-tab" id="apptab-intel" onclick="switchAppTab('intel')">Intel</button>
       <button class="app-tab" id="apptab-hobbies" onclick="switchAppTab('hobbies')">Hobbies</button>
       <button class="app-tab" id="apptab-ideas" onclick="switchAppTab('ideas')">Ideas</button>
+      <button class="app-tab" id="apptab-journal" onclick="switchAppTab('journal')">Journal</button>
     </div>
     <button class="btn btn-ghost btn-icon" id="mi-settings-btn" onclick="openSettings()" title="Manage Sub-Verticals" style="margin-right:4px;display:none">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -703,7 +801,7 @@ header {
 </header>
 
 <!-- ══ Relationships Screen ══════════════════════════════════ -->
-<div class="screen" id="screen-relationships">
+<div class="screen hidden" id="screen-relationships">
   <div class="screen-inner">
 
     <aside class="sidebar scroll-hidden" id="rel-sidebar">
@@ -876,6 +974,31 @@ header {
 </div>
 
 <!-- ══ Ideas Screen ══════════════════════════════════════════ -->
+<!-- ══ Today / Assistant ═════════════════════════════════════ -->
+<div class="screen" id="screen-today">
+  <div class="screen-inner">
+    <div class="content">
+      <div class="toolbar">
+        <div class="td-quickadd-wrap">
+          <input class="td-quickadd" id="td-quickadd" placeholder="Remind me every 6 months to change the air filters…"
+                 onkeydown="if(event.key==='Enter')tdQuickAdd()">
+          <button class="td-quickadd-btn" onclick="tdQuickAdd()">Add</button>
+        </div>
+        <div class="td-hint">Type it how you'd say it — "every 6 months to change air filters", "call Dave back about the car Friday", "buy pool chlorine tomorrow".</div>
+        <div class="toolbar-row filter-chips-wrap" id="td-view-bar">
+          <button class="filter-chip active" data-tdview="today" onclick="tdSetView('today',this)">Today</button>
+          <button class="filter-chip" data-tdview="all" onclick="tdSetView('all',this)">All Open</button>
+          <button class="filter-chip" data-tdview="done" onclick="tdSetView('done',this)">Done</button>
+        </div>
+        <div class="toolbar-row filter-chips-wrap" id="td-folder-bar"></div>
+      </div>
+      <div class="card-area scroll-hidden">
+        <div id="td-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="screen hidden" id="screen-ideas">
   <div class="screen-inner">
     <div class="content">
@@ -901,6 +1024,29 @@ header {
       </div>
       <div class="card-area scroll-hidden">
         <div class="cards-grid" id="ideas-grid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Journal Screen ════════════════════════════════════════ -->
+<div class="screen hidden" id="screen-journal">
+  <div class="screen-inner">
+    <div class="content">
+      <div class="toolbar">
+        <div class="toolbar-row">
+          <div class="search-wrap">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input class="search-input" id="journal-search" placeholder="Search entries…" oninput="renderJournal()">
+          </div>
+          <select class="sort-select" id="journal-sort" onchange="renderJournal()">
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+          </select>
+        </div>
+      </div>
+      <div class="card-area scroll-hidden">
+        <div class="cards-grid" id="journal-grid"></div>
       </div>
     </div>
   </div>
@@ -1377,6 +1523,50 @@ header {
 </div>
 
 <!-- ══ Idea Modal ═════════════════════════════════════════════ -->
+<!-- ══ Reminder Modal ════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="td-modal-overlay" onclick="if(event.target===this)tdCloseModal()">
+  <div class="modal scroll-hidden" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="td-modal-title">Add Reminder</div>
+      <button class="modal-close" onclick="tdCloseModal()">×</button>
+    </div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">Fields marked <span style="color:#ef4444">*</span> are required</div>
+    <div class="form-grid">
+      <div class="form-group form-full"><label class="form-label">What <span style="color:#ef4444">*</span></label><input class="form-input" id="td-title" placeholder="Change the air filters"></div>
+      <div class="form-group form-full"><label class="form-label">Folder</label>
+        <select class="form-select" id="td-folder"></select>
+      </div>
+      <div class="form-group"><label class="form-label">Next due <span style="color:#ef4444">*</span></label><input class="form-input" type="date" id="td-due"></div>
+      <div class="form-group"><label class="form-label">Priority</label>
+        <select class="form-select" id="td-priority">
+          <option value="normal">Normal</option>
+          <option value="high">High</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
+      <div class="form-group form-full"><label class="form-label">Repeat</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select class="form-select" id="td-repeat-unit" style="flex:2" onchange="tdSyncRepeatUI()">
+            <option value="none">Doesn't repeat</option>
+            <option value="day">Days</option>
+            <option value="week">Weeks</option>
+            <option value="month">Months</option>
+            <option value="year">Years</option>
+          </select>
+          <input class="form-input" type="number" min="1" step="1" id="td-repeat-every" value="1" style="flex:1" placeholder="1">
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px" id="td-repeat-hint">Repeating items reschedule themselves from the day you actually check them off.</div>
+      </div>
+      <div class="form-group form-full"><label class="form-label">Notes <span class="form-opt">(optional)</span></label><textarea class="form-textarea" id="td-notes" placeholder="Filter size 20x25x1, buy at Home Depot…"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="flex:1" onclick="tdCloseModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" onclick="tdSave()">Save Reminder</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay hidden" id="idea-modal-overlay" onclick="if(event.target===this)closeIdeaModal()">
   <div class="modal scroll-hidden" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
@@ -1401,6 +1591,31 @@ header {
     <div class="modal-footer">
       <button class="btn btn-ghost" style="flex:1" onclick="closeIdeaModal()">Cancel</button>
       <button class="btn btn-primary" style="flex:2" onclick="saveIdea()">Save Idea</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Journal Modal ══════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="journal-modal-overlay" onclick="if(event.target===this)closeJournalModal()">
+  <div class="modal modal-tall" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="journal-modal-title">New Entry</div>
+      <button class="modal-close" onclick="closeJournalModal()">×</button>
+    </div>
+    <div class="modal-body-flex">
+      <div class="form-group">
+        <label class="form-label">Date <span style="color:#ef4444">*</span></label>
+        <input class="form-input" id="journal-date" type="date">
+      </div>
+      <div class="form-group form-group-grow">
+        <label class="form-label">Entry <span class="form-opt" id="journal-wordcount"></span></label>
+        <textarea class="form-textarea journal-textarea" id="journal-body" oninput="updateJournalWordCount()" placeholder="What happened today…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeJournalModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveJournalEntry()">Save Entry</button>
     </div>
   </div>
 </div>
@@ -1518,6 +1733,8 @@ let cooking  = JSON.parse(localStorage.getItem('hobbies_cooking_v1') || '[]');
 let otherHobbies = JSON.parse(localStorage.getItem('hobbies_other_v1') || '[]');
 let movies   = JSON.parse(localStorage.getItem('hobbies_movies_v1') || '[]');
 let ideas    = JSON.parse(localStorage.getItem('ideas_v1') || '[]');
+let journal  = JSON.parse(localStorage.getItem('journal_v1') || '[]');
+let todos    = JSON.parse(localStorage.getItem('todos_v1') || '[]');
 let activeRelFilter   = 'all';
 let activePlaceFilter = 'all';
 let selectedWarmth = 3;
@@ -1525,7 +1742,9 @@ let selectedStars  = 0;
 let placeVisited   = false;
 let editingContactId = null;
 let editingPlaceId   = null;
-let activeAppTab  = 'relationships';
+// The app opens on the daily summary. Change this to 'relationships' to land
+// on Contacts instead (also swap the `active` class on the header tab buttons).
+let activeAppTab  = 'today';
 let activeMobTab  = 'contacts';
 let activeHobbyKind     = 'golf';   // 'golf' | 'alcohol' | 'cooking' | 'other'
 let activeHobbyStatus   = { golf:'all', alcohol:'all', cooking:'all', movies:'all', other:'all' };
@@ -1535,6 +1754,7 @@ let hobbySelectedStars = 0;
 let hobbyStatusOn = false;
 let activeIdeaStatus = 'all';
 let editingIdeaId = null;
+let editingJournalId = null;
 
 const WARMTH_COLORS = ['','#374151','#b45309','#d97706','#f59e0b','#10b981'];
 const WARMTH_LABELS = ['','Cold','Lukewarm','Warm','Close','Strong'];
@@ -1558,6 +1778,8 @@ function saveCooking()  { localStorage.setItem('hobbies_cooking_v1', JSON.string
 function saveOtherHobbies() { localStorage.setItem('hobbies_other_v1', JSON.stringify(otherHobbies)); }
 function saveMovies() { localStorage.setItem('hobbies_movies_v1', JSON.stringify(movies)); }
 function saveIdeas() { localStorage.setItem('ideas_v1', JSON.stringify(ideas)); }
+function saveJournal() { localStorage.setItem('journal_v1', JSON.stringify(journal)); }
+function saveTodos() { localStorage.setItem('todos_v1', JSON.stringify(todos)); }
 function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1606,27 +1828,34 @@ function locTag(city, state) {
 function switchAppTab(tab) {
   activeAppTab = tab;
   const isRel = tab === 'relationships', isPl = tab === 'places', isHob = tab === 'hobbies', isIdeas = tab === 'ideas';
+  const isToday = tab === 'today', isJournal = tab === 'journal';
   const isMM = tab === 'marketmap', isIntel = tab === 'intel';
   const isMI = isMM || isIntel;
   document.getElementById('screen-relationships').classList.toggle('hidden', !isRel);
   document.getElementById('screen-places').classList.toggle('hidden', !isPl);
   document.getElementById('screen-hobbies').classList.toggle('hidden', !isHob);
   document.getElementById('screen-ideas').classList.toggle('hidden', !isIdeas);
+  document.getElementById('screen-today').classList.toggle('hidden', !isToday);
+  document.getElementById('screen-journal').classList.toggle('hidden', !isJournal);
   document.getElementById('mi-app').classList.toggle('hidden', !isMI);
-  ['relationships','places','marketmap','intel','hobbies','ideas'].forEach(t => {
+  ['today','relationships','places','marketmap','intel','hobbies','ideas','journal'].forEach(t => {
     const b = document.getElementById('apptab-' + t);
     if(b) b.classList.toggle('active', t === tab);
   });
-  const labels = { relationships:'Add Contact', places:'Add Place', marketmap:'Add Company', intel:'Add Deal', hobbies: 'Add ' + (HOBBY_META[activeHobbyKind] ? HOBBY_META[activeHobbyKind].singular : ''), ideas:'Add Idea' };
+  const labels = { today:'Add Reminder', relationships:'Add Contact', places:'Add Place', marketmap:'Add Company', intel:'Add Deal', hobbies: 'Add ' + (HOBBY_META[activeHobbyKind] ? HOBBY_META[activeHobbyKind].singular : ''), ideas:'Add Idea', journal:'Add Entry' };
   document.getElementById('header-add-label').textContent = labels[tab] || 'Add';
   // MI settings gear only on Market Intelligence tabs
   const gear = document.getElementById('mi-settings-btn');
   if(gear) gear.style.display = isMI ? '' : 'none';
   // hide the relationship bottom-nav while in Market Intelligence, Hobbies, or Ideas
   const bn = document.querySelector('.bottom-nav');
-  if(bn) bn.style.display = (isMI || isHob || isIdeas) ? 'none' : '';
+  if(bn) bn.style.display = (isMI || isHob || isIdeas || isToday || isJournal) ? 'none' : '';
   if(isMI) {
     miSwitchPanel(isMM ? 'map' : 'deals');
+  } else if(isToday) {
+    tdRender();
+  } else if(isJournal) {
+    renderJournal();
   } else if(isHob) {
     renderHobbyCategoryBar();
     renderHobbyStatusBar();
@@ -1640,11 +1869,13 @@ function switchAppTab(tab) {
 }
 
 function openAddModal() {
-  if(activeAppTab === 'places') openPlaceModal();
+  if(activeAppTab === 'today') tdOpenModal();
+  else if(activeAppTab === 'places') openPlaceModal();
   else if(activeAppTab === 'marketmap') openAddCompany();
   else if(activeAppTab === 'intel') openAddDeal();
   else if(activeAppTab === 'hobbies') openHobbyModal();
   else if(activeAppTab === 'ideas') openIdeaModal();
+  else if(activeAppTab === 'journal') openJournalModal();
   else openContactModal();
 }
 
@@ -2119,6 +2350,578 @@ function doDeleteIdea(id) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// JOURNAL
+// ═══════════════════════════════════════════════════════════════
+// Uses tdParse() so 'YYYY-MM-DD' is read as a LOCAL date — new Date(str)
+// would treat it as UTC and show the wrong day west of Greenwich.
+function journalDateLabel(ymd) {
+  if(!ymd) return '—';
+  return tdParse(ymd).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+}
+function journalWordCount(text) {
+  const w = String(text||'').trim();
+  return w ? w.split(/\s+/).length : 0;
+}
+function updateJournalWordCount() {
+  const n = journalWordCount(document.getElementById('journal-body').value);
+  document.getElementById('journal-wordcount').textContent = n ? `(${n} word${n!==1?'s':''})` : '';
+}
+
+function renderJournal() {
+  const q = document.getElementById('journal-search').value.toLowerCase();
+  const sort = document.getElementById('journal-sort').value;
+  const grid = document.getElementById('journal-grid');
+
+  let list = journal.filter(e => {
+    if(q) {
+      const s = `${e.date} ${journalDateLabel(e.date)} ${e.body}`.toLowerCase();
+      if(!s.includes(q)) return false;
+    }
+    return true;
+  });
+
+  list.sort((a,b) => {
+    const cmp = String(a.date||'').localeCompare(String(b.date||''));
+    if(cmp !== 0) return sort==='oldest' ? cmp : -cmp;
+    return sort==='oldest' ? new Date(a.added)-new Date(b.added) : new Date(b.added)-new Date(a.added);
+  });
+
+  if(!list.length) {
+    grid.innerHTML = `<div class="empty-state">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>
+      <h3>${journal.length===0?'No journal entries yet':'No results'}</h3>
+      <p style="font-size:13px">${journal.length===0?'Tap Add Entry to write your first one.':'Try a different search.'}</p>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map(e => {
+    const words = journalWordCount(e.body);
+    const preview = (e.body||'').slice(0,180);
+    return `<div class="place-card cat-journal" onclick="openJournalDetail('${e.id}')">
+      <div class="card-header">
+        <div class="place-icon" style="background:#042f2e">📔</div>
+        <div style="flex:1;min-width:0">
+          <div class="place-name">${escHtml(journalDateLabel(e.date))}</div>
+          <div class="place-loc">${words} word${words!==1?'s':''}</div>
+        </div>
+      </div>
+      ${preview?`<div class="card-snippet">${escHtml(preview)}${(e.body||'').length>180?'…':''}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function openJournalModal(id) {
+  editingJournalId = id || null;
+  const e = id ? journal.find(x=>x.id===id) : null;
+  document.getElementById('journal-modal-title').textContent = e ? 'Edit Entry' : 'New Entry';
+  document.getElementById('journal-date').value = e ? (e.date||tdToday()) : tdToday();
+  document.getElementById('journal-body').value = e ? (e.body||'') : '';
+  updateJournalWordCount();
+  document.getElementById('journal-modal-overlay').classList.remove('hidden');
+}
+function closeJournalModal() { document.getElementById('journal-modal-overlay').classList.add('hidden'); }
+
+function saveJournalEntry() {
+  const date = document.getElementById('journal-date').value;
+  const body = document.getElementById('journal-body').value.trim();
+  if(!date) { alert('Please pick a date.'); return; }
+  if(!body) { alert('Entry cannot be empty.'); return; }
+  const now = new Date().toISOString();
+  const data = { date, body, updated: now };
+  if(editingJournalId) {
+    const i = journal.findIndex(x=>x.id===editingJournalId);
+    if(i>=0) journal[i] = {...journal[i], ...data};
+  } else {
+    journal.push({id:genId(), added:now, ...data});
+  }
+  saveJournal();
+  closeJournalModal();
+  renderJournal();
+}
+
+function openJournalDetail(id) {
+  const e = journal.find(x=>x.id===id); if(!e) return;
+  const words = journalWordCount(e.body);
+
+  document.getElementById('detail-header').innerHTML = `
+    <div class="detail-place-icon" style="background:#042f2e">📔</div>
+    <div style="flex:1;min-width:0">
+      <div class="detail-name">${escHtml(journalDateLabel(e.date))}</div>
+      <div class="detail-sub">${words} word${words!==1?'s':''}</div>
+    </div>
+    <div class="detail-actions">
+      <button class="action-btn action-btn-edit" onclick="closeDetail();openJournalModal('${e.id}')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit
+      </button>
+      <button class="action-btn action-btn-delete" onclick="confirmDelete('${e.id}','journal')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg> Delete
+      </button>
+    </div>`;
+
+  document.getElementById('detail-body').innerHTML = `
+    <div><div class="detail-notes-text">${escHtml(e.body).replace(/\n/g,'<br>')}</div></div>
+    <div style="font-size:11px;color:var(--text-muted)">Written ${formatDate(e.added?.slice(0,10))}${e.updated && e.updated!==e.added ? ` · edited ${formatDate(e.updated.slice(0,10))}` : ''}</div>`;
+
+  document.getElementById('detail-footer').innerHTML = '';
+  showDetail();
+}
+
+function doDeleteJournal(id) {
+  journal = journal.filter(x=>x.id!==id);
+  saveJournal(); closeDetail();
+  renderJournal();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TODAY / ASSISTANT
+// ═══════════════════════════════════════════════════════════════
+// Folders are the "subfolders" things get filed into. `match` is used to
+// auto-file an item typed in the quick-add box; the user can always override
+// the guess in the modal before saving.
+const TD_FOLDERS = [
+  { id:'pool',    label:'Pool',            icon:'🏊', match:['pool','chlorine','skimmer','filter basket','pump','spa','hot tub','ph','shock','algae'] },
+  { id:'home',    label:'Home & Maint.',   icon:'🏠', match:['air filter','filters','hvac','furnace','gutter','lawn','yard','smoke detector','water heater','sprinkler','pest','septic','roof','mow','clean','trash','garbage','recycling'] },
+  { id:'vehicle', label:'Vehicles',        icon:'🚗', match:['car','truck','vehicle','oil change','tires','tire','registration','inspection','dmv','mileage','brakes'] },
+  { id:'calls',   label:'Calls & Follow-ups', icon:'📞', match:['call','callback','call back','follow up','follow-up','email','text','reach out','ping','respond','reply','schedule'] },
+  { id:'buy',     label:'Purchases',       icon:'🛒', match:['buy','order','purchase','pick up','renew','subscribe','reorder','ship','return'] },
+  { id:'read',    label:'Reading',         icon:'📖', match:['read','article','book','newsletter','watch','listen','podcast','white paper'] },
+  { id:'work',    label:'Work',            icon:'💼', match:['deck','proposal','invoice','client','meeting','report','deadline','contract','presentation','submit'] },
+  { id:'money',   label:'Money',           icon:'💳', match:['pay','bill','tax','taxes','insurance','premium','budget','transfer','statement'] },
+  { id:'health',  label:'Health',          icon:'🩺', match:['doctor','dentist','appointment','prescription','refill','gym','checkup','physical','vaccine'] },
+  { id:'other',   label:'Other',           icon:'📌', match:[] },
+];
+const TD_FOLDER_BY_ID = Object.fromEntries(TD_FOLDERS.map(f => [f.id, f]));
+
+let tdView = 'today';
+let tdFolder = 'all';
+let tdEditingId = null;
+
+// ── Date helpers (all local-time, YYYY-MM-DD strings) ─────────
+function tdYMD(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function tdToday() { return tdYMD(new Date()); }
+// Parse 'YYYY-MM-DD' as a LOCAL date. `new Date(str)` would treat it as UTC
+// and shift the day backwards for anyone west of Greenwich.
+function tdParse(ymd) {
+  const [y,m,d] = String(ymd).split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+function tdDaysUntil(ymd) {
+  return Math.round((tdParse(ymd) - tdParse(tdToday())) / 86400000);
+}
+// Add an interval, clamping to the last valid day of the target month so that
+// "every month" on the 31st doesn't skip into the month after.
+function tdAddInterval(ymd, every, unit) {
+  const d = tdParse(ymd);
+  const day = d.getDate();
+  if (unit === 'day')   d.setDate(day + every);
+  else if (unit === 'week') d.setDate(day + every * 7);
+  else if (unit === 'month' || unit === 'year') {
+    const months = unit === 'year' ? every * 12 : every;
+    d.setDate(1);
+    d.setMonth(d.getMonth() + months);
+    const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    d.setDate(Math.min(day, lastDay));
+  }
+  return tdYMD(d);
+}
+function tdWhenLabel(ymd) {
+  const n = tdDaysUntil(ymd);
+  if (n < -1)  return { text: `${Math.abs(n)} days overdue`, cls: 'td-when-overdue' };
+  if (n === -1) return { text: 'Yesterday',  cls: 'td-when-overdue' };
+  if (n === 0) return { text: 'Today',       cls: 'td-when-today' };
+  if (n === 1) return { text: 'Tomorrow',    cls: '' };
+  if (n < 7)   return { text: tdParse(ymd).toLocaleDateString(undefined,{weekday:'long'}), cls: '' };
+  return { text: tdParse(ymd).toLocaleDateString(undefined,{month:'short',day:'numeric'}), cls: '' };
+}
+function tdRepeatLabel(t) {
+  if (!t.repeatUnit || t.repeatUnit === 'none') return '';
+  const n = t.repeatEvery || 1;
+  const unit = n === 1 ? t.repeatUnit : t.repeatUnit + 's';
+  return n === 1 ? `↻ every ${t.repeatUnit}` : `↻ every ${n} ${unit}`;
+}
+
+// ── Natural-language parsing ──────────────────────────────────
+// Best-effort: pulls a recurrence, a due date and a folder out of a plain
+// sentence. The result always lands in the modal for confirmation, so a bad
+// guess costs a correction rather than a wrong reminder.
+const TD_WORD_NUM = { a:1, an:1, one:1, two:2, three:3, four:4, five:5, six:6, seven:7, eight:8, nine:9, ten:10, twelve:12 };
+const TD_WEEKDAYS = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+const TD_MONTHS = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+
+function tdParseNL(input) {
+  let s = ' ' + input.trim() + ' ';
+  const lower = () => s.toLowerCase();
+  const out = { title:'', due:null, repeatEvery:1, repeatUnit:'none', priority:'normal', folder:null };
+
+  // strip a leading "remind me to/that/about"
+  s = s.replace(/^\s*(please\s+)?remind me( to| that| about)?\s+/i, ' ');
+
+  const eat = (re) => { const m = lower().match(re); if (m) { s = s.slice(0, m.index) + ' ' + s.slice(m.index + m[0].length); } return m; };
+
+  // ── recurrence ──
+  let m;
+  if ((m = eat(/\b(daily|every ?day)\b/)))            { out.repeatUnit='day';   out.repeatEvery=1; }
+  else if ((m = eat(/\b(weekly|every ?week)\b/)))     { out.repeatUnit='week';  out.repeatEvery=1; }
+  else if ((m = eat(/\b(biweekly|bi-weekly)\b/)))     { out.repeatUnit='week';  out.repeatEvery=2; }
+  else if ((m = eat(/\bmonthly\b/)))                  { out.repeatUnit='month'; out.repeatEvery=1; }
+  else if ((m = eat(/\bquarterly\b/)))                { out.repeatUnit='month'; out.repeatEvery=3; }
+  else if ((m = eat(/\b(annually|yearly|every ?year)\b/))) { out.repeatUnit='year'; out.repeatEvery=1; }
+  else if ((m = eat(/\bevery\s+(\d+|a|an|one|two|three|four|five|six|seven|eight|nine|ten|twelve)\s*(day|week|month|year)s?\b/))) {
+    out.repeatEvery = parseInt(m[1],10) || TD_WORD_NUM[m[1]] || 1;
+    out.repeatUnit  = m[2];
+  }
+  else if ((m = eat(/\bevery\s+(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/))) {
+    out.repeatUnit='week'; out.repeatEvery=1;
+    out.due = tdNextWeekday(TD_WEEKDAYS.indexOf(m[1]));
+  }
+
+  // ── explicit due date ──
+  if (!out.due) {
+    if ((m = eat(/\btoday\b/)))          out.due = tdToday();
+    else if ((m = eat(/\btomorrow\b/)))  out.due = tdAddInterval(tdToday(), 1, 'day');
+    else if ((m = eat(/\bnext week\b/))) out.due = tdAddInterval(tdToday(), 7, 'day');
+    else if ((m = eat(/\bnext month\b/)))out.due = tdAddInterval(tdToday(), 1, 'month');
+    else if ((m = eat(/\bin\s+(\d+|a|an|one|two|three|four|five|six|seven|eight|nine|ten|twelve)\s*(day|week|month|year)s?\b/))) {
+      out.due = tdAddInterval(tdToday(), parseInt(m[1],10) || TD_WORD_NUM[m[1]] || 1, m[2]);
+    }
+    else if ((m = eat(/\b(?:on\s+|next\s+)?(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/))) {
+      out.due = tdNextWeekday(TD_WEEKDAYS.indexOf(m[1]));
+    }
+    else if ((m = eat(/\b(?:on\s+)?(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{1,2})(?:st|nd|rd|th)?\b/))) {
+      const mi = TD_MONTHS.findIndex(x => x.startsWith(m[1]));
+      out.due = tdDateInFuture(mi, parseInt(m[2],10));
+    }
+    else if ((m = eat(/\b(?:on\s+)?(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\b/))) {
+      const yr = m[3] ? (m[3].length === 2 ? 2000 + +m[3] : +m[3]) : null;
+      out.due = yr ? tdYMD(new Date(yr, +m[1]-1, +m[2])) : tdDateInFuture(+m[1]-1, +m[2]);
+    }
+  }
+
+  // ── priority ──
+  if (eat(/\b(urgent|asap|important|high priority)\b/)) out.priority = 'high';
+
+  // ── tidy up the leftover text into a title ──
+  let title = s.replace(/\s+/g, ' ').trim();
+  title = title.replace(/^(to|that|about|on|by|for|and|,)\s+/i, '');
+  title = title.replace(/[\s,]+$/,'').replace(/\s+(to|on|by|and)$/i,'');
+  out.title = title.charAt(0).toUpperCase() + title.slice(1);
+
+  // ── folder ──
+  out.folder = tdGuessFolder(input);
+  // A recurrence with no stated start begins today.
+  if (!out.due) out.due = tdToday();
+  return out;
+}
+
+function tdNextWeekday(target) {
+  const d = new Date();
+  let delta = (target - d.getDay() + 7) % 7;
+  if (delta === 0) delta = 7;          // "on Friday" said on a Friday means next Friday
+  d.setDate(d.getDate() + delta);
+  return tdYMD(d);
+}
+function tdDateInFuture(monthIdx, day) {
+  const now = new Date();
+  let d = new Date(now.getFullYear(), monthIdx, day);
+  if (tdYMD(d) < tdToday()) d = new Date(now.getFullYear() + 1, monthIdx, day);
+  return tdYMD(d);
+}
+function tdGuessFolder(text) {
+  const s = text.toLowerCase();
+  let best = null, bestLen = 0;
+  for (const f of TD_FOLDERS) {
+    for (const kw of f.match) {
+      // longest keyword wins, so "air filter" beats a bare "filter"
+      if (s.includes(kw) && kw.length > bestLen) { best = f.id; bestLen = kw.length; }
+    }
+  }
+  return best || 'other';
+}
+
+// ── Quick add ─────────────────────────────────────────────────
+function tdQuickAdd() {
+  const box = document.getElementById('td-quickadd');
+  const raw = box.value.trim();
+  if (!raw) return;
+  const p = tdParseNL(raw);
+  box.value = '';
+  tdOpenModal(null, p);   // pre-filled, user confirms
+}
+
+// ── Modal ─────────────────────────────────────────────────────
+function tdOpenModal(id, prefill) {
+  tdEditingId = id || null;
+  const t = id ? todos.find(x => x.id === id) : null;
+  const src = t || prefill || {};
+
+  const sel = document.getElementById('td-folder');
+  sel.innerHTML = TD_FOLDERS.map(f => `<option value="${f.id}">${f.icon} ${f.label}</option>`).join('');
+
+  document.getElementById('td-modal-title').textContent = t ? 'Edit Reminder' : 'Add Reminder';
+  document.getElementById('td-title').value  = src.title || '';
+  sel.value = src.folder || 'other';
+  document.getElementById('td-due').value    = src.due || tdToday();
+  document.getElementById('td-priority').value = src.priority || 'normal';
+  document.getElementById('td-repeat-unit').value  = src.repeatUnit || 'none';
+  document.getElementById('td-repeat-every').value = src.repeatEvery || 1;
+  document.getElementById('td-notes').value  = src.notes || '';
+  tdSyncRepeatUI();
+  document.getElementById('td-modal-overlay').classList.remove('hidden');
+}
+function tdCloseModal() {
+  document.getElementById('td-modal-overlay').classList.add('hidden');
+  tdEditingId = null;
+}
+function tdSyncRepeatUI() {
+  const none = document.getElementById('td-repeat-unit').value === 'none';
+  document.getElementById('td-repeat-every').style.display = none ? 'none' : '';
+  document.getElementById('td-repeat-hint').textContent = none
+    ? 'A one-off reminder. It moves to Done when you check it off.'
+    : 'Repeating items reschedule themselves from the day you actually check them off.';
+}
+
+function tdSave() {
+  const title = document.getElementById('td-title').value.trim();
+  if (!title) { alert('Give the reminder a name.'); return; }
+  const due = document.getElementById('td-due').value;
+  if (!due) { alert('Pick a due date.'); return; }
+
+  const unit = document.getElementById('td-repeat-unit').value;
+  const now = new Date().toISOString();
+  const data = {
+    title, due,
+    folder:   document.getElementById('td-folder').value,
+    priority: document.getElementById('td-priority').value,
+    repeatUnit:  unit,
+    repeatEvery: unit === 'none' ? 1 : Math.max(1, parseInt(document.getElementById('td-repeat-every').value,10) || 1),
+    notes:    document.getElementById('td-notes').value.trim(),
+    updated:  now,
+  };
+  if (tdEditingId) {
+    const i = todos.findIndex(x => x.id === tdEditingId);
+    if (i >= 0) todos[i] = { ...todos[i], ...data };
+  } else {
+    todos.push({ id: genId(), added: now, status: 'open', history: [], ...data });
+  }
+  saveTodos();
+  tdCloseModal();
+  tdRender();
+}
+
+// ── Completing, snoozing, deleting ────────────────────────────
+function tdComplete(id) {
+  const t = todos.find(x => x.id === id); if (!t) return;
+  const today = tdToday();
+  t.history = [...(t.history || []), today];
+  t.updated = new Date().toISOString();
+
+  if (t.repeatUnit && t.repeatUnit !== 'none') {
+    // Reschedule from the day it was actually done, not from the day it was
+    // due — six months from today is what "every six months" really means.
+    t.lastDone = today;
+    t.due = tdAddInterval(today, t.repeatEvery || 1, t.repeatUnit);
+  } else {
+    t.status = 'done';
+    t.doneOn = today;
+  }
+  saveTodos();
+  tdRender();
+}
+function tdReopen(id) {
+  const t = todos.find(x => x.id === id); if (!t) return;
+  t.status = 'open';
+  delete t.doneOn;
+  t.history = (t.history || []).slice(0, -1);
+  t.updated = new Date().toISOString();
+  saveTodos();
+  tdRender();
+}
+function tdSnooze(id, days, event) {
+  if (event) event.stopPropagation();
+  const t = todos.find(x => x.id === id); if (!t) return;
+  // Snooze from today so a long-overdue item doesn't stay overdue.
+  const base = tdDaysUntil(t.due) < 0 ? tdToday() : t.due;
+  t.due = tdAddInterval(base, days, 'day');
+  t.updated = new Date().toISOString();
+  saveTodos();
+  tdRender();
+}
+function doDeleteTodo(id) {
+  todos = todos.filter(x => x.id !== id);
+  saveTodos(); closeDetail();
+  tdRender();
+}
+
+// ── Rendering ─────────────────────────────────────────────────
+function tdSetView(v, btn) {
+  tdView = v;
+  document.querySelectorAll('#td-view-bar .filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  tdRender();
+}
+function tdSetFolder(f, btn) {
+  tdFolder = f;
+  document.querySelectorAll('#td-folder-bar .filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  tdRender();
+}
+
+function tdRenderFolderBar() {
+  const bar = document.getElementById('td-folder-bar');
+  const open = todos.filter(t => t.status !== 'done');
+  const used = TD_FOLDERS.filter(f => open.some(t => t.folder === f.id));
+  if (!used.length) { bar.innerHTML = ''; return; }
+  bar.innerHTML =
+    `<button class="filter-chip ${tdFolder==='all'?'active':''}" onclick="tdSetFolder('all',this)">All</button>` +
+    used.map(f => `<button class="filter-chip ${tdFolder===f.id?'active':''}" onclick="tdSetFolder('${f.id}',this)">${f.icon} ${f.label}</button>`).join('');
+}
+
+function tdItemHTML(t, urgency) {
+  const f = TD_FOLDER_BY_ID[t.folder] || TD_FOLDER_BY_ID.other;
+  const when = tdWhenLabel(t.due);
+  const rep = tdRepeatLabel(t);
+  const done = t.status === 'done';
+  return `<div class="td-item ${done ? 'td-done' : urgency}">
+    <button class="td-check" onclick="event.stopPropagation();${done ? `tdReopen('${t.id}')` : `tdComplete('${t.id}')`}" aria-label="${done?'Reopen':'Mark done'}">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+    </button>
+    <div class="td-body" onclick="tdOpenDetail('${t.id}')">
+      <div class="td-title">${escHtml(t.title)}</div>
+      <div class="td-meta">
+        <span class="td-folder">${f.icon} ${f.label}</span>
+        ${done ? `<span>Done ${formatDate(t.doneOn)}</span>` : `<span class="${when.cls}">${when.text}</span>`}
+        ${rep ? `<span class="td-repeat">${rep}</span>` : ''}
+        ${t.priority === 'high' && !done ? '<span class="td-prio-high">! High</span>' : ''}
+      </div>
+    </div>
+    ${done ? '' : `<button class="td-snooze" onclick="tdSnooze('${t.id}',1,event)" title="Push out one day">+1d</button>`}
+  </div>`;
+}
+
+function tdSection(title, items, urgency) {
+  if (!items.length) return '';
+  return `<div class="td-section">
+    <div class="td-section-head"><span>${title}</span><span class="td-count">${items.length}</span></div>
+    ${items.map(t => tdItemHTML(t, urgency)).join('')}
+  </div>`;
+}
+
+function tdRender() {
+  tdRenderFolderBar();
+  const list = document.getElementById('td-list');
+  const inFolder = t => tdFolder === 'all' || t.folder === tdFolder;
+  const byDue = (a,b) => a.due === b.due
+    ? (b.priority === 'high') - (a.priority === 'high')
+    : a.due.localeCompare(b.due);
+
+  if (tdView === 'done') {
+    const done = todos.filter(t => t.status === 'done' && inFolder(t))
+                      .sort((a,b) => (b.doneOn||'').localeCompare(a.doneOn||''));
+    list.innerHTML = done.length
+      ? tdSection('Completed', done, '')
+      : `<div class="td-allclear"><div class="td-allclear-mark">📭</div><h3>Nothing completed yet</h3></div>`;
+    tdUpdateBadge();
+    return;
+  }
+
+  const open = todos.filter(t => t.status !== 'done' && inFolder(t)).sort(byDue);
+
+  if (tdView === 'all') {
+    list.innerHTML = open.length
+      ? tdSection('All open', open, '')
+      : `<div class="td-allclear"><div class="td-allclear-mark">🗒️</div><h3>Nothing on the list</h3><p style="font-size:13px">Add something using the box above.</p></div>`;
+    tdUpdateBadge();
+    return;
+  }
+
+  // ── Today view: the daily summary ──
+  const overdue = open.filter(t => tdDaysUntil(t.due) < 0);
+  const today   = open.filter(t => tdDaysUntil(t.due) === 0);
+  const soon    = open.filter(t => { const n = tdDaysUntil(t.due); return n > 0 && n <= 7; });
+  const later   = open.filter(t => tdDaysUntil(t.due) > 7);
+
+  const d = new Date();
+  const heading = d.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' });
+  const actionable = overdue.length + today.length;
+
+  let body = '';
+  if (!actionable && !soon.length) {
+    body = `<div class="td-allclear">
+      <div class="td-allclear-mark">✅</div>
+      <h3>You're all clear today</h3>
+      <p style="font-size:13px">${later.length ? `${later.length} item${later.length>1?'s':''} further out.` : 'Nothing scheduled.'}</p>
+    </div>`;
+  } else {
+    body = tdSection('⚠️ Overdue', overdue, 'td-overdue')
+         + tdSection('Due today', today, 'td-due')
+         + tdSection('Next 7 days', soon, 'td-soon');
+  }
+
+  const summary = actionable
+    ? `${actionable} thing${actionable>1?'s':''} to handle today`
+    : 'Nothing due today';
+
+  list.innerHTML = `<div style="margin-bottom:16px">
+      <div style="font-size:17px;font-weight:700">${heading}</div>
+      <div style="font-size:12.5px;color:var(--text-dim);margin-top:2px">${summary}${soon.length?` · ${soon.length} coming up this week`:''}</div>
+    </div>` + body;
+  tdUpdateBadge();
+}
+
+// Badge on the Today tab so the daily summary is visible from any tab.
+function tdUpdateBadge() {
+  const badge = document.getElementById('today-badge');
+  if (!badge) return;
+  const n = todos.filter(t => t.status !== 'done' && tdDaysUntil(t.due) <= 0).length;
+  badge.textContent = n > 99 ? '99+' : n;
+  badge.classList.toggle('hidden', n === 0);
+}
+
+function tdOpenDetail(id) {
+  const t = todos.find(x => x.id === id); if (!t) return;
+  const f = TD_FOLDER_BY_ID[t.folder] || TD_FOLDER_BY_ID.other;
+  const when = tdWhenLabel(t.due);
+  const rep = tdRepeatLabel(t);
+  const hist = (t.history || []).slice().reverse();
+
+  document.getElementById('detail-header').innerHTML = `
+    <div class="detail-place-icon" style="background:var(--surface3)">${f.icon}</div>
+    <div style="flex:1;min-width:0">
+      <div class="detail-name">${escHtml(t.title)}</div>
+      <div class="detail-sub">${f.label} · ${t.status === 'done' ? `Done ${formatDate(t.doneOn)}` : when.text}</div>
+      ${rep ? `<div style="margin-top:5px;font-size:12px;color:var(--accent-light)">${rep}</div>` : ''}
+    </div>
+    <div class="detail-actions">
+      <button class="action-btn action-btn-edit" onclick="closeDetail();tdOpenModal('${t.id}')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit
+      </button>
+      <button class="action-btn action-btn-delete" onclick="confirmDelete('${t.id}','reminder')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg> Delete
+      </button>
+    </div>`;
+
+  document.getElementById('detail-body').innerHTML = `
+    ${t.notes ? `<div><div class="detail-section-title">Notes</div><div class="detail-notes-text">${escHtml(t.notes).replace(/\n/g,'<br>')}</div></div>` : ''}
+    <div><div class="detail-section-title">Schedule</div>
+      <div style="font-size:13px;color:var(--text-dim)">Due ${formatDate(t.due)}${rep ? ` · ${rep.replace('↻ ','')}` : ' · one-off'}</div>
+    </div>
+    ${hist.length ? `<div><div class="detail-section-title">History (${hist.length})</div>
+      <div style="font-size:12.5px;color:var(--text-dim);line-height:1.9">${hist.slice(0,12).map(h=>`✓ ${formatDate(h)}`).join('<br>')}</div></div>` : ''}
+    <div style="font-size:11px;color:var(--text-muted)">Added ${formatDate(t.added?.slice(0,10))}</div>`;
+
+  document.getElementById('detail-footer').innerHTML = t.status === 'done' ? '' : `
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost" style="flex:1" onclick="tdSnooze('${t.id}',1);closeDetail()">+1 day</button>
+      <button class="btn btn-ghost" style="flex:1" onclick="tdSnooze('${t.id}',7);closeDetail()">+1 week</button>
+      <button class="btn btn-primary" style="flex:1.4" onclick="tdComplete('${t.id}');closeDetail()">Mark done</button>
+    </div>`;
+  showDetail();
+}
+
+// ═══════════════════════════════════════════════════════════════
 // RELATIONSHIPS — FILTER & RENDER
 // ═══════════════════════════════════════════════════════════════
 // ── Investor sector (market-map style filter on the Investors tab) ──
@@ -2578,6 +3381,8 @@ function confirmDelete(id, type) {
     if (type === 'contact') doDeleteContact(id);
     else if (['golf','alcohol','cooking','movies','other'].includes(type)) doDeleteHobby(type, id);
     else if (type === 'idea') doDeleteIdea(id);
+    else if (type === 'journal') doDeleteJournal(id);
+    else if (type === 'reminder') doDeleteTodo(id);
     else doDeletePlace(id);
   });
   newCancel.addEventListener('click', () => {
@@ -2642,12 +3447,14 @@ function exportJSON(scope) {
     otherHobbies: (typeof otherHobbies !== 'undefined') ? otherHobbies : [],
     movies: (typeof movies !== 'undefined') ? movies : [],
     ideas: (typeof ideas !== 'undefined') ? ideas : [],
+    todos: (typeof todos !== 'undefined') ? todos : [],
+    journal: (typeof journal !== 'undefined') ? journal : [],
   };
   const json = JSON.stringify(payload, null, 2);
   const filename = `my-world-backup-${new Date().toISOString().slice(0,10)}.json`;
   downloadFile(json, filename, 'application/json');
   localStorage.setItem('last_backup_ts', new Date().toISOString());
-  showDataStatus(`✓ Backup exported — ${contacts.length} contacts, ${places.length} places, ${payload.companies.length} companies, ${payload.golf.length} golf courses, ${payload.drinks.length} drinks, ${payload.cooking.length} dishes, ${payload.otherHobbies.length} other activities, ${payload.movies.length} movies, ${payload.ideas.length} ideas. Save this file somewhere safe!`, true);
+  showDataStatus(`✓ Backup exported — ${contacts.length} contacts, ${places.length} places, ${payload.companies.length} companies, ${payload.golf.length} golf courses, ${payload.drinks.length} drinks, ${payload.cooking.length} dishes, ${payload.otherHobbies.length} other activities, ${payload.movies.length} movies, ${payload.ideas.length} ideas, ${payload.todos.length} reminders, ${payload.journal.length} journal entries. Save this file somewhere safe!`, true);
   updateLastBackupInfo();
 }
 
@@ -2819,12 +3626,12 @@ function importJSON(event) {
       const data = JSON.parse(e.target.result);
 
       // Validate
-      if (!data.contacts && !data.places && !data.companies && !data.deals && !data.golf && !data.drinks && !data.cooking && !data.otherHobbies && !data.movies && !data.ideas) {
+      if (!data.contacts && !data.places && !data.companies && !data.deals && !data.golf && !data.drinks && !data.cooking && !data.otherHobbies && !data.movies && !data.ideas && !data.todos && !data.journal) {
         showDataStatus('❌ Invalid file — this does not look like a My World backup.', false);
         return;
       }
 
-      let addedContacts = 0, addedPlaces = 0, addedCompanies = 0, addedDeals = 0, addedGolf = 0, addedDrinks = 0, addedCooking = 0, addedOtherHobbies = 0, addedMovies = 0, addedIdeas = 0;
+      let addedContacts = 0, addedPlaces = 0, addedCompanies = 0, addedDeals = 0, addedGolf = 0, addedDrinks = 0, addedCooking = 0, addedOtherHobbies = 0, addedMovies = 0, addedIdeas = 0, addedTodos = 0, addedJournal = 0;
 
       // Merge contacts (skip any with same id to avoid duplicates)
       if (Array.isArray(data.contacts)) {
@@ -2922,14 +3729,33 @@ function importJSON(event) {
         addedIdeas = newIdeas.length;
         saveIdeas();
       }
+      // Merge reminders (skip duplicate ids)
+      if (Array.isArray(data.todos)) {
+        const existingIds = new Set(todos.map(t => t.id));
+        const newTodos = data.todos.filter(t => !existingIds.has(t.id));
+        todos = [...todos, ...newTodos];
+        addedTodos = newTodos.length;
+        saveTodos();
+      }
+      // Merge journal entries (skip duplicate ids)
+      if (Array.isArray(data.journal)) {
+        const existingIds = new Set(journal.map(j => j.id));
+        const newJournal = data.journal.filter(j => !existingIds.has(j.id));
+        journal = [...journal, ...newJournal];
+        addedJournal = newJournal.length;
+        saveJournal();
+      }
       if (activeAppTab === 'hobbies') renderHobbies();
       if (activeAppTab === 'ideas') renderIdeas();
+      if (activeAppTab === 'journal') renderJournal();
+      if (activeAppTab === 'today') tdRender();
+      tdUpdateBadge();
 
       // Re-render the Market Map / Intel feeds if those functions are loaded
       if (typeof renderAll === 'function') renderAll();
 
       showDataStatus(
-        `✓ Restore complete — added ${addedContacts} contact${addedContacts!==1?'s':''}, ${addedPlaces} place${addedPlaces!==1?'s':''}, ${addedCompanies} compan${addedCompanies!==1?'ies':'y'}, ${addedDeals} deal${addedDeals!==1?'s':''}, ${addedGolf} golf course${addedGolf!==1?'s':''}, ${addedDrinks} drink${addedDrinks!==1?'s':''}, ${addedCooking} dish${addedCooking!==1?'es':''}, ${addedOtherHobbies} other activit${addedOtherHobbies!==1?'ies':'y'}, ${addedMovies} movie${addedMovies!==1?'s':''}, and ${addedIdeas} idea${addedIdeas!==1?'s':''}.`,
+        `✓ Restore complete — added ${addedContacts} contact${addedContacts!==1?'s':''}, ${addedPlaces} place${addedPlaces!==1?'s':''}, ${addedCompanies} compan${addedCompanies!==1?'ies':'y'}, ${addedDeals} deal${addedDeals!==1?'s':''}, ${addedGolf} golf course${addedGolf!==1?'s':''}, ${addedDrinks} drink${addedDrinks!==1?'s':''}, ${addedCooking} dish${addedCooking!==1?'es':''}, ${addedOtherHobbies} other activit${addedOtherHobbies!==1?'ies':'y'}, ${addedMovies} movie${addedMovies!==1?'s':''}, ${addedIdeas} idea${addedIdeas!==1?'s':''}, ${addedTodos} reminder${addedTodos!==1?'s':''}, and ${addedJournal} journal entr${addedJournal!==1?'ies':'y'}.`,
         true
       );
 
@@ -2948,7 +3774,7 @@ function importJSON(event) {
 document.addEventListener('keydown', e => {
   if(e.key==='Escape') {
     document.getElementById('delete-modal').style.display = 'none';
-    closeContactModal(); closePlaceModal(); closeHobbyModal(); closeIdeaModal(); closeDetail(); closeDataModal();
+    closeContactModal(); closePlaceModal(); closeHobbyModal(); closeIdeaModal(); closeJournalModal(); closeDetail(); closeDataModal();
   }
 });
 
@@ -2988,6 +3814,7 @@ function seedPlaces() {
 if('serviceWorker' in navigator) navigator.serviceWorker.register('/relationships-dashboard/sw.js').catch(()=>{});
 renderContacts();
 renderPlaces();
+switchAppTab('today');   // land on the daily summary
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════
