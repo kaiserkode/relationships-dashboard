@@ -1690,6 +1690,38 @@ header {
       <!-- Status message -->
       <div id="data-status" style="display:none;padding:10px 14px;border-radius:var(--radius-sm);font-size:13px;font-weight:500"></div>
 
+      <!-- Excel Sync section -->
+      <div style="background:var(--surface2);border:1px solid var(--accent);border-radius:var(--radius);padding:16px">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">🔄 Excel Sync — Bulk Edit</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
+          Export a sheet, edit it in Excel, import it back. Rows are matched on the
+          <strong style="color:var(--text-dim)">ID</strong> column, so your edits update the existing records instead of creating duplicates.
+        </div>
+        <select class="form-select" id="sheet-type" style="width:100%;margin-bottom:10px">
+          <option value="contacts">Contacts</option>
+          <option value="places">Places</option>
+          <option value="companies">Companies</option>
+          <option value="deals">Deals</option>
+        </select>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn btn-primary" style="justify-content:center;height:48px;font-size:15px"
+                  onclick="exportSheet(document.getElementById('sheet-type').value)">
+            ⬇&nbsp; Export Sheet for Excel
+          </button>
+          <label style="display:flex;align-items:center;justify-content:center;height:48px;background:var(--surface);border:2px dashed var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:14px;font-weight:600;color:var(--text-muted);gap:8px">
+            ⬆&nbsp; Import Edited Sheet
+            <input type="file" accept=".csv" style="display:none"
+                   onchange="importSheet(event, document.getElementById('sheet-type').value)">
+          </label>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:12px;line-height:1.7">
+          • Blank cell = leave unchanged &nbsp;·&nbsp; type <strong style="color:var(--text-dim)">--</strong> to clear a field<br>
+          • Put <strong style="color:var(--text-dim)">Y</strong> in the <em>Delete?</em> column to remove a record<br>
+          • Add new rows at the bottom, leaving ID blank<br>
+          • You'll get a summary to confirm before anything saves
+        </div>
+      </div>
+
       <!-- Export section -->
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px">
         <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">📤 Export — Save a Backup</div>
@@ -3577,29 +3609,133 @@ function exportJSON(scope) {
   updateLastBackupInfo();
 }
 
-function exportCSV(type) {
-  let csv, filename;
-  if (type === 'contacts') {
-    const headers = ['First Name','Last Name','City','State','Organization','Role','Email','Phone','Type','Warmth','Last Contact','Next Follow-up','Tags','How We Met','Notes'];
-    const rows = contacts.map(c => [
-      c.first, c.last, c.city, c.state, c.org, c.role, c.email, c.phone,
-      TYPE_LABELS[c.type]||c.type, c.warmth||'', c.lastContact, c.followup,
-      c.tags, c.howMet, c.notes
-    ].map(csvCell).join(','));
-    csv = [headers.join(','), ...rows].join('\n');
-    filename = `contacts-${new Date().toISOString().slice(0,10)}.csv`;
-  } else {
-    const headers = ['Name','City','State','Category','Rating','Visited','Address','Website','Tags','Notes'];
-    const rows = places.map(p => [
-      p.name, p.city, p.state, CAT_LABELS[p.category]||p.category,
-      p.rating||'', p.visited?'Yes':'No', p.address, p.website, p.tags, p.notes
-    ].map(csvCell).join(','));
-    csv = [headers.join(','), ...rows].join('\n');
-    filename = `places-${new Date().toISOString().slice(0,10)}.csv`;
+// ═══════════════════════════════════════════════════════════════
+// EXCEL SYNC — schema-driven round-trip editing
+// Export a sheet → edit it in Excel → import it back. Rows are matched
+// by the ID column, so an edited row UPDATES its record in place rather
+// than creating a duplicate. Fields with no column are left untouched,
+// so things like company comment threads survive the round trip.
+// ═══════════════════════════════════════════════════════════════
+
+// A blank cell means "leave this value alone" — that protects notes from
+// being wiped by a stray keystroke. To genuinely empty a field, type --
+const SHEET_CLEAR_TOKEN = '--';
+
+// Excel silently rewrites 2026-06-01 as 6/1/2026 when it saves, so accept both.
+function normalizeDate(v) {
+  const s = String(v == null ? '' : v).trim();
+  if (!s) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if (m) {
+    let mo = m[1], d = m[2], y = m[3];
+    if (y.length === 2) y = '20' + y;
+    return `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
   }
-  downloadFile(csv, filename, 'text/csv');
-  showDataStatus(`✓ ${type === 'contacts' ? contacts.length + ' contacts' : places.length + ' places'} exported as CSV.`, true);
+  const parsed = new Date(s);
+  return isNaN(parsed.getTime()) ? s : parsed.toISOString().slice(0,10);
 }
+
+const sheetYesNo = v => /^(y|yes|true|1|x)$/i.test(String(v == null ? '' : v).trim());
+
+const SHEET_SCHEMAS = {
+  contacts: {
+    label: 'Contacts',
+    all:    () => contacts,
+    commit: rows => { contacts = rows; saveContacts(); try { renderContacts(); } catch(e){} },
+    blank:  () => ({ id: genId(), added: new Date().toISOString(), type: 'professional', warmth: 0 }),
+    columns: [
+      { h:'ID',             f:'id', key:true },
+      { h:'First Name',     f:'first' },
+      { h:'Last Name',      f:'last' },
+      { h:'City',           f:'city' },
+      { h:'State',          f:'state' },
+      { h:'Organization',   f:'org' },
+      { h:'Role',           f:'role' },
+      { h:'Sector',         f:'sector' },
+      { h:'Email',          f:'email' },
+      { h:'Phone',          f:'phone' },
+      { h:'Type',           f:'type',   out: v => (typeof TYPE_LABELS !== 'undefined' && TYPE_LABELS[v]) || v || '', in: v => csvTypeMap(v) },
+      { h:'Warmth (1-5)',   f:'warmth', out: v => v || '', in: v => parseInt(v) || 0 },
+      { h:'Last Contact',   f:'lastContact', in: normalizeDate },
+      { h:'Next Follow-up', f:'followup',    in: normalizeDate },
+      { h:'Tags',           f:'tags' },
+      { h:'How We Met',     f:'howMet' },
+      { h:'Notes',          f:'notes' },
+    ],
+  },
+  places: {
+    label: 'Places',
+    all:    () => places,
+    commit: rows => { places = rows; savePlaces(); try { renderPlaces(); } catch(e){} },
+    blank:  () => ({ id: genId(), added: new Date().toISOString(), category: 'other', rating: 0, visited: false }),
+    columns: [
+      { h:'ID',        f:'id', key:true },
+      { h:'Name',      f:'name' },
+      { h:'City',      f:'city' },
+      { h:'State',     f:'state' },
+      { h:'Category',  f:'category', out: v => (typeof CAT_LABELS !== 'undefined' && CAT_LABELS[v]) || v || '', in: v => csvCatMap(v) },
+      { h:'Rating',    f:'rating',  out: v => v || '', in: v => parseInt(v) || 0 },
+      { h:'Visited',   f:'visited', out: v => v ? 'Yes' : 'No', in: sheetYesNo },
+      { h:'Address',   f:'address' },
+      { h:'Website',   f:'website' },
+      { h:'Tags',      f:'tags' },
+      { h:'Notes',     f:'notes' },
+    ],
+  },
+  companies: {
+    label: 'Companies',
+    all:    () => companies,
+    commit: rows => { companies = rows; saveCompanies(); try { renderAll(); } catch(e){} },
+    blank:  () => ({ id: genId(), createdAt: Date.now(), comments: [] }),
+    columns: [
+      { h:'ID',       f:'id', key:true },
+      { h:'Name',     f:'name' },
+      { h:'Industry', f:'industry' },
+      { h:'Subgroup', f:'subgroup' },
+      { h:'Type',     f:'type' },
+      { h:'Partners', f:'partners' },
+      { h:'Notes',    f:'notes' },
+    ],
+  },
+  deals: {
+    label: 'Deals',
+    all:    () => deals,
+    commit: rows => { deals = rows; saveDeals(); try { renderAll(); } catch(e){} },
+    blank:  () => ({ id: genId(), createdAt: Date.now() }),
+    columns: [
+      { h:'ID',       f:'id', key:true },
+      { h:'Name',     f:'name' },
+      { h:'Industry', f:'industry' },
+      { h:'Subgroup', f:'subgroup' },
+      { h:'Type',     f:'type' },
+      { h:'Parties',  f:'parties' },
+      { h:'Size',     f:'size' },
+      { h:'Source',   f:'source' },
+      { h:'Notes',    f:'notes' },
+    ],
+  },
+};
+
+function exportSheet(type) {
+  const sch = SHEET_SCHEMAS[type];
+  if (!sch) return;
+  const rows = sch.all() || [];
+  const headers = sch.columns.map(c => c.h).concat('Delete?');
+  const body = rows.map(r =>
+    sch.columns.map(c => {
+      const raw = r[c.f];
+      return csvCell(c.out ? c.out(raw, r) : (raw == null ? '' : raw));
+    }).concat('').join(',')
+  );
+  // ﻿ is a UTF-8 BOM — without it Excel garbles accented characters.
+  const csv = '﻿' + [headers.join(','), ...body].join('\r\n');
+  downloadFile(csv, `${type}-${new Date().toISOString().slice(0,10)}.csv`, 'text/csv;charset=utf-8');
+  showDataStatus(`✓ Exported ${rows.length} ${sch.label.toLowerCase()}. Edit in Excel, then import it back — leave the ID column untouched.`, true);
+}
+
+// Older buttons called exportCSV directly.
+function exportCSV(type) { exportSheet(type); }
 
 function csvCell(val) {
   const s = String(val == null ? '' : val).replace(/"/g, '""');
@@ -3640,84 +3776,124 @@ function parseCSV(text) {
   return rows;
 }
 
-function importCSV(event, type) {
+// Nothing is written until the user confirms the summary.
+let pendingSheetPlan = null;
+
+function importSheet(event, type) {
   const file = event.target.files[0];
   if (!file) return;
+  const sch = SHEET_SCHEMAS[type];
+  if (!sch) return;
   const reader = new FileReader();
   reader.onload = e => {
     try {
-      const rows = parseCSV(e.target.result);
-      if (rows.length < 2) { showDataStatus('❌ File is empty or has no data rows.', false); return; }
+      let text = String(e.target.result || '');
+      if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1); // strip Excel's BOM
+      const rows = parseCSV(text).filter(r => r.some(c => String(c).trim() !== ''));
+      if (rows.length < 2) { showDataStatus('❌ That file has no data rows.', false); return; }
 
-      const headers = rows[0].map(h => h.toLowerCase().replace(/[^a-z]/g,''));
-      const col = key => headers.indexOf(key);
+      const norm = s => String(s == null ? '' : s).toLowerCase().replace(/[^a-z0-9]/g,'');
+      const head = rows[0].map(norm);
+      const idx  = {};
+      sch.columns.forEach(c => { idx[c.f] = head.indexOf(norm(c.h)); });
+      const delIdx = head.indexOf('delete');
 
-      let added = 0;
-
-      if (type === 'contacts') {
-        // Map CSV columns to contact fields
-        const existing = new Set(contacts.map(c => `${c.first}|${c.last}|${c.city}`));
-        for (let i = 1; i < rows.length; i++) {
-          const r = rows[i];
-          if (!r[col('firstname')] && !r[0]) continue;
-          const c = {
-            id: genId(),
-            added: new Date().toISOString(),
-            first:       r[col('firstname')]   || r[0] || '',
-            last:        r[col('lastname')]    || r[1] || '',
-            city:        r[col('city')]        || r[2] || '',
-            state:       r[col('state')]       || r[3] || '',
-            org:         r[col('organization')]|| r[4] || '',
-            role:        r[col('roletitle')]   || r[5] || '',
-            email:       r[col('email')]       || r[6] || '',
-            phone:       r[col('phone')]       || r[7] || '',
-            type:        csvTypeMap(r[col('type')] || r[8] || ''),
-            warmth:      parseInt(r[col('warmth')] || r[9]) || 0,
-            lastContact: r[col('lastcontact')] || r[10] || '',
-            followup:    r[col('nextfollowup')]|| r[11] || '',
-            tags:        r[col('tags')]        || r[12] || '',
-            howMet:      r[col('howwemet')]    || r[13] || '',
-            notes:       r[col('notes')]       || r[14] || '',
-          };
-          const key = `${c.first}|${c.last}|${c.city}`;
-          if (!existing.has(key) && c.first) { contacts.push(c); existing.add(key); added++; }
-        }
-        saveContacts(); renderContacts();
-
-      } else {
-        // Places
-        const existing = new Set(places.map(p => `${p.name}|${p.city}`));
-        for (let i = 1; i < rows.length; i++) {
-          const r = rows[i];
-          if (!r[0]) continue;
-          const p = {
-            id: genId(),
-            added: new Date().toISOString(),
-            name:     r[col('name')]     || r[0] || '',
-            city:     r[col('city')]     || r[1] || '',
-            state:    r[col('state')]    || r[2] || '',
-            category: csvCatMap(r[col('category')] || r[3] || ''),
-            rating:   parseInt(r[col('rating')] || r[4]) || 0,
-            visited:  (r[col('visited')] || r[5] || '').toLowerCase() === 'yes',
-            address:  r[col('address')]  || r[6] || '',
-            website:  r[col('website')]  || r[7] || '',
-            tags:     r[col('tags')]     || r[8] || '',
-            notes:    r[col('notes')]    || r[9] || '',
-          };
-          const key = `${p.name}|${p.city}`;
-          if (!existing.has(key) && p.name) { places.push(p); existing.add(key); added++; }
-        }
-        savePlaces(); renderPlaces();
+      if (idx.id === -1) {
+        showDataStatus('❌ No ID column found. Export a fresh sheet from this app and edit that one — the ID column is what links each row back to its record.', false);
+        return;
       }
 
-      showDataStatus(`✓ Imported ${added} new ${type} from CSV.`, true);
+      const current = sch.all() || [];
+      const byId = new Map(current.map(r => [String(r.id), r]));
+      const updates = [], adds = [], deletes = [];
+      let fieldCount = 0;
+
+      for (let i = 1; i < rows.length; i++) {
+        const r = rows[i];
+        const cell = f => idx[f] === -1 ? undefined : String(r[idx[f]] == null ? '' : r[idx[f]]).trim();
+        const id = cell('id');
+        const markedDelete = delIdx !== -1 && sheetYesNo(r[delIdx]);
+
+        if (id && byId.has(id)) {
+          const rec = byId.get(id);
+          if (markedDelete) { deletes.push(rec); continue; }
+          const changes = {};
+          for (const c of sch.columns) {
+            if (c.key || idx[c.f] === -1) continue;
+            const raw = cell(c.f);
+            if (raw === undefined || raw === '') continue;        // blank = leave alone
+            const val = raw === SHEET_CLEAR_TOKEN ? '' : (c.in ? c.in(raw) : raw);
+            if (String(rec[c.f] == null ? '' : rec[c.f]) !== String(val == null ? '' : val)) changes[c.f] = val;
+          }
+          const n = Object.keys(changes).length;
+          if (n) { updates.push({ rec, changes }); fieldCount += n; }
+        } else if (!markedDelete) {
+          const rec = sch.blank();
+          let any = false;
+          for (const c of sch.columns) {
+            if (c.key || idx[c.f] === -1) continue;
+            const raw = cell(c.f);
+            if (!raw || raw === SHEET_CLEAR_TOKEN) continue;
+            rec[c.f] = c.in ? c.in(raw) : raw;
+            any = true;
+          }
+          if (any) adds.push(rec);
+        }
+      }
+
+      pendingSheetPlan = { type, updates, adds, deletes };
+      showSheetPlan(sch, updates.length, fieldCount, adds.length, deletes.length);
     } catch(err) {
-      showDataStatus('❌ Could not parse CSV — make sure it was exported from this app.', false);
+      showDataStatus('❌ Could not read that file. Make sure it is a CSV exported from this app.', false);
     }
     event.target.value = '';
   };
   reader.readAsText(file);
 }
+
+function showSheetPlan(sch, nUpd, nFields, nAdd, nDel) {
+  if (!nUpd && !nAdd && !nDel) {
+    pendingSheetPlan = null;
+    showDataStatus(`No changes found — that sheet already matches your ${sch.label.toLowerCase()}.`, true);
+    return;
+  }
+  const el = document.getElementById('data-status');
+  el.style.display = '';
+  el.style.background = '#1e3a5f';
+  el.style.color  = '#bfdbfe';
+  el.style.border = '1px solid #3b82f6';
+  el.innerHTML = `
+    <div style="font-weight:700;margin-bottom:8px">Review before saving — ${sch.label}</div>
+    <div style="font-size:13px;line-height:1.8;margin-bottom:12px">
+      ✏️ <strong>${nUpd}</strong> record${nUpd===1?'':'s'} updated <span style="opacity:.75">(${nFields} field${nFields===1?'':'s'} changed)</span><br>
+      ➕ <strong>${nAdd}</strong> new record${nAdd===1?'':'s'} added<br>
+      🗑️ <strong>${nDel}</strong> record${nDel===1?'':'s'} deleted
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost" style="flex:1;height:44px;justify-content:center" onclick="cancelSheetPlan()">Cancel</button>
+      <button class="btn btn-primary" style="flex:2;height:44px;justify-content:center" onclick="applySheetPlan()">Apply Changes</button>
+    </div>`;
+}
+
+function cancelSheetPlan() {
+  pendingSheetPlan = null;
+  showDataStatus('Sync cancelled — nothing was changed.', true);
+}
+
+function applySheetPlan() {
+  if (!pendingSheetPlan) return;
+  const { type, updates, adds, deletes } = pendingSheetPlan;
+  const sch = SHEET_SCHEMAS[type];
+  updates.forEach(u => Object.assign(u.rec, u.changes));
+  const delIds = new Set(deletes.map(d => String(d.id)));
+  const rows = (sch.all() || []).filter(r => !delIds.has(String(r.id))).concat(adds);
+  sch.commit(rows);
+  pendingSheetPlan = null;
+  showDataStatus(`✓ Synced — ${updates.length} updated, ${adds.length} added, ${deletes.length} deleted. Export a JSON backup to lock it in.`, true);
+}
+
+// Older buttons called importCSV directly.
+function importCSV(event, type) { importSheet(event, type); }
 
 function csvTypeMap(s) {
   s = (s||'').toLowerCase();
