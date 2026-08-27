@@ -1,3 +1,13 @@
 .DS_Store
 Thumbs.db
 *.log
+
+# This repo is PUBLIC and its contents are served on the open web via
+# GitHub Pages. Never commit personal data exports — contacts, emails,
+# phone numbers and private notes would become publicly readable.
+my-world-backup*.json
+*-backup-*.json
+contacts-*.csv
+places-*.csv
+companies-*.csv
+deals-*.csv
