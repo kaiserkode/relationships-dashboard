@@ -1459,6 +1459,7 @@ header {
     <div class="modal-handle"></div>
     <div class="modal-header">
       <div class="modal-title" id="contact-modal-title">Add Contact</div>
+      <button class="btn btn-ghost btn-sm" onclick="openBulkModal()" style="margin-left:auto;margin-right:8px">⚡ Bulk</button>
       <button class="modal-close" onclick="closeContactModal()">×</button>
     </div>
     <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">Fields marked <span style="color:#ef4444">*</span> are required</div>
@@ -1721,6 +1722,77 @@ header {
     <div class="modal-footer">
       <button class="btn btn-ghost" style="flex:1" onclick="closeJournalModal()">Cancel</button>
       <button class="btn btn-primary" style="flex:2" onclick="saveJournalEntry()">Save Entry</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Bulk Add Modal ═════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="bulk-modal-overlay" onclick="if(event.target===this)closeBulkModal()">
+  <div class="modal scroll-hidden" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">⚡ Bulk Add</div>
+      <button class="modal-close" onclick="closeBulkModal()">×</button>
+    </div>
+
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.6">
+      Set what everyone has in common once, then type one person per line.
+      Ideal after a conference.
+    </div>
+
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:10px">Applies to everyone</div>
+      <div class="form-grid">
+        <div class="form-group form-full"><label class="form-label">Where you met <span style="color:#ef4444">*</span></label>
+          <input class="form-input" id="b-howmet" placeholder="SaaStr Annual 2026"></div>
+        <div class="form-group"><label class="form-label">City <span style="color:#ef4444">*</span></label>
+          <input class="form-input" id="b-city" placeholder="San Francisco"></div>
+        <div class="form-group"><label class="form-label">State <span class="form-opt">(optional)</span></label>
+          <input class="form-input" id="b-state" placeholder="CA"></div>
+        <div class="form-group"><label class="form-label">Type</label>
+          <select class="form-select" id="b-type">
+            <option value="lead">Prospect</option>
+            <option value="investor">Investor / Advisor</option>
+            <option value="professional">Professional</option>
+            <option value="personal">Personal</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Tier</label>
+          <select class="form-select" id="b-tier">
+            <option value="">No tier</option>
+            <option value="I">Tier I</option>
+            <option value="II">Tier II</option>
+            <option value="III">Tier III</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Last Conversation</label>
+          <input class="form-input" id="b-lastcontact" type="date"></div>
+        <div class="form-group"><label class="form-label">Next Follow-up</label>
+          <input class="form-input" id="b-followup" type="date"></div>
+        <div class="form-group form-full"><label class="form-label">Next Action <span class="form-opt">(same for all)</span></label>
+          <input class="form-input" id="b-nextaction" placeholder="Send follow-up email"></div>
+        <div class="form-group form-full"><label class="form-label">Tags <span class="form-opt">(optional)</span></label>
+          <input class="form-input" id="b-tags" placeholder="SaaStr, enterprise"></div>
+      </div>
+    </div>
+
+    <div class="form-group form-full" style="margin-bottom:12px">
+      <label class="form-label">People — one per line</label>
+      <textarea class="form-textarea" id="b-lines" style="min-height:150px;font-size:14px"
+        placeholder="Jane Smith, Acme Corp, wants a demo of the platform&#10;Bob Jones, Initech, bob@initech.com, intro from Sarah&#10;Priya Rao, Northwind, 555 123 4567"
+        oninput="previewBulk()"></textarea>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:6px;line-height:1.6">
+        Name first, then anything else separated by commas — company, email, phone, a note.
+        Emails and phone numbers are detected automatically. You can also paste columns
+        straight from a spreadsheet.
+      </div>
+    </div>
+
+    <div id="bulk-preview"></div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeBulkModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" id="bulk-save-btn" onclick="saveBulk()">Add People</button>
     </div>
   </div>
 </div>
@@ -3456,6 +3528,124 @@ function openContactModal(id) {
 }
 function closeContactModal() { document.getElementById('contact-modal-overlay').classList.add('hidden'); }
 
+// ═══════════════════════════════════════════════════════════════
+// BULK ADD — for the "met ten people at a conference" case
+// ═══════════════════════════════════════════════════════════════
+function openBulkModal() {
+  closeContactModal();
+  const today = new Date().toISOString().slice(0,10);
+  const plus14 = new Date(Date.now() + 14*86400000).toISOString().slice(0,10);
+  ['howmet','city','state','nextaction','tags','lines'].forEach(f =>
+    document.getElementById('b-'+f).value = '');
+  document.getElementById('b-type').value = 'lead';
+  document.getElementById('b-tier').value = '';
+  document.getElementById('b-lastcontact').value = today;
+  document.getElementById('b-followup').value = plus14;
+  document.getElementById('bulk-preview').innerHTML = '';
+  document.getElementById('bulk-modal-overlay').classList.remove('hidden');
+  setTimeout(() => { try { document.getElementById('b-howmet').focus(); } catch(e){} }, 250);
+}
+function closeBulkModal() { document.getElementById('bulk-modal-overlay').classList.add('hidden'); }
+
+// One line per person. First field is the name; after that we work out what
+// each piece is rather than forcing a rigid column order.
+function parseBulkLine(line) {
+  const parts = line.includes('\t') ? line.split('\t') : line.split(/\s*[,;|]\s*/);
+  const rec = { name:'', org:'', email:'', phone:'', note:'' };
+  const rest = [];
+  parts.forEach((p, i) => {
+    const t = String(p == null ? '' : p).trim();
+    if (!t) return;
+    if (i === 0) { rec.name = t; return; }
+    if (!rec.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t)) { rec.email = t; return; }
+    if (!rec.phone && /^[\d\s()+.\-]{7,}$/.test(t)) { rec.phone = t; return; }
+    rest.push(t);
+  });
+  rec.org  = rest.shift() || '';
+  rec.note = rest.join(' · ');
+  return rec;
+}
+
+function bulkParsedRows() {
+  return document.getElementById('b-lines').value
+    .split('\n').map(l => l.trim()).filter(Boolean)
+    .map(parseBulkLine).filter(r => r.name);
+}
+
+function previewBulk() {
+  const rows = bulkParsedRows();
+  const el = document.getElementById('bulk-preview');
+  if (!rows.length) { el.innerHTML = ''; return; }
+  el.innerHTML = `
+    <div style="background:var(--surface2);border:1px solid var(--accent);border-radius:var(--radius);padding:12px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent-light);margin-bottom:8px">
+        Preview — ${rows.length} ${rows.length===1?'person':'people'}
+      </div>
+      ${rows.map(r => `<div style="font-size:12px;padding:6px 8px;border-radius:6px;background:var(--surface);border:1px solid var(--border);margin-bottom:5px">
+        <strong>${escHtml(r.name)}</strong>${r.org?` · ${escHtml(r.org)}`:''}
+        ${r.email?`<div style="color:var(--accent-light);font-size:11px">${escHtml(r.email)}</div>`:''}
+        ${r.phone?`<div style="color:var(--text-muted);font-size:11px">${escHtml(r.phone)}</div>`:''}
+        ${r.note?`<div style="color:var(--text-muted);font-size:11px">${escHtml(r.note)}</div>`:''}
+      </div>`).join('')}
+    </div>`;
+}
+
+function saveBulk() {
+  const howMet = document.getElementById('b-howmet').value.trim();
+  const city   = document.getElementById('b-city').value.trim();
+  const rows   = bulkParsedRows();
+  if (!howMet) { alert('Fill in where you met — it applies to everyone.'); return; }
+  if (!city)   { alert('City is required.'); return; }
+  if (!rows.length) { alert('Add at least one person, one per line.'); return; }
+
+  const shared = {
+    city,
+    state:       document.getElementById('b-state').value.trim(),
+    type:        document.getElementById('b-type').value,
+    tier:        document.getElementById('b-tier').value,
+    lastContact: document.getElementById('b-lastcontact').value,
+    followup:    document.getElementById('b-followup').value,
+    nextAction:  document.getElementById('b-nextaction').value.trim(),
+    tags:        document.getElementById('b-tags').value.trim(),
+    howMet,
+  };
+
+  rows.forEach(r => {
+    const bits = r.name.split(/\s+/);
+    contacts.push({
+      id: genId(), added: new Date().toISOString(),
+      first: bits.shift() || '',
+      last:  bits.join(' '),
+      org: r.org, email: r.email, phone: r.phone,
+      role: '', sector: '', warmth: 0,
+      notes: r.note,
+      ...shared,
+    });
+  });
+
+  saveContacts();
+  closeBulkModal();
+  try { renderContacts(); } catch(e) {}
+  showToast(`✓ Added ${rows.length} ${rows.length===1?'contact':'contacts'} from ${howMet}`);
+}
+
+// Lightweight confirmation that doesn't depend on the Backup panel being open.
+function showToast(msg) {
+  let t = document.getElementById('app-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'app-toast';
+    t.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--bottom-nav-height) + var(--safe-bottom) + 16px);'
+      + 'background:#064e3b;color:#34d399;border:1px solid #10b981;border-radius:10px;padding:12px 18px;'
+      + 'font-size:14px;font-weight:600;z-index:500;max-width:90%;text-align:center;box-shadow:0 6px 24px rgba(0,0,0,.4)';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.display = '';
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => { t.style.display = 'none'; }, 3500);
+}
+
 function setWarmth(val) {
   selectedWarmth = val;
   document.querySelectorAll('.warmth-btn').forEach(b=>{
@@ -5054,7 +5244,7 @@ function importJSON(event) {
 document.addEventListener('keydown', e => {
   if(e.key==='Escape') {
     document.getElementById('delete-modal').style.display = 'none';
-    closeContactModal(); closePlaceModal(); closeHobbyModal(); closeIdeaModal(); closeJournalModal(); closeDetail(); closeDataModal();
+    closeContactModal(); closePlaceModal(); closeHobbyModal(); closeIdeaModal(); closeJournalModal(); closeDetail(); closeDataModal(); closeBulkModal();
   }
 });
 
