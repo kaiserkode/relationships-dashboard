@@ -1722,6 +1722,17 @@ header {
         </div>
       </div>
 
+      <!-- Cleanup section -->
+      <div id="cleanup-card" style="display:none;background:var(--surface2);border:1px solid #f59e0b;border-radius:var(--radius);padding:16px">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">🧹 Clean Up Stray Contacts</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
+          Contacts with no name at all — they show up as <strong style="color:var(--text-dim)">?</strong> with a dash.
+          These usually come from importing the wrong sheet by mistake.
+        </div>
+        <div id="cleanup-count" style="font-size:14px;font-weight:600;color:var(--yellow);margin-bottom:12px"></div>
+        <div id="cleanup-actions"></div>
+      </div>
+
       <!-- Export section -->
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px">
         <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">📤 Export — Save a Backup</div>
@@ -3558,8 +3569,58 @@ function doDeletePlace(id) {
 // ═══════════════════════════════════════════════════════════════
 function openDataModal() {
   updateLastBackupInfo();
+  refreshCleanupCard();
   document.getElementById('data-status').style.display = 'none';
   document.getElementById('data-modal-overlay').classList.remove('hidden');
+}
+
+// Junk rows from a bad import have NO identity at all — that is what shows on the
+// card as "?" with a dash. Deliberately also require org/role/email/phone to be
+// empty: real records exist that are tracked by firm name with no person attached
+// (PE firms like Ariel Investments, JMI, Court Square) and must never be deleted.
+function findStrayContacts() {
+  const blank = v => !String(v || '').trim();
+  return contacts.filter(c =>
+    blank(c.first) && blank(c.last) &&
+    blank(c.org)   && blank(c.role) &&
+    blank(c.email) && blank(c.phone) && blank(c.city)
+  );
+}
+
+function refreshCleanupCard() {
+  const strays = findStrayContacts();
+  const card = document.getElementById('cleanup-card');
+  if (!strays.length) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  document.getElementById('cleanup-count').textContent =
+    `${strays.length} nameless contact${strays.length === 1 ? '' : 's'} found.`;
+  document.getElementById('cleanup-actions').innerHTML = `
+    <button class="btn btn-danger" style="width:100%;height:48px;justify-content:center;font-size:15px;font-weight:700"
+            onclick="confirmCleanupStrays()">Remove all ${strays.length}</button>`;
+}
+
+function confirmCleanupStrays() {
+  const strays = findStrayContacts();
+  if (!strays.length) return;
+  document.getElementById('cleanup-actions').innerHTML = `
+    <div style="font-size:13px;color:#fca5a5;font-weight:600;margin-bottom:10px">
+      Delete ${strays.length} nameless contacts? Your named contacts are not touched.
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-ghost" style="flex:1;height:48px;justify-content:center" onclick="refreshCleanupCard()">Cancel</button>
+      <button class="btn btn-danger" style="flex:1;height:48px;justify-content:center;font-weight:700" onclick="doCleanupStrays()">Yes, Delete</button>
+    </div>`;
+}
+
+function doCleanupStrays() {
+  const before = contacts.length;
+  const doomed = new Set(findStrayContacts().map(c => c.id));
+  contacts = contacts.filter(c => !doomed.has(c.id));
+  const removed = before - contacts.length;
+  saveContacts();
+  try { renderContacts(); } catch(e) {}
+  refreshCleanupCard();
+  showDataStatus(`✓ Removed ${removed} nameless contact${removed === 1 ? '' : 's'}. ${contacts.length} contacts remain.`, true);
 }
 function closeDataModal() {
   document.getElementById('data-modal-overlay').classList.add('hidden');
