@@ -3287,7 +3287,12 @@ function renderContacts() {
   });
 
   list.sort((a,b) => {
-    if(sort==='name')    return `${a.first} ${a.last}`.localeCompare(`${b.first} ${b.last}`);
+    // Sort by whatever the card actually leads with, so A–Z matches what you see.
+    if(sort==='name') {
+      const key = c => (ORG_FIRST_TYPES.indexOf(c.type) !== -1 && String(c.org||'').trim())
+        ? String(c.org).trim() : `${c.first||''} ${c.last||''}`.trim();
+      return key(a).localeCompare(key(b));
+    }
     if(sort==='city')    return (a.city||'').localeCompare(b.city||'');
     if(sort==='state')   return (a.state||'').localeCompare(b.state||'');
     if(sort==='warmth')  return (b.warmth||0)-(a.warmth||0);
@@ -3314,13 +3319,10 @@ function renderContacts() {
     const dueCls = days!==null?(days<0?'overdue':days<=7?'soon':''):'';
     const color  = avatarColor(c.first+c.last);
     const tags   = (c.tags||'').split(',').map(t=>t.trim()).filter(Boolean);
-    // Investors lead with the fund (org) as the primary name, the person as secondary
     const isInvestor = c.type === 'investor';
-    const personName = `${escHtml(c.first)} ${escHtml(c.last||'')}`.trim();
-    const primaryName = (isInvestor && c.org) ? escHtml(c.org) : personName;
-    const subLine = (isInvestor && c.org)
-      ? [personName, escHtml(c.role||'')].filter(Boolean).join(' · ')
-      : (escHtml([c.role,c.org].filter(Boolean).join(' · '))||'—');
+    const disp = contactDisplay(c);
+    const primaryName = disp.primary;
+    const subLine = disp.sub;
     const sectorTag = isInvestor
       ? `<span class="tag" style="background:rgba(99,102,241,0.15);color:var(--accent-light)">${SECTOR_LABELS[getInvestorSector(c)]}</span>`
       : '';
@@ -3347,6 +3349,23 @@ function renderContacts() {
 
 const TIER_ORDER = { 'I':0, 'II':1, 'III':2, '':3 };
 const tierBadge = t => t ? `<span class="tier-badge tier-${t}">TIER ${t}</span>` : '';
+
+// Prospects and investors are recalled by firm, not by person — so those two
+// lead with the company name and drop the person to the line underneath.
+// Everyone else keeps the person on top.
+const ORG_FIRST_TYPES = ['lead','investor'];
+function contactDisplay(c) {
+  const person = `${escHtml(c.first||'')} ${escHtml(c.last||'')}`.trim();
+  const orgFirst = ORG_FIRST_TYPES.indexOf(c.type) !== -1 && !!String(c.org||'').trim();
+  return {
+    orgFirst,
+    person,
+    primary: orgFirst ? escHtml(c.org) : (person || '—'),
+    sub: orgFirst
+      ? ([person, escHtml(c.role||'')].filter(Boolean).join(' · ') || '—')
+      : (escHtml([c.role, c.org].filter(Boolean).join(' · ')) || '—'),
+  };
+}
 
 // The required to-do list shown above Prospects and Investors. An item is
 // anything with a follow-up date or a written next action — sorted by urgency,
@@ -3386,11 +3405,13 @@ function renderActionPanel(list) {
       const d = c.followup ? daysDiff(c.followup) : null;
       const cls = d === null ? '' : (d < 0 ? 'is-overdue' : d <= 7 ? 'is-soon' : '');
       const dueCls = d === null ? '' : (d < 0 ? 'overdue' : d <= 7 ? 'soon' : '');
+      const disp = contactDisplay(c);
       return `<div class="todo-row ${cls}" onclick="openContactDetail('${c.id}')">
         <div style="flex:1;min-width:0">
-          <div class="todo-name">${escHtml(c.first)} ${escHtml(c.last||'')} ${tierBadge(c.tier)}</div>
+          <div class="todo-name">${disp.primary} ${tierBadge(c.tier)}</div>
+          ${disp.orgFirst ? `<div class="todo-meta" style="margin-top:1px">${disp.sub}</div>` : ''}
           ${c.nextAction ? `<div class="todo-action">→ ${escHtml(c.nextAction)}</div>` : ''}
-          <div class="todo-meta">Last spoke: ${c.lastContact ? formatDate(c.lastContact) : 'never'}${c.org ? ' · ' + escHtml(c.org) : ''}</div>
+          <div class="todo-meta">Last spoke: ${c.lastContact ? formatDate(c.lastContact) : 'never'}${!disp.orgFirst && c.org ? ' · ' + escHtml(c.org) : ''}</div>
         </div>
         <div class="todo-due ${dueCls}">${d === null ? 'no date' : relativeDate(d)}</div>
       </div>`;
@@ -3758,8 +3779,8 @@ function openContactDetail(id) {
   document.getElementById('detail-header').innerHTML = `
     <div class="detail-avatar" style="background:${color}22;color:${color}">${initials(c)}</div>
     <div style="flex:1;min-width:0">
-      <div class="detail-name">${escHtml(c.first)} ${escHtml(c.last||'')}</div>
-      <div class="detail-sub">${escHtml([c.role,c.org].filter(Boolean).join(' · ')||'—')}</div>
+      <div class="detail-name">${contactDisplay(c).primary} ${tierBadge(c.tier)}</div>
+      <div class="detail-sub">${contactDisplay(c).sub}</div>
       ${loc?`<div style="font-size:12px;color:#818cf8;margin-top:2px">📍 ${escHtml(loc)}</div>`:''}
       <div style="margin-top:5px"><span class="type-badge type-${c.type}">${TYPE_LABELS[c.type]}</span></div>
     </div>
@@ -4751,8 +4772,9 @@ function exportWorkbook() {
 
   // ── Follow-Ups tab: the same required to-do list the app shows above
   // Prospects and Investors, as a read-only sheet you can sort and filter.
+  // Company leads here too, matching how the app lists prospects and investors.
   const todoRows = [[
-    { v:'Type', s:1 }, { v:'Tier', s:1 }, { v:'Name', s:1 }, { v:'Organization', s:1 },
+    { v:'Company', s:1 }, { v:'Person', s:1 }, { v:'Tier', s:1 }, { v:'Type', s:1 },
     { v:'Next Action', s:1 }, { v:'Last Conversation', s:1 }, { v:'Next Follow-up', s:1 },
     { v:'Status', s:1 }, { v:'ID', s:1 }
   ]];
@@ -4772,15 +4794,15 @@ function exportWorkbook() {
     const d = c.followup ? daysDiff(c.followup) : null;
     const status = d === null ? 'no date' : (d < 0 ? `OVERDUE ${Math.abs(d)}d` : d === 0 ? 'today' : `in ${d}d`);
     todoRows.push([
-      TYPE_LABELS[c.type] || c.type, c.tier ? `Tier ${c.tier}` : '',
-      `${c.first||''} ${c.last||''}`.trim(), c.org || '',
+      c.org || '—', `${c.first||''} ${c.last||''}`.trim(),
+      c.tier ? `Tier ${c.tier}` : '', TYPE_LABELS[c.type] || c.type,
       c.nextAction || '', c.lastContact || '', c.followup || '', status, c.id
     ]);
   });
   const followTab = {
     name:'Follow-Ups', rows: todoRows, freeze: 1,
     autoFilter: `A1:I${Math.max(todoRows.length, 1)}`,
-    widths: [16, 10, 24, 26, 52, 18, 16, 14, 20],
+    widths: [28, 24, 10, 16, 52, 18, 16, 14, 20],
   };
 
   dash.push([]);
