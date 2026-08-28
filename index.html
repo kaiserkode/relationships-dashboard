@@ -4089,19 +4089,110 @@ function colRef(n) {                              // 0 -> A, 26 -> AA
   return s;
 }
 
-function sheetXml(rows) {
+// A cell is either a plain value, or { v, s, f } for style / formula.
+function sheetXml(tab) {
+  const rows = tab.rows || [];
   let x = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        + '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>';
+        + '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">';
+
+  x += '<sheetViews><sheetView workbookViewId="0"';
+  if (tab.tabSelected) x += ' tabSelected="1"';
+  if (tab.hideGrid) x += ' showGridLines="0"';
+  x += '>';
+  if (tab.freeze) {
+    x += `<pane ySplit="${tab.freeze}" topLeftCell="A${tab.freeze+1}" activePane="bottomLeft" state="frozen"/>`
+       + '<selection pane="bottomLeft"/>';
+  }
+  x += '</sheetView></sheetViews>';
+
+  if (tab.widths && tab.widths.length) {
+    x += '<cols>';
+    tab.widths.forEach((w, i) => { x += `<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`; });
+    x += '</cols>';
+  }
+
+  x += '<sheetData>';
   rows.forEach((row, r) => {
     x += `<row r="${r+1}">`;
-    row.forEach((cell, c) => {
-      const v = (cell == null) ? '' : String(cell);
-      if (v === '') return;
-      x += `<c r="${colRef(c)}${r+1}" t="inlineStr"><is><t xml:space="preserve">${xmlEsc(v)}</t></is></c>`;
+    (row || []).forEach((cell, c) => {
+      const obj = (cell && typeof cell === 'object') ? cell : { v: cell };
+      const ref = `${colRef(c)}${r+1}`;
+      const sAttr = obj.s ? ` s="${obj.s}"` : '';
+      if (obj.f) {
+        if (obj.spill) {
+          // A dynamic array formula only spreads across neighbouring cells when it
+          // is marked as one: cm="1" points at the cell metadata declaring it.
+          x += `<c r="${ref}"${sAttr} cm="1"><f t="array" ref="${obj.spill}" aca="1" ca="1">${xmlEsc(obj.f)}</f><v>0</v></c>`;
+        } else {
+          x += `<c r="${ref}"${sAttr}><f>${xmlEsc(obj.f)}</f></c>`;
+        }
+        return;
+      }
+      const v = (obj.v == null) ? '' : String(obj.v);
+      if (v === '') { if (obj.s) x += `<c r="${ref}"${sAttr}/>`; return; }
+      x += `<c r="${ref}"${sAttr} t="inlineStr"><is><t xml:space="preserve">${xmlEsc(v)}</t></is></c>`;
     });
     x += '</row>';
   });
-  return x + '</sheetData></worksheet>';
+  x += '</sheetData>';
+
+  if (tab.autoFilter) x += `<autoFilter ref="${tab.autoFilter}"/>`;
+
+  if (tab.validations && tab.validations.length) {
+    x += `<dataValidations count="${tab.validations.length}">`;
+    tab.validations.forEach(v => {
+      x += `<dataValidation type="list" allowBlank="1" showInputMessage="1" showErrorMessage="0" sqref="${v.range}">`
+         + `<formula1>"${xmlEsc(v.options.join(','))}"</formula1></dataValidation>`;
+    });
+    x += '</dataValidations>';
+  }
+
+  // Internal hyperlinks act as buttons — they work everywhere, no macros needed.
+  if (tab.links && tab.links.length) {
+    x += '<hyperlinks>';
+    tab.links.forEach(l => {
+      x += `<hyperlink ref="${l.ref}" location="${xmlEsc(l.target)}" display="${xmlEsc(l.display||'')}"/>`;
+    });
+    x += '</hyperlinks>';
+  }
+  return x + '</worksheet>';
+}
+
+function stylesXml() {
+  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+  + '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+  + '<fonts count="6">'
+  +   '<font><sz val="11"/><color rgb="FF1A1A1A"/><name val="Calibri"/></font>'
+  +   '<font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>'
+  +   '<font><b/><sz val="20"/><color rgb="FF1F3864"/><name val="Calibri"/></font>'
+  +   '<font><b/><sz val="12"/><color rgb="FF1F3864"/><name val="Calibri"/></font>'
+  +   '<font><sz val="10"/><color rgb="FF808080"/><name val="Calibri"/></font>'
+  +   '<font><b/><sz val="28"/><color rgb="FF2E75B6"/><name val="Calibri"/></font>'
+  + '</fonts>'
+  + '<fills count="5">'
+  +   '<fill><patternFill patternType="none"/></fill>'
+  +   '<fill><patternFill patternType="gray125"/></fill>'
+  +   '<fill><patternFill patternType="solid"><fgColor rgb="FF1F3864"/><bgColor indexed="64"/></patternFill></fill>'
+  +   '<fill><patternFill patternType="solid"><fgColor rgb="FFFFF2CC"/><bgColor indexed="64"/></patternFill></fill>'
+  +   '<fill><patternFill patternType="solid"><fgColor rgb="FFF2F7FB"/><bgColor indexed="64"/></patternFill></fill>'
+  + '</fills>'
+  + '<borders count="2">'
+  +   '<border><left/><right/><top/><bottom/><diagonal/></border>'
+  +   '<border><left style="thin"><color rgb="FFBFBFBF"/></left><right style="thin"><color rgb="FFBFBFBF"/></right>'
+  +   '<top style="thin"><color rgb="FFBFBFBF"/></top><bottom style="thin"><color rgb="FFBFBFBF"/></bottom><diagonal/></border>'
+  + '</borders>'
+  + '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
+  + '<cellXfs count="7">'
+  +   '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'                                                   // 0 normal
+  +   '<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/>'                        // 1 header
+  +   '<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>'                                      // 2 title
+  +   '<xf numFmtId="0" fontId="3" fillId="0" borderId="0" xfId="0" applyFont="1"/>'                                      // 3 section label
+  +   '<xf numFmtId="0" fontId="0" fillId="3" borderId="1" xfId="0" applyFill="1" applyBorder="1"/>'                      // 4 input box
+  +   '<xf numFmtId="0" fontId="4" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment wrapText="1" vertical="top"/></xf>' // 5 muted
+  +   '<xf numFmtId="0" fontId="5" fillId="4" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center"/></xf>' // 6 big stat
+  + '</cellXfs>'
+  + '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>'
+  + '</styleSheet>';
 }
 
 function buildWorkbook(tabs) {                    // tabs: [{name, rows}]
@@ -4113,6 +4204,7 @@ function buildWorkbook(tabs) {                    // tabs: [{name, rows}]
     + '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
     + '<Default Extension="xml" ContentType="application/xml"/>'
     + '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+    + '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
     + tabs.map((t,i)=>`<Override PartName="/xl/worksheets/sheet${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')
     + '</Types>') });
   files.push({ name:'_rels/.rels', data: enc8.encode(
@@ -4123,13 +4215,19 @@ function buildWorkbook(tabs) {                    // tabs: [{name, rows}]
     '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
     + `<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="${NS}"><sheets>`
     + tabs.map((t,i)=>`<sheet name="${xmlEsc(t.name)}" sheetId="${i+1}" r:id="rId${i+1}"/>`).join('')
-    + '</sheets></workbook>') });
+    + '</sheets>'
+    // fullCalcOnLoad makes Excel evaluate the dashboard formulas the moment it opens,
+    // since we ship formulas without cached results.
+    + '<calcPr calcId="191029" fullCalcOnLoad="1"/>'
+    + '</workbook>') });
   files.push({ name:'xl/_rels/workbook.xml.rels', data: enc8.encode(
     '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
     + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
     + tabs.map((t,i)=>`<Relationship Id="rId${i+1}" Type="${NS}/worksheet" Target="worksheets/sheet${i+1}.xml"/>`).join('')
+    + `<Relationship Id="rIdStyles" Type="${NS}/styles" Target="styles.xml"/>`
     + '</Relationships>') });
-  tabs.forEach((t,i) => files.push({ name:`xl/worksheets/sheet${i+1}.xml`, data: enc8.encode(sheetXml(t.rows)) }));
+  files.push({ name:'xl/styles.xml', data: enc8.encode(stylesXml()) });
+  tabs.forEach((t,i) => files.push({ name:`xl/worksheets/sheet${i+1}.xml`, data: enc8.encode(sheetXml(t)) }));
   return zipBuild(files);
 }
 
@@ -4189,21 +4287,164 @@ async function readWorkbook(buf) {
   return out;
 }
 
+// Dropdown choices offered on the data tabs so typed values stay valid.
+const SHEET_CHOICES = {
+  contacts: { type: ['Professional','Personal','Prospect','Investor/Advisor'], 'warmth': ['1','2','3','4','5'] },
+  places:   { category: ['Restaurant','Bars / Nightlife','Activity','Hotel','Other'], visited: ['Yes','No'], rating: ['1','2','3','4','5'] },
+  todos:    { status: ['open','done','snoozed'], scope: ['personal','work'], priority: ['low','normal','high'] },
+  ideas:    { status: ['new','open','doing','done','parked'] },
+  golf:     { status: ['want','been'], rating: ['1','2','3','4','5'] },
+  drinks:   { status: ['want','tried'], rating: ['1','2','3','4','5'] },
+  cooking:  { status: ['want','tried'], rating: ['1','2','3','4','5'] },
+  otherHobbies: { status: ['want','tried'], rating: ['1','2','3','4','5'] },
+  movies:   { status: ['want','watched'], rating: ['1','2','3','4','5'] },
+};
+
+// A clickable filter view over one data tab, driven by live Excel formulas.
+function buildViewTab(name, sch, dataRows, filterCols, searchCols) {
+  const last = Math.max(dataRows, 1) + 1;               // sheet row of last record
+  const sheet = `'${sch.label}'`;
+  const colOf = f => {
+    const i = sch.columns.findIndex(c => c.f === f);
+    return i === -1 ? null : colRef(i);
+  };
+  const rows = [];
+  rows.push([{ v:`${sch.label} Explorer`, s:2 }]);
+  rows.push([{ v:'Type in the yellow boxes to filter. Leave one blank to ignore it. Results update instantly.', s:5 }]);
+  rows.push([]);
+
+  const conds = [];
+  filterCols.forEach((fc, i) => {
+    const col = colOf(fc.f);
+    if (!col) return;
+    const inputRef = `B${rows.length + 1}`;
+    rows.push([{ v: fc.label, s:3 }, { v:'', s:4 }]);
+    conds.push(`ISNUMBER(SEARCH($${inputRef},${sheet}!${col}2:${col}${last}&""))`);
+  });
+  const searchRef = `B${rows.length + 1}`;
+  rows.push([{ v:'Search text', s:3 }, { v:'', s:4 }]);
+  const searchExpr = searchCols.map(f => `${sheet}!${colOf(f)}2:${colOf(f)}${last}&" "`).filter(Boolean).join('&');
+  if (searchExpr) conds.push(`ISNUMBER(SEARCH($${searchRef},${searchExpr}))`);
+
+  rows.push([]);
+  rows.push([{ v:'← Back to Dashboard', s:3 }]);
+  const backRow = rows.length;
+  rows.push([]);
+
+  rows.push(sch.columns.map(c => ({ v:c.h, s:1 })));
+  const firstCol = colRef(0), lastCol = colRef(sch.columns.length - 1);
+  // Newer functions are stored under their internal names in the file format —
+  // written as plain "FILTER" the workbook is rejected as corrupt.
+  const formula = `IFERROR(_xlfn._xlws.FILTER(${sheet}!${firstCol}2:${lastCol}${last},${conds.join('*')},"No matches"),"No matches")`;
+  const resultRow = rows.length + 1;
+  rows.push([{ f: formula, spill: `A${resultRow}:${lastCol}${resultRow + dataRows}` }]);
+
+  return {
+    name,
+    rows,
+    hideGrid: true,
+    widths: sch.columns.map(c => (c.f === 'notes' || c.f === 'howMet' || c.f === 'body') ? 70 : (c.f === 'id' ? 20 : 22)),
+    links: [{ ref:`A${backRow}`, target:"'Dashboard'!A1", display:'← Back to Dashboard' }],
+  };
+}
+
 // ── Export the whole app as one Excel workbook ────────────────
 function exportWorkbook() {
-  const tabs = WORKBOOK_TABS.filter(k => SHEET_SCHEMAS[k]).map(k => {
+  const dataTabs = WORKBOOK_TABS.filter(k => SHEET_SCHEMAS[k]).map(k => {
     const sch = SHEET_SCHEMAS[k];
     let list = [];
     try { list = sch.all() || []; } catch(e) { list = []; }
-    const rows = [ sch.columns.map(c => c.h).concat('Delete?') ];
+    const rows = [ sch.columns.map(c => ({ v:c.h, s:1 })).concat({ v:'Delete?', s:1 }) ];
     list.forEach(r => rows.push(
       sch.columns.map(c => {
         const raw = r[c.f];
         return c.out ? c.out(raw, r) : (raw == null ? '' : raw);
       }).concat('')
     ));
-    return { name: sch.label, rows, count: list.length };
+    const nCols = sch.columns.length + 1;
+    const lastRow = list.length + 1;
+    const validations = [];
+    const choices = SHEET_CHOICES[k] || {};
+    Object.keys(choices).forEach(f => {
+      const i = sch.columns.findIndex(c => c.f === f);
+      if (i === -1) return;
+      const col = colRef(i);
+      validations.push({ range: `${col}2:${col}${lastRow + 500}`, options: choices[f] });
+    });
+    return {
+      key: k, name: sch.label, rows, count: list.length,
+      freeze: 1,
+      autoFilter: `A1:${colRef(nCols - 1)}${lastRow}`,
+      widths: sch.columns.map(c => (c.f === 'notes' || c.f === 'howMet' || c.f === 'body') ? 70 : (c.f === 'id' ? 20 : 20)).concat(9),
+      validations,
+      firstEmptyRow: lastRow + 1,
+    };
   });
+
+  const byKey = {}; dataTabs.forEach(t => byKey[t.key] = t);
+  const cnt = k => byKey[k] ? byKey[k].count : 0;
+
+  // ── Dashboard ──
+  const dash = [];
+  dash.push([{ v:'My World', s:2 }]);
+  dash.push([{ v:`Exported ${new Date().toLocaleString()} — edit any Data tab, then import this file back into the app.`, s:5 }]);
+  dash.push([]);
+  dash.push([{ v:'WORK', s:3 }]);
+  dash.push([
+    { v:'Contacts', s:3 }, { v:'Companies', s:3 }, { v:'Deals', s:3 }, { v:'Places', s:3 }
+  ]);
+  dash.push([
+    { v:String(cnt('contacts')), s:6 }, { v:String(cnt('companies')), s:6 },
+    { v:String(cnt('deals')), s:6 }, { v:String(cnt('places')), s:6 }
+  ]);
+  dash.push([]);
+  dash.push([{ v:'LIFESTYLE', s:3 }]);
+  dash.push([
+    { v:'Reminders', s:3 }, { v:'Ideas', s:3 }, { v:'Journal', s:3 }, { v:'Golf', s:3 },
+    { v:'Drinks', s:3 }, { v:'Cooking', s:3 }, { v:'Other Hobbies', s:3 }, { v:'Movies', s:3 }
+  ]);
+  dash.push([
+    { v:String(cnt('todos')), s:6 }, { v:String(cnt('ideas')), s:6 }, { v:String(cnt('journal')), s:6 },
+    { v:String(cnt('golf')), s:6 }, { v:String(cnt('drinks')), s:6 }, { v:String(cnt('cooking')), s:6 },
+    { v:String(cnt('otherHobbies')), s:6 }, { v:String(cnt('movies')), s:6 }
+  ]);
+  dash.push([]);
+  dash.push([{ v:'BROWSE  —  click a tab, then use the ▾ arrows on any column header to filter', s:3 }]);
+  const exploreRow = dash.length + 1;
+  dash.push([
+    { v:'🔍 Companies', s:4 }, { v:'🔍 Contacts', s:4 }, { v:'🔍 Places', s:4 },
+    { v:'🔍 Deals', s:4 }, { v:'🔍 Reminders', s:4 }
+  ]);
+  dash.push([]);
+  dash.push([{ v:'ADD SOMETHING NEW  —  jumps to the first empty row, then just type. Leave ID blank.', s:3 }]);
+  const addRow = dash.length + 1;
+  dash.push([
+    { v:'➕ Contact', s:4 }, { v:'➕ Company', s:4 }, { v:'➕ Deal', s:4 }, { v:'➕ Place', s:4 },
+    { v:'➕ Reminder', s:4 }, { v:'➕ Idea', s:4 }, { v:'➕ Journal', s:4 }
+  ]);
+  dash.push([]);
+  dash.push([{ v:'How the round trip works', s:3 }]);
+  dash.push([{ v:'Blank cell = leave unchanged.   Type -- to clear a field.   Put Y in the Delete? column to remove a row.   New rows: leave ID blank and the app creates the record.', s:5 }]);
+
+  const addTargets = ['contacts','companies','deals','places','todos','ideas','journal'];
+  const browseTargets = ['companies','contacts','places','deals','todos'];
+  const links = [];
+  browseTargets.forEach((k, i) => {
+    const t = byKey[k];
+    if (t) links.push({ ref:`${colRef(i)}${exploreRow}`, target:`'${t.name}'!A1`, display:t.name });
+  });
+  addTargets.forEach((k, i) => {
+    const t = byKey[k];
+    if (!t) return;
+    links.push({ ref:`${colRef(i)}${addRow}`, target:`'${t.name}'!A${t.firstEmptyRow}`, display:'Add' });
+  });
+
+  const dashboard = {
+    name:'Dashboard', rows:dash, hideGrid:true, tabSelected:true,
+    widths:[18,18,18,18,18,18,18,18], links,
+  };
+
+  const tabs = [dashboard].concat(dataTabs);
   const bytes = buildWorkbook(tabs);
   const blob = new Blob([bytes], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   const url = URL.createObjectURL(blob);
@@ -4213,8 +4454,9 @@ function exportWorkbook() {
   setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
   localStorage.setItem('last_backup_ts', new Date().toISOString());
   updateLastBackupInfo();
-  showDataStatus('✓ Workbook exported — ' + tabs.map(t => `${t.name} ${t.count}`).join(', ')
-    + '. Edit on your computer, then import it back here.', true);
+  showDataStatus('✓ Workbook exported — Dashboard plus '
+    + dataTabs.length + ' tabs (' + dataTabs.map(t => `${t.name} ${t.count}`).join(', ')
+    + '). Edit on your computer, then import it back here.', true);
 }
 
 // ── Import a whole workbook (every tab at once) ───────────────
