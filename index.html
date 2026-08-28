@@ -370,6 +370,45 @@ header {
   border-radius: var(--radius-sm); padding: 11px;
 }
 .detail-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* ── Tier badges + required to-do panel ─────────────────────── */
+.tier-badge {
+  padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.03em; flex-shrink: 0;
+}
+.tier-I   { background: #7c2d12; color: #fdba74; }
+.tier-II  { background: #1e3a5f; color: #93c5fd; }
+.tier-III { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); }
+
+.todo-panel {
+  background: var(--surface); border: 1px solid var(--accent);
+  border-radius: var(--radius); padding: 14px; margin-bottom: 14px;
+}
+.todo-panel-title {
+  font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--accent-light); margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.todo-panel-count {
+  background: var(--accent); color: #fff; border-radius: 10px;
+  padding: 1px 8px; font-size: 11px;
+}
+.todo-row {
+  display: flex; align-items: flex-start; gap: 10px; padding: 9px 10px;
+  border-radius: var(--radius-sm); background: var(--surface2);
+  border: 1px solid var(--border); margin-bottom: 6px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.todo-row:active { border-color: var(--accent); }
+.todo-row.is-overdue { border-left: 3px solid var(--red); }
+.todo-row.is-soon    { border-left: 3px solid var(--yellow); }
+.todo-name { font-size: 13px; font-weight: 600; }
+.todo-action { font-size: 12px; color: var(--text-dim); margin-top: 2px; line-height: 1.5; }
+.todo-meta { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+.todo-due { font-size: 11px; font-weight: 700; flex-shrink: 0; text-align: right; }
+.todo-due.overdue { color: var(--red); }
+.todo-due.soon    { color: var(--yellow); }
+.todo-empty { font-size: 12px; color: var(--text-muted); text-align: center; padding: 8px 0; }
 .detail-body-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: var(--safe-bottom); overscroll-behavior: contain; touch-action: pan-y; }
 .detail-footer { display: none; } /* buttons moved to header */
 
@@ -919,6 +958,7 @@ header {
         <div id="rel-loc-count" style="font-size:12px;color:var(--text-muted);display:none"></div>
       </div>
       <div class="card-area scroll-hidden">
+        <div id="action-panel"></div>
         <div class="cards-grid" id="contacts-grid"></div>
       </div>
     </div>
@@ -1460,8 +1500,17 @@ header {
           <button class="warmth-btn" data-v="5" onclick="setWarmth(5)">5</button>
         </div>
       </div>
-      <div class="form-group"><label class="form-label">Last Contact <span class="form-opt">(optional)</span></label><input class="form-input" id="f-last-contact" type="date"></div>
+      <div class="form-group"><label class="form-label">Tier <span class="form-opt">(prospects &amp; investors)</span></label>
+        <select class="form-select" id="f-tier">
+          <option value="">No tier</option>
+          <option value="I">Tier I</option>
+          <option value="II">Tier II</option>
+          <option value="III">Tier III</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Last Conversation <span class="form-opt">(optional)</span></label><input class="form-input" id="f-last-contact" type="date"></div>
       <div class="form-group"><label class="form-label">Next Follow-up <span class="form-opt">(optional)</span></label><input class="form-input" id="f-followup" type="date"></div>
+      <div class="form-group form-full"><label class="form-label">Next Action <span class="form-opt">(what needs doing)</span></label><input class="form-input" id="f-next-action" placeholder="Send case study, intro to Sarah…"></div>
       <div class="form-group form-full"><label class="form-label">Tags <span class="form-opt">(optional, comma-separated)</span></label><input class="form-input" id="f-tags" placeholder="VC, mentor, close friend"></div>
       <div class="form-group form-full"><label class="form-label">Additional Notes <span class="form-opt">(optional)</span></label><textarea class="form-textarea" id="f-notes" placeholder="Key topics, shared interests…"></textarea></div>
     </div>
@@ -3176,6 +3225,7 @@ function renderContacts() {
   });
 
   updateRelLocUI(list.length);
+  renderActionPanel(list);
   const grid = document.getElementById('contacts-grid');
 
   if(!list.length) {
@@ -3206,7 +3256,7 @@ function renderContacts() {
       <div class="card-header">
         <div class="avatar" style="background:${color}22;color:${color}">${initials(c)}</div>
         <div style="flex:1;min-width:0">
-          <div class="card-name">${primaryName}</div>
+          <div class="card-name">${primaryName} ${tierBadge(c.tier)}</div>
           <div class="card-sub">${subLine}</div>
           ${warmthDots(c.warmth||0)}
         </div>
@@ -3221,6 +3271,59 @@ function renderContacts() {
     </div>`;
   }).join('');
   renderRelWidgets();
+}
+
+const TIER_ORDER = { 'I':0, 'II':1, 'III':2, '':3 };
+const tierBadge = t => t ? `<span class="tier-badge tier-${t}">TIER ${t}</span>` : '';
+
+// The required to-do list shown above Prospects and Investors. An item is
+// anything with a follow-up date or a written next action — sorted by urgency,
+// with Tier I breaking ties so the important names surface first.
+function renderActionPanel(list) {
+  const el = document.getElementById('action-panel');
+  if (!el) return;
+  const scoped = activeRelFilter === 'lead' || activeRelFilter === 'investor';
+  if (!scoped) { el.innerHTML = ''; return; }
+
+  const label = TYPE_LABELS[activeRelFilter] || 'Contacts';
+  const items = list
+    .filter(c => c.followup || String(c.nextAction || '').trim())
+    .sort((a, b) => {
+      const da = a.followup ? daysDiff(a.followup) : 99999;
+      const db = b.followup ? daysDiff(b.followup) : 99999;
+      if (da !== db) return da - db;
+      return (TIER_ORDER[a.tier||''] ?? 3) - (TIER_ORDER[b.tier||''] ?? 3);
+    });
+
+  if (!items.length) {
+    el.innerHTML = `<div class="todo-panel">
+      <div class="todo-panel-title">Required To-Dos — ${escHtml(label)}</div>
+      <div class="todo-empty">Nothing outstanding. Add a follow-up date or a next action to a contact and it shows up here.</div>
+    </div>`;
+    return;
+  }
+
+  const overdue = items.filter(c => c.followup && daysDiff(c.followup) < 0).length;
+  el.innerHTML = `<div class="todo-panel">
+    <div class="todo-panel-title">
+      Required To-Dos — ${escHtml(label)}
+      <span class="todo-panel-count">${items.length}</span>
+      ${overdue ? `<span style="color:var(--red);font-weight:700">${overdue} overdue</span>` : ''}
+    </div>
+    ${items.map(c => {
+      const d = c.followup ? daysDiff(c.followup) : null;
+      const cls = d === null ? '' : (d < 0 ? 'is-overdue' : d <= 7 ? 'is-soon' : '');
+      const dueCls = d === null ? '' : (d < 0 ? 'overdue' : d <= 7 ? 'soon' : '');
+      return `<div class="todo-row ${cls}" onclick="openContactDetail('${c.id}')">
+        <div style="flex:1;min-width:0">
+          <div class="todo-name">${escHtml(c.first)} ${escHtml(c.last||'')} ${tierBadge(c.tier)}</div>
+          ${c.nextAction ? `<div class="todo-action">→ ${escHtml(c.nextAction)}</div>` : ''}
+          <div class="todo-meta">Last spoke: ${c.lastContact ? formatDate(c.lastContact) : 'never'}${c.org ? ' · ' + escHtml(c.org) : ''}</div>
+        </div>
+        <div class="todo-due ${dueCls}">${d === null ? 'no date' : relativeDate(d)}</div>
+      </div>`;
+    }).join('')}
+  </div>`;
 }
 
 function renderRelWidgets() {
@@ -3346,6 +3449,8 @@ function openContactModal(id) {
   document.getElementById('f-followup').value     = c?.followup||'';
   document.getElementById('f-type').value         = c?.type||'professional';
   document.getElementById('f-sector').value       = c?.sector||'';
+  document.getElementById('f-tier').value         = c?.tier||'';
+  document.getElementById('f-next-action').value  = c?.nextAction||'';
   setWarmth(c?.warmth||3);
   document.getElementById('contact-modal-overlay').classList.remove('hidden');
 }
@@ -3377,6 +3482,8 @@ function saveContact() {
     phone: document.getElementById('f-phone').value.trim(),
     type: document.getElementById('f-type').value,
     sector: document.getElementById('f-sector').value,
+    tier: document.getElementById('f-tier').value,
+    nextAction: document.getElementById('f-next-action').value.trim(),
     lastContact: document.getElementById('f-last-contact').value,
     followup: document.getElementById('f-followup').value,
     warmth: selectedWarmth,
@@ -3479,12 +3586,15 @@ function openContactDetail(id) {
     <div><div class="detail-section-title">Relationship</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px">
         <div class="detail-field"><div class="detail-field-label">Warmth</div>${wHtml}</div>
-        <div class="detail-field"><div class="detail-field-label">Last Contact</div><div class="detail-field-value">${formatDate(c.lastContact)}</div></div>
+        ${c.tier?`<div class="detail-field"><div class="detail-field-label">Tier</div><div>${tierBadge(c.tier)}</div></div>`:''}
+        <div class="detail-field"><div class="detail-field-label">Last Conversation</div><div class="detail-field-value">${formatDate(c.lastContact)}</div></div>
         <div class="detail-field"><div class="detail-field-label">Next Follow-up</div>
           <div class="detail-field-value" style="color:${days!==null&&days<0?'var(--red)':days!==null&&days<=7?'var(--yellow)':'var(--text)'}">
             ${c.followup?`${formatDate(c.followup)} <span style="font-size:11px;opacity:.7">(${relativeDate(days)})</span>`:'—'}
           </div></div>
       </div></div>
+    ${c.nextAction?`<div><div class="detail-section-title">Next Action</div>
+      <div class="detail-notes-text" style="border-color:var(--accent);color:var(--text)">→ ${escHtml(c.nextAction)}</div></div>`:''}
     <div><div class="detail-section-title">How We Met</div>
       <div class="detail-notes-text" style="font-style:italic">${escHtml(c.howMet||'—').replace(/\n/g,'<br>')}</div></div>
     ${(c.email||c.phone)?`<div><div class="detail-section-title">Contact Info</div>
@@ -3742,9 +3852,14 @@ const SHEET_SCHEMAS = {
       { h:'Email',          f:'email' },
       { h:'Phone',          f:'phone' },
       { h:'Type',           f:'type',   out: v => (typeof TYPE_LABELS !== 'undefined' && TYPE_LABELS[v]) || v || '', in: v => csvTypeMap(v) },
+      // Strip the word "Tier" before matching — otherwise the i in "Tier"
+      // matches first and every Tier II/III silently collapses to Tier I.
+      { h:'Tier',           f:'tier',   out: v => v ? `Tier ${v}` : '',
+        in: v => ((String(v).toUpperCase().replace(/TIER/g,'').match(/I{1,3}/)||[''])[0]) },
       { h:'Warmth (1-5)',   f:'warmth', out: v => v || '', in: v => parseInt(v) || 0 },
-      { h:'Last Contact',   f:'lastContact', in: normalizeDate },
+      { h:'Last Conversation', f:'lastContact', in: normalizeDate },
       { h:'Next Follow-up', f:'followup',    in: normalizeDate },
+      { h:'Next Action',    f:'nextAction' },
       { h:'Tags',           f:'tags' },
       { h:'How We Met',     f:'howMet' },
       { h:'Notes',          f:'notes' },
@@ -4289,7 +4404,7 @@ async function readWorkbook(buf) {
 
 // Dropdown choices offered on the data tabs so typed values stay valid.
 const SHEET_CHOICES = {
-  contacts: { type: ['Professional','Personal','Prospect','Investor/Advisor'], 'warmth': ['1','2','3','4','5'] },
+  contacts: { type: ['Professional','Personal','Prospect','Investor/Advisor'], tier: ['Tier I','Tier II','Tier III'], warmth: ['1','2','3','4','5'] },
   places:   { category: ['Restaurant','Bars / Nightlife','Activity','Hotel','Other'], visited: ['Yes','No'], rating: ['1','2','3','4','5'] },
   todos:    { status: ['open','done','snoozed'], scope: ['personal','work'], priority: ['low','normal','high'] },
   ideas:    { status: ['new','open','doing','done','parked'] },
@@ -4444,7 +4559,47 @@ function exportWorkbook() {
     widths:[18,18,18,18,18,18,18,18], links,
   };
 
-  const tabs = [dashboard].concat(dataTabs);
+  // ── Follow-Ups tab: the same required to-do list the app shows above
+  // Prospects and Investors, as a read-only sheet you can sort and filter.
+  const todoRows = [[
+    { v:'Type', s:1 }, { v:'Tier', s:1 }, { v:'Name', s:1 }, { v:'Organization', s:1 },
+    { v:'Next Action', s:1 }, { v:'Last Conversation', s:1 }, { v:'Next Follow-up', s:1 },
+    { v:'Status', s:1 }, { v:'ID', s:1 }
+  ]];
+  let followUps = [];
+  try {
+    followUps = (contacts || [])
+      .filter(c => (c.type === 'lead' || c.type === 'investor')
+                && (c.followup || String(c.nextAction||'').trim()))
+      .sort((a,b) => {
+        const da = a.followup ? daysDiff(a.followup) : 99999;
+        const db = b.followup ? daysDiff(b.followup) : 99999;
+        if (da !== db) return da - db;
+        return (TIER_ORDER[a.tier||''] ?? 3) - (TIER_ORDER[b.tier||''] ?? 3);
+      });
+  } catch(e) { followUps = []; }
+  followUps.forEach(c => {
+    const d = c.followup ? daysDiff(c.followup) : null;
+    const status = d === null ? 'no date' : (d < 0 ? `OVERDUE ${Math.abs(d)}d` : d === 0 ? 'today' : `in ${d}d`);
+    todoRows.push([
+      TYPE_LABELS[c.type] || c.type, c.tier ? `Tier ${c.tier}` : '',
+      `${c.first||''} ${c.last||''}`.trim(), c.org || '',
+      c.nextAction || '', c.lastContact || '', c.followup || '', status, c.id
+    ]);
+  });
+  const followTab = {
+    name:'Follow-Ups', rows: todoRows, freeze: 1,
+    autoFilter: `A1:I${Math.max(todoRows.length, 1)}`,
+    widths: [16, 10, 24, 26, 52, 18, 16, 14, 20],
+  };
+
+  dash.push([]);
+  dash.push([{ v:'REQUIRED TO-DOS  —  prospects and investors needing action', s:3 }]);
+  const followRow = dash.length + 1;
+  dash.push([{ v:`📋 Follow-Ups (${followUps.length})`, s:4 }]);
+  links.push({ ref:`A${followRow}`, target:"'Follow-Ups'!A1", display:'Follow-Ups' });
+
+  const tabs = [dashboard, followTab].concat(dataTabs);
   const bytes = buildWorkbook(tabs);
   const blob = new Blob([bytes], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   const url = URL.createObjectURL(blob);
