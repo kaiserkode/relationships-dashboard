@@ -11,3 +11,7 @@ contacts-*.csv
 places-*.csv
 companies-*.csv
 deals-*.csv
+
+# Excel mirrors of personal data
+*.xlsx
+*.xlsm

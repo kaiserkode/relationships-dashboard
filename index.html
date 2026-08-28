@@ -1690,9 +1690,34 @@ header {
       <!-- Status message -->
       <div id="data-status" style="display:none;padding:10px 14px;border-radius:var(--radius-sm);font-size:13px;font-weight:500"></div>
 
+      <!-- Full Excel workbook (mirror) -->
+      <div style="background:var(--surface2);border:2px solid var(--accent);border-radius:var(--radius);padding:16px">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">📗 Excel Mirror — Everything, One File</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
+          One Excel workbook holding every section as its own tab — work and lifestyle.
+          Edit at your desk, import it back, and the app updates. Add on your phone while
+          travelling, export again, and Excel catches up. Both directions, same file.
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn btn-primary" style="justify-content:center;height:50px;font-size:15px;font-weight:700"
+                  onclick="exportWorkbook()">
+            ⬇&nbsp; Export Excel Workbook
+          </button>
+          <label style="display:flex;align-items:center;justify-content:center;height:50px;background:var(--surface);border:2px dashed var(--accent);border-radius:var(--radius-sm);cursor:pointer;font-size:14px;font-weight:600;color:var(--accent-light);gap:8px">
+            ⬆&nbsp; Import Excel Workbook
+            <input type="file" accept=".xlsx,.csv" style="display:none" onchange="importWorkbook(event)">
+          </label>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:10px;line-height:1.7">
+          • Every tab syncs at once &nbsp;·&nbsp; matched on the <strong style="color:var(--text-dim)">ID</strong> column<br>
+          • Blank cell = unchanged &nbsp;·&nbsp; <strong style="color:var(--text-dim)">--</strong> clears &nbsp;·&nbsp; <strong style="color:var(--text-dim)">Y</strong> in <em>Delete?</em> removes<br>
+          • New rows: type at the bottom of a tab, leave ID blank
+        </div>
+      </div>
+
       <!-- Excel Sync section -->
-      <div style="background:var(--surface2);border:1px solid var(--accent);border-radius:var(--radius);padding:16px">
-        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">🔄 Excel Sync — Bulk Edit</div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">🔄 Single Sheet Sync (CSV)</div>
         <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
           Export a sheet, edit it in Excel, import it back. Rows are matched on the
           <strong style="color:var(--text-dim)">ID</strong> column, so your edits update the existing records instead of creating duplicates.
@@ -3776,7 +3801,125 @@ const SHEET_SCHEMAS = {
       { h:'Notes',    f:'notes' },
     ],
   },
+  todos: {
+    label: 'Reminders',
+    all:    () => todos,
+    commit: rows => { todos = rows; saveTodos(); try { tdRender(); } catch(e){} },
+    blank:  () => ({ id: genId(), added: new Date().toISOString(), status:'open', scope:'personal',
+                     folder:'other', priority:'normal', repeatUnit:'none', repeatEvery:1, history:[] }),
+    columns: [
+      { h:'ID',       f:'id', key:true },
+      { h:'Title',    f:'title' },
+      { h:'Status',   f:'status' },
+      { h:'Scope',    f:'scope' },
+      { h:'Folder',   f:'folder' },
+      { h:'Priority', f:'priority' },
+      { h:'Due',      f:'due',    in: normalizeDate },
+      { h:'Done On',  f:'doneOn', in: normalizeDate },
+      { h:'Notes',    f:'notes' },
+    ],
+  },
+  ideas: {
+    label: 'Ideas',
+    all:    () => ideas,
+    commit: rows => { ideas = rows; saveIdeas(); try { renderIdeas(); } catch(e){} },
+    blank:  () => ({ id: genId(), added: new Date().toISOString(), status:'new' }),
+    columns: [
+      { h:'ID',     f:'id', key:true },
+      { h:'Title',  f:'title' },
+      { h:'Status', f:'status' },
+      { h:'Tags',   f:'tags' },
+      { h:'Notes',  f:'notes' },
+    ],
+  },
+  journal: {
+    label: 'Journal',
+    all:    () => journal,
+    commit: rows => { journal = rows; saveJournal(); try { renderJournal(); } catch(e){} },
+    blank:  () => ({ id: genId(), added: new Date().toISOString() }),
+    columns: [
+      { h:'ID',    f:'id', key:true },
+      { h:'Date',  f:'date', in: normalizeDate },
+      { h:'Entry', f:'body' },
+    ],
+  },
+  golf: {
+    label: 'Golf',
+    all:    () => golf,
+    commit: rows => { golf = rows; saveGolf(); try { renderHobbies(); } catch(e){} },
+    blank:  () => ({ id: genId(), added: new Date().toISOString(), status:'want', rating:0 }),
+    columns: [
+      { h:'ID',     f:'id', key:true },
+      { h:'Name',   f:'name' },
+      { h:'City',   f:'city' },
+      { h:'State',  f:'state' },
+      { h:'Status', f:'status' },
+      { h:'Rating', f:'rating', out: v => v || '', in: v => parseInt(v) || 0 },
+      { h:'Tags',   f:'tags' },
+      { h:'Notes',  f:'notes' },
+    ],
+  },
+  drinks: {
+    label: 'Drinks',
+    all:    () => drinks,
+    commit: rows => { drinks = rows; saveDrinks(); try { renderHobbies(); } catch(e){} },
+    blank:  () => ({ id: genId(), added: new Date().toISOString(), status:'want', rating:0 }),
+    columns: [
+      { h:'ID',       f:'id', key:true },
+      { h:'Name',     f:'name' },
+      { h:'Category', f:'category' },
+      { h:'Status',   f:'status' },
+      { h:'Rating',   f:'rating', out: v => v || '', in: v => parseInt(v) || 0 },
+      { h:'Tags',     f:'tags' },
+      { h:'Notes',    f:'notes' },
+    ],
+  },
+  cooking: {
+    label: 'Cooking',
+    all:    () => cooking,
+    commit: rows => { cooking = rows; saveCooking(); try { renderHobbies(); } catch(e){} },
+    blank:  () => ({ id: genId(), added: new Date().toISOString(), status:'want', rating:0 }),
+    columns: [
+      { h:'ID',     f:'id', key:true },
+      { h:'Name',   f:'name' },
+      { h:'Status', f:'status' },
+      { h:'Rating', f:'rating', out: v => v || '', in: v => parseInt(v) || 0 },
+      { h:'Tags',   f:'tags' },
+      { h:'Notes',  f:'notes' },
+    ],
+  },
+  otherHobbies: {
+    label: 'Other Hobbies',
+    all:    () => otherHobbies,
+    commit: rows => { otherHobbies = rows; saveOtherHobbies(); try { renderHobbies(); } catch(e){} },
+    blank:  () => ({ id: genId(), added: new Date().toISOString(), status:'want', rating:0 }),
+    columns: [
+      { h:'ID',     f:'id', key:true },
+      { h:'Name',   f:'name' },
+      { h:'Status', f:'status' },
+      { h:'Rating', f:'rating', out: v => v || '', in: v => parseInt(v) || 0 },
+      { h:'Tags',   f:'tags' },
+      { h:'Notes',  f:'notes' },
+    ],
+  },
+  movies: {
+    label: 'Movies',
+    all:    () => movies,
+    commit: rows => { movies = rows; saveMovies(); try { renderHobbies(); } catch(e){} },
+    blank:  () => ({ id: genId(), added: new Date().toISOString(), status:'want', rating:0 }),
+    columns: [
+      { h:'ID',     f:'id', key:true },
+      { h:'Name',   f:'name' },
+      { h:'Status', f:'status' },
+      { h:'Rating', f:'rating', out: v => v || '', in: v => parseInt(v) || 0 },
+      { h:'Tags',   f:'tags' },
+      { h:'Notes',  f:'notes' },
+    ],
+  },
 };
+
+// Tab order in the workbook: work first, then lifestyle.
+const WORKBOOK_TABS = ['contacts','companies','deals','places','todos','ideas','journal','golf','drinks','cooking','otherHobbies','movies'];
 
 function exportSheet(type) {
   const sch = SHEET_SCHEMAS[type];
@@ -3835,6 +3978,367 @@ function parseCSV(text) {
   }
   if (cur || row.length) { row.push(cur.trim()); rows.push(row); }
   return rows;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// XLSX ENGINE — real Excel workbooks, no external library
+// An .xlsx is a ZIP of XML files. We write entries uncompressed
+// (ZIP "stored"), which Excel accepts, and read them back with the
+// browser's built-in inflate. Every cell is written as text so Excel
+// cannot silently reformat dates like 2026-06-01 into 6/1/2026.
+// ═══════════════════════════════════════════════════════════════
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let i = 0; i < 256; i++) {
+    let c = i;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[i] = c >>> 0;
+  }
+  return t;
+})();
+function crc32(bytes) {
+  let c = 0xFFFFFFFF;
+  for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+const enc8 = new TextEncoder();
+
+function zipBuild(files) {                       // files: [{name, data:Uint8Array}]
+  const chunks = [], central = [];
+  let offset = 0;
+  const put = (arr) => { chunks.push(arr); offset += arr.length; };
+  const u16 = n => new Uint8Array([n & 255, (n >>> 8) & 255]);
+  const u32 = n => new Uint8Array([n & 255, (n >>> 8) & 255, (n >>> 16) & 255, (n >>> 24) & 255]);
+
+  files.forEach(f => {
+    const name = enc8.encode(f.name);
+    const crc = crc32(f.data), size = f.data.length, here = offset;
+    put(u32(0x04034b50)); put(u16(20)); put(u16(0)); put(u16(0));
+    put(u16(0)); put(u16(0));                       // time/date
+    put(u32(crc)); put(u32(size)); put(u32(size));
+    put(u16(name.length)); put(u16(0));
+    put(name); put(f.data);
+
+    const c = [];
+    const pc = a => c.push(a);
+    pc(u32(0x02014b50)); pc(u16(20)); pc(u16(20)); pc(u16(0)); pc(u16(0));
+    pc(u16(0)); pc(u16(0));
+    pc(u32(crc)); pc(u32(size)); pc(u32(size));
+    pc(u16(name.length)); pc(u16(0)); pc(u16(0)); pc(u16(0)); pc(u16(0));
+    pc(u32(0)); pc(u32(here)); pc(name);
+    central.push(c);
+  });
+
+  const cdStart = offset;
+  central.forEach(c => c.forEach(put));
+  const cdSize = offset - cdStart;
+  put(u32(0x06054b50)); put(u16(0)); put(u16(0));
+  put(u16(files.length)); put(u16(files.length));
+  put(u32(cdSize)); put(u32(cdStart)); put(u16(0));
+
+  let total = 0; chunks.forEach(c => total += c.length);
+  const out = new Uint8Array(total);
+  let p = 0; chunks.forEach(c => { out.set(c, p); p += c.length; });
+  return out;
+}
+
+async function zipRead(buf) {                     // -> { name: string }
+  const b = new Uint8Array(buf), dv = new DataView(buf);
+  let eocd = -1;
+  for (let i = b.length - 22; i >= 0 && i > b.length - 66000; i--) {
+    if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  }
+  if (eocd < 0) throw new Error('Not a valid Excel file');
+  const count = dv.getUint16(eocd + 10, true);
+  let p = dv.getUint32(eocd + 16, true);
+  const out = {};
+  for (let i = 0; i < count; i++) {
+    if (dv.getUint32(p, true) !== 0x02014b50) break;
+    const method   = dv.getUint16(p + 10, true);
+    const compSize = dv.getUint32(p + 20, true);
+    const nameLen  = dv.getUint16(p + 28, true);
+    const extraLen = dv.getUint16(p + 30, true);
+    const cmtLen   = dv.getUint16(p + 32, true);
+    const local    = dv.getUint32(p + 42, true);
+    const name = new TextDecoder().decode(b.subarray(p + 46, p + 46 + nameLen));
+    const lNameLen  = dv.getUint16(local + 26, true);
+    const lExtraLen = dv.getUint16(local + 28, true);
+    const start = local + 30 + lNameLen + lExtraLen;
+    const raw = b.subarray(start, start + compSize);
+    let data;
+    if (method === 0) data = raw;
+    else {
+      const ds = new DecompressionStream('deflate-raw');
+      const blob = new Blob([raw]).stream().pipeThrough(ds);
+      data = new Uint8Array(await new Response(blob).arrayBuffer());
+    }
+    out[name] = new TextDecoder().decode(data);
+    p += 46 + nameLen + extraLen + cmtLen;
+  }
+  return out;
+}
+
+const xmlEsc = s => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  .replace(/"/g,'&quot;').replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'');
+
+function colRef(n) {                              // 0 -> A, 26 -> AA
+  let s = '';
+  n += 1;
+  while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = (n - m - 1) / 26; }
+  return s;
+}
+
+function sheetXml(rows) {
+  let x = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        + '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>';
+  rows.forEach((row, r) => {
+    x += `<row r="${r+1}">`;
+    row.forEach((cell, c) => {
+      const v = (cell == null) ? '' : String(cell);
+      if (v === '') return;
+      x += `<c r="${colRef(c)}${r+1}" t="inlineStr"><is><t xml:space="preserve">${xmlEsc(v)}</t></is></c>`;
+    });
+    x += '</row>';
+  });
+  return x + '</sheetData></worksheet>';
+}
+
+function buildWorkbook(tabs) {                    // tabs: [{name, rows}]
+  const files = [];
+  const NS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+  files.push({ name:'[Content_Types].xml', data: enc8.encode(
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+    + '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+    + '<Default Extension="xml" ContentType="application/xml"/>'
+    + '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+    + tabs.map((t,i)=>`<Override PartName="/xl/worksheets/sheet${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')
+    + '</Types>') });
+  files.push({ name:'_rels/.rels', data: enc8.encode(
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+    + `<Relationship Id="rId1" Type="${NS}/officeDocument" Target="xl/workbook.xml"/></Relationships>`) });
+  files.push({ name:'xl/workbook.xml', data: enc8.encode(
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + `<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="${NS}"><sheets>`
+    + tabs.map((t,i)=>`<sheet name="${xmlEsc(t.name)}" sheetId="${i+1}" r:id="rId${i+1}"/>`).join('')
+    + '</sheets></workbook>') });
+  files.push({ name:'xl/_rels/workbook.xml.rels', data: enc8.encode(
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+    + tabs.map((t,i)=>`<Relationship Id="rId${i+1}" Type="${NS}/worksheet" Target="worksheets/sheet${i+1}.xml"/>`).join('')
+    + '</Relationships>') });
+  tabs.forEach((t,i) => files.push({ name:`xl/worksheets/sheet${i+1}.xml`, data: enc8.encode(sheetXml(t.rows)) }));
+  return zipBuild(files);
+}
+
+// Parse a workbook back into { sheetName: rows[][] }
+async function readWorkbook(buf) {
+  const parts = await zipRead(buf);
+  const wb = parts['xl/workbook.xml'] || '';
+  const rels = parts['xl/_rels/workbook.xml.rels'] || '';
+
+  const shared = [];
+  if (parts['xl/sharedStrings.xml']) {
+    const sx = parts['xl/sharedStrings.xml'];
+    (sx.match(/<si>[\s\S]*?<\/si>/g) || []).forEach(si => {
+      shared.push((si.match(/<t[^>]*>([\s\S]*?)<\/t>/g) || [])
+        .map(t => t.replace(/<[^>]+>/g,'')).join(''));
+    });
+  }
+  const relMap = {};
+  (rels.match(/<Relationship[^>]*\/>/g) || []).forEach(r => {
+    const id = (r.match(/Id="([^"]+)"/)||[])[1];
+    const tg = (r.match(/Target="([^"]+)"/)||[])[1];
+    if (id && tg) relMap[id] = tg.replace(/^\/?xl\//,'').replace(/^\//,'');
+  });
+
+  const unesc = s => String(s).replace(/&lt;/g,'<').replace(/&gt;/g,'>')
+    .replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&amp;/g,'&');
+
+  const out = {};
+  (wb.match(/<sheet[^>]*\/>/g) || []).forEach(s => {
+    const name = unesc((s.match(/name="([^"]*)"/)||[])[1] || '');
+    const rid  = (s.match(/r:id="([^"]+)"/)||[])[1];
+    const target = relMap[rid];
+    const xml = parts['xl/' + target];
+    if (!xml) return;
+    const rows = [];
+    (xml.match(/<row[\s\S]*?<\/row>|<row[^>]*\/>/g) || []).forEach(rx => {
+      const cells = [];
+      (rx.match(/<c[\s\S]*?<\/c>|<c[^>]*\/>/g) || []).forEach(cx => {
+        const ref = (cx.match(/r="([A-Z]+)\d+"/)||[])[1] || '';
+        let ci = 0; for (let k = 0; k < ref.length; k++) ci = ci * 26 + (ref.charCodeAt(k) - 64);
+        ci = ci - 1;
+        const type = (cx.match(/t="([^"]+)"/)||[])[1] || 'n';
+        let val = '';
+        if (type === 'inlineStr') {
+          val = (cx.match(/<t[^>]*>([\s\S]*?)<\/t>/g) || []).map(t => t.replace(/<[^>]+>/g,'')).join('');
+        } else {
+          const v = (cx.match(/<v>([\s\S]*?)<\/v>/)||[])[1];
+          if (v != null) val = (type === 's') ? (shared[parseInt(v)] || '') : v;
+        }
+        if (ci >= 0) cells[ci] = unesc(val);
+      });
+      for (let k = 0; k < cells.length; k++) if (cells[k] == null) cells[k] = '';
+      rows.push(cells);
+    });
+    out[name] = rows;
+  });
+  return out;
+}
+
+// ── Export the whole app as one Excel workbook ────────────────
+function exportWorkbook() {
+  const tabs = WORKBOOK_TABS.filter(k => SHEET_SCHEMAS[k]).map(k => {
+    const sch = SHEET_SCHEMAS[k];
+    let list = [];
+    try { list = sch.all() || []; } catch(e) { list = []; }
+    const rows = [ sch.columns.map(c => c.h).concat('Delete?') ];
+    list.forEach(r => rows.push(
+      sch.columns.map(c => {
+        const raw = r[c.f];
+        return c.out ? c.out(raw, r) : (raw == null ? '' : raw);
+      }).concat('')
+    ));
+    return { name: sch.label, rows, count: list.length };
+  });
+  const bytes = buildWorkbook(tabs);
+  const blob = new Blob([bytes], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `my-world-${new Date().toISOString().slice(0,10)}.xlsx`;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+  localStorage.setItem('last_backup_ts', new Date().toISOString());
+  updateLastBackupInfo();
+  showDataStatus('✓ Workbook exported — ' + tabs.map(t => `${t.name} ${t.count}`).join(', ')
+    + '. Edit on your computer, then import it back here.', true);
+}
+
+// ── Import a whole workbook (every tab at once) ───────────────
+let pendingWorkbookPlan = null;
+
+function importWorkbook(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (/\.csv$/i.test(file.name)) { importSheet(event, document.getElementById('sheet-type').value); return; }
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try {
+      const sheets = await readWorkbook(e.target.result);
+      const byLabel = {};
+      Object.keys(SHEET_SCHEMAS).forEach(k => { byLabel[SHEET_SCHEMAS[k].label.toLowerCase()] = k; });
+      const norm = s => String(s == null ? '' : s).toLowerCase().replace(/[^a-z0-9]/g,'');
+      const plans = [];
+
+      Object.keys(sheets).forEach(tabName => {
+        const key = byLabel[String(tabName).toLowerCase()];
+        if (!key) return;
+        const sch = SHEET_SCHEMAS[key];
+        const rows = sheets[tabName].filter(r => r.some(c => String(c).trim() !== ''));
+        if (rows.length < 2) return;
+        const head = rows[0].map(norm);
+        const idx = {};
+        sch.columns.forEach(c => { idx[c.f] = head.indexOf(norm(c.h)); });
+        if (idx.id === -1) return;
+        const delIdx = head.indexOf('delete');
+
+        let list = [];
+        try { list = sch.all() || []; } catch(err) { list = []; }
+        const byId = new Map(list.map(r => [String(r.id), r]));
+        const updates = [], adds = [], deletes = [];
+        let fields = 0;
+
+        for (let i = 1; i < rows.length; i++) {
+          const r = rows[i];
+          const cell = f => idx[f] === -1 ? undefined : String(r[idx[f]] == null ? '' : r[idx[f]]).trim();
+          const id = cell('id');
+          const del = delIdx !== -1 && sheetYesNo(r[delIdx]);
+          if (id && byId.has(id)) {
+            const rec = byId.get(id);
+            if (del) { deletes.push(rec); continue; }
+            const changes = {};
+            for (const c of sch.columns) {
+              if (c.key || idx[c.f] === -1) continue;
+              const raw = cell(c.f);
+              if (raw === undefined || raw === '') continue;
+              const val = raw === SHEET_CLEAR_TOKEN ? '' : (c.in ? c.in(raw) : raw);
+              if (String(rec[c.f] == null ? '' : rec[c.f]) !== String(val == null ? '' : val)) changes[c.f] = val;
+            }
+            const n = Object.keys(changes).length;
+            if (n) { updates.push({ rec, changes }); fields += n; }
+          } else if (!del) {
+            const rec = sch.blank();
+            let any = false;
+            for (const c of sch.columns) {
+              if (c.key || idx[c.f] === -1) continue;
+              const raw = cell(c.f);
+              if (!raw || raw === SHEET_CLEAR_TOKEN) continue;
+              rec[c.f] = c.in ? c.in(raw) : raw;
+              any = true;
+            }
+            if (any) adds.push(rec);
+          }
+        }
+        if (updates.length || adds.length || deletes.length) {
+          plans.push({ key, label: sch.label, updates, adds, deletes, fields });
+        }
+      });
+
+      if (!plans.length) {
+        showDataStatus('No changes found — that workbook already matches what is on this device.', true);
+        return;
+      }
+      pendingWorkbookPlan = plans;
+      showWorkbookPlan(plans);
+    } catch (err) {
+      showDataStatus('❌ Could not read that workbook. Make sure it is the .xlsx exported from this app.', false);
+    }
+    event.target.value = '';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function showWorkbookPlan(plans) {
+  let u = 0, a = 0, d = 0;
+  plans.forEach(p => { u += p.updates.length; a += p.adds.length; d += p.deletes.length; });
+  const el = document.getElementById('data-status');
+  el.style.display = '';
+  el.style.background = '#1e3a5f'; el.style.color = '#bfdbfe'; el.style.border = '1px solid #3b82f6';
+  el.innerHTML = `
+    <div style="font-weight:700;margin-bottom:8px">⚠️ Not saved yet — tap Apply below</div>
+    <div style="font-size:13px;line-height:1.8;margin-bottom:10px">
+      ${plans.map(p => `<strong>${p.label}</strong> — ${p.updates.length} updated, ${p.adds.length} added, ${p.deletes.length} deleted`).join('<br>')}
+    </div>
+    <div style="font-size:13px;font-weight:700;margin-bottom:12px">Total: ${u} updated · ${a} added · ${d} deleted</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost" style="flex:1;height:44px;justify-content:center" onclick="cancelWorkbookPlan()">Cancel</button>
+      <button class="btn btn-primary" style="flex:2;height:52px;justify-content:center;font-size:16px;font-weight:700" onclick="applyWorkbookPlan()">Apply Changes</button>
+    </div>`;
+  try { el.scrollIntoView({ behavior:'smooth', block:'center' }); } catch(e) {}
+}
+
+function cancelWorkbookPlan() {
+  pendingWorkbookPlan = null;
+  showDataStatus('Import cancelled — nothing was changed.', true);
+}
+
+function applyWorkbookPlan() {
+  if (!pendingWorkbookPlan) return;
+  let u = 0, a = 0, d = 0;
+  pendingWorkbookPlan.forEach(p => {
+    const sch = SHEET_SCHEMAS[p.key];
+    p.updates.forEach(x => Object.assign(x.rec, x.changes));
+    const doomed = new Set(p.deletes.map(x => String(x.id)));
+    let list = [];
+    try { list = sch.all() || []; } catch(e) { list = []; }
+    sch.commit(list.filter(r => !doomed.has(String(r.id))).concat(p.adds));
+    u += p.updates.length; a += p.adds.length; d += p.deletes.length;
+  });
+  pendingWorkbookPlan = null;
+  showDataStatus(`✓ Synced — ${u} updated, ${a} added, ${d} deleted across all tabs.`, true);
 }
 
 // Nothing is written until the user confirms the summary.
