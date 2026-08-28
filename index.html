@@ -3803,6 +3803,19 @@ function importSheet(event, type) {
         return;
       }
 
+      // Guard against importing the wrong sheet into the wrong tab. Without this,
+      // a Companies sheet imported as Contacts silently creates hundreds of junk rows.
+      const score = s => s.columns.filter(c => head.indexOf(norm(c.h)) !== -1).length / s.columns.length;
+      let best = type, bestScore = score(sch);
+      Object.keys(SHEET_SCHEMAS).forEach(k => {
+        const sc = score(SHEET_SCHEMAS[k]);
+        if (sc > bestScore) { best = k; bestScore = sc; }
+      });
+      if (best !== type) {
+        showDataStatus(`❌ That looks like a ${SHEET_SCHEMAS[best].label} sheet, but "${sch.label}" is selected. Change the dropdown to ${SHEET_SCHEMAS[best].label} and import it again.`, false);
+        return;
+      }
+
       const current = sch.all() || [];
       const byId = new Map(current.map(r => [String(r.id), r]));
       const updates = [], adds = [], deletes = [];
@@ -3863,6 +3876,7 @@ function showSheetPlan(sch, nUpd, nFields, nAdd, nDel) {
   el.style.color  = '#bfdbfe';
   el.style.border = '1px solid #3b82f6';
   el.innerHTML = `
+    <div style="font-weight:700;margin-bottom:8px">⚠️ Not saved yet — tap Apply below</div>
     <div style="font-weight:700;margin-bottom:8px">Review before saving — ${sch.label}</div>
     <div style="font-size:13px;line-height:1.8;margin-bottom:12px">
       ✏️ <strong>${nUpd}</strong> record${nUpd===1?'':'s'} updated <span style="opacity:.75">(${nFields} field${nFields===1?'':'s'} changed)</span><br>
@@ -3871,8 +3885,11 @@ function showSheetPlan(sch, nUpd, nFields, nAdd, nDel) {
     </div>
     <div style="display:flex;gap:8px">
       <button class="btn btn-ghost" style="flex:1;height:44px;justify-content:center" onclick="cancelSheetPlan()">Cancel</button>
-      <button class="btn btn-primary" style="flex:2;height:44px;justify-content:center" onclick="applySheetPlan()">Apply Changes</button>
+      <button class="btn btn-primary" style="flex:2;height:52px;justify-content:center;font-size:16px;font-weight:700" onclick="applySheetPlan()">Apply Changes</button>
     </div>`;
+  // On a phone the modal is usually scrolled down at the file picker, so bring
+  // the summary into view — otherwise it looks like nothing happened.
+  try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(e) {}
 }
 
 function cancelSheetPlan() {
