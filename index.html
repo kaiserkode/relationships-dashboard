@@ -371,6 +371,72 @@ header {
 }
 .detail-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 
+/* ── Campaigns ──────────────────────────────────────────────── */
+.campaign-picks { display: flex; flex-wrap: wrap; gap: 6px; min-height: 30px; }
+.campaign-pick {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 11px; border-radius: 20px; font-size: 12px; font-weight: 500;
+  cursor: pointer; border: 1px solid var(--border);
+  background: var(--surface2); color: var(--text-muted);
+  -webkit-tap-highlight-color: transparent; user-select: none;
+}
+.campaign-pick.on { background: #4c1d95; border-color: #a855f7; color: #e9d5ff; }
+.campaign-pick input { display: none; }
+.campaign-pick-empty { font-size: 12px; color: var(--text-muted); padding: 6px 0; }
+
+.campaign-tag {
+  padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;
+  background: #4c1d95; color: #e9d5ff;
+}
+
+.campaign-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px; cursor: pointer;
+  position: relative; overflow: hidden;
+  -webkit-tap-highlight-color: transparent; transition: border-color 0.15s;
+}
+.campaign-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: #a855f7; }
+.campaign-card:active { border-color: #a855f7; }
+.campaign-name { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.campaign-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-bottom: 12px; }
+.campaign-counts { display: flex; gap: 10px; }
+.campaign-count {
+  flex: 1; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 8px 10px; text-align: center;
+}
+.campaign-count-n { font-size: 20px; font-weight: 700; color: #c084fc; }
+.campaign-count-l { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
+
+.member-row {
+  display: flex; align-items: center; gap: 10px; padding: 9px 10px;
+  border-radius: var(--radius-sm); background: var(--surface2);
+  border: 1px solid var(--border); margin-bottom: 6px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.member-row:active { border-color: #a855f7; }
+.member-main { flex: 1; min-width: 0; }
+.member-name { font-size: 13px; font-weight: 600; }
+.member-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+.member-remove {
+  width: 30px; height: 30px; border-radius: 50%; border: none; flex-shrink: 0;
+  background: #7f1d1d33; color: var(--red); font-size: 16px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.picker-row {
+  display: flex; align-items: center; gap: 10px; padding: 10px;
+  border-radius: var(--radius-sm); border: 1px solid var(--border);
+  background: var(--surface2); margin-bottom: 6px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.picker-row.on { border-color: #a855f7; background: #4c1d9533; }
+.picker-check {
+  width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  font-size: 13px; color: #fff;
+}
+.picker-row.on .picker-check { background: #a855f7; border-color: #a855f7; }
+
 /* ── Tier badges + required to-do panel ─────────────────────── */
 .tier-badge {
   padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 700;
@@ -868,6 +934,7 @@ header {
       <button class="app-tab" id="apptab-places" onclick="switchAppTab('places')">Places</button>
       <button class="app-tab" id="apptab-marketmap" onclick="switchAppTab('marketmap')">Market</button>
       <button class="app-tab" id="apptab-intel" onclick="switchAppTab('intel')">Intel</button>
+      <button class="app-tab" id="apptab-campaigns" onclick="switchAppTab('campaigns')">Campaigns</button>
       <button class="app-tab" id="apptab-hobbies" onclick="switchAppTab('hobbies')">Hobbies</button>
       <button class="app-tab" id="apptab-ideas" onclick="switchAppTab('ideas')">Ideas</button>
       <button class="app-tab" id="apptab-journal" onclick="switchAppTab('journal')">Journal</button>
@@ -1119,6 +1186,29 @@ header {
   </div>
 </div>
 
+<!-- ══ Campaigns Screen ══════════════════════════════════════ -->
+<div class="screen hidden" id="screen-campaigns">
+  <div class="screen-inner">
+    <div class="content">
+      <div class="toolbar">
+        <div class="toolbar-row">
+          <div class="search-wrap">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input class="search-input" id="campaigns-search" placeholder="Search campaigns…" oninput="renderCampaigns()">
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.5">
+          A campaign is a distribution list. Tag contacts and companies into it from their
+          edit form, or add them in bulk from inside the campaign.
+        </div>
+      </div>
+      <div class="card-area scroll-hidden">
+        <div class="cards-grid" id="campaigns-grid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ══ Journal Screen ════════════════════════════════════════ -->
 <div class="screen hidden" id="screen-journal">
   <div class="screen-inner">
@@ -1238,6 +1328,10 @@ header {
         <div class="form-group">
           <label class="form-label">Financing Partners</label>
           <input type="text" id="c-partners" placeholder="e.g. Goldman Sachs, JP Morgan (comma separated)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Campaigns <span style="font-weight:400;opacity:.7">(distribution lists)</span></label>
+          <div id="c-campaigns" class="campaign-picks"></div>
         </div>
         <div class="form-group">
           <label class="form-label">Notes / Conversation Summary</label>
@@ -1512,6 +1606,8 @@ header {
       <div class="form-group"><label class="form-label">Last Conversation <span class="form-opt">(optional)</span></label><input class="form-input" id="f-last-contact" type="date"></div>
       <div class="form-group"><label class="form-label">Next Follow-up <span class="form-opt">(optional)</span></label><input class="form-input" id="f-followup" type="date"></div>
       <div class="form-group form-full"><label class="form-label">Next Action <span class="form-opt">(what needs doing)</span></label><input class="form-input" id="f-next-action" placeholder="Send case study, intro to Sarah…"></div>
+      <div class="form-group form-full"><label class="form-label">Campaigns <span class="form-opt">(distribution lists)</span></label>
+        <div id="f-campaigns" class="campaign-picks"></div></div>
       <div class="form-group form-full"><label class="form-label">Tags <span class="form-opt">(optional, comma-separated)</span></label><input class="form-input" id="f-tags" placeholder="VC, mentor, close friend"></div>
       <div class="form-group form-full"><label class="form-label">Additional Notes <span class="form-opt">(optional)</span></label><textarea class="form-textarea" id="f-notes" placeholder="Key topics, shared interests…"></textarea></div>
     </div>
@@ -1722,6 +1818,50 @@ header {
     <div class="modal-footer">
       <button class="btn btn-ghost" style="flex:1" onclick="closeJournalModal()">Cancel</button>
       <button class="btn btn-primary" style="flex:2" onclick="saveJournalEntry()">Save Entry</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Campaign Modal ═════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="campaign-modal-overlay" onclick="if(event.target===this)closeCampaignModal()">
+  <div class="modal scroll-hidden" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="campaign-modal-title">New Campaign</div>
+      <button class="modal-close" onclick="closeCampaignModal()">×</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group form-full"><label class="form-label">Name <span style="color:#ef4444">*</span></label>
+        <input class="form-input" id="cp-name" placeholder="MSSP Research Distribution"></div>
+      <div class="form-group form-full"><label class="form-label">What it's for <span class="form-opt">(optional)</span></label>
+        <textarea class="form-textarea" id="cp-desc" placeholder="Quarterly cyber services research sent to MSSPs and the PE firms that own them"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeCampaignModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveCampaign()">Save Campaign</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Campaign Member Picker ═════════════════════════════════ -->
+<div class="modal-overlay hidden" id="picker-modal-overlay" onclick="if(event.target===this)closePicker()">
+  <div class="modal scroll-hidden" onclick="event.stopPropagation()" style="display:flex;flex-direction:column;max-height:92dvh">
+    <div class="modal-handle"></div>
+    <div class="modal-header" style="flex-shrink:0">
+      <div class="modal-title" id="picker-title">Add to campaign</div>
+      <button class="modal-close" onclick="closePicker()">×</button>
+    </div>
+    <div class="toolbar-row filter-chips-wrap" style="flex-shrink:0;margin-bottom:8px">
+      <button class="filter-chip active" id="picker-kind-contacts" onclick="setPickerKind('contacts')">Contacts</button>
+      <button class="filter-chip" id="picker-kind-companies" onclick="setPickerKind('companies')">Companies</button>
+    </div>
+    <div class="search-wrap" style="flex-shrink:0;margin-bottom:10px">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="search-input" id="picker-search" placeholder="Search…" oninput="renderPicker()">
+    </div>
+    <div id="picker-list" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:120px"></div>
+    <div class="modal-footer" style="flex-shrink:0">
+      <button class="btn btn-ghost" style="flex:1" onclick="closePicker()">Done</button>
     </div>
   </div>
 </div>
@@ -2073,7 +2213,7 @@ function locTag(city, state) {
 function switchAppTab(tab) {
   activeAppTab = tab;
   const isRel = tab === 'relationships', isPl = tab === 'places', isHob = tab === 'hobbies', isIdeas = tab === 'ideas';
-  const isToday = tab === 'today', isJournal = tab === 'journal';
+  const isToday = tab === 'today', isJournal = tab === 'journal', isCamp = tab === 'campaigns';
   const isMM = tab === 'marketmap', isIntel = tab === 'intel';
   const isMI = isMM || isIntel;
   document.getElementById('screen-relationships').classList.toggle('hidden', !isRel);
@@ -2082,21 +2222,24 @@ function switchAppTab(tab) {
   document.getElementById('screen-ideas').classList.toggle('hidden', !isIdeas);
   document.getElementById('screen-today').classList.toggle('hidden', !isToday);
   document.getElementById('screen-journal').classList.toggle('hidden', !isJournal);
+  document.getElementById('screen-campaigns').classList.toggle('hidden', !isCamp);
   document.getElementById('mi-app').classList.toggle('hidden', !isMI);
-  ['today','relationships','places','marketmap','intel','hobbies','ideas','journal'].forEach(t => {
+  ['today','relationships','places','marketmap','intel','campaigns','hobbies','ideas','journal'].forEach(t => {
     const b = document.getElementById('apptab-' + t);
     if(b) b.classList.toggle('active', t === tab);
   });
-  const labels = { today:'Add Reminder', relationships:'Add Contact', places:'Add Place', marketmap:'Add Company', intel:'Add Deal', hobbies: 'Add ' + (HOBBY_META[activeHobbyKind] ? HOBBY_META[activeHobbyKind].singular : ''), ideas:'Add Idea', journal:'Add Entry' };
+  const labels = { today:'Add Reminder', relationships:'Add Contact', places:'Add Place', marketmap:'Add Company', intel:'Add Deal', campaigns:'New Campaign', hobbies: 'Add ' + (HOBBY_META[activeHobbyKind] ? HOBBY_META[activeHobbyKind].singular : ''), ideas:'Add Idea', journal:'Add Entry' };
   document.getElementById('header-add-label').textContent = labels[tab] || 'Add';
   // MI settings gear only on Market Intelligence tabs
   const gear = document.getElementById('mi-settings-btn');
   if(gear) gear.style.display = isMI ? '' : 'none';
   // hide the relationship bottom-nav while in Market Intelligence, Hobbies, or Ideas
   const bn = document.querySelector('.bottom-nav');
-  if(bn) bn.style.display = (isMI || isHob || isIdeas || isToday || isJournal) ? 'none' : '';
+  if(bn) bn.style.display = (isMI || isHob || isIdeas || isToday || isJournal || isCamp) ? 'none' : '';
   if(isMI) {
     miSwitchPanel(isMM ? 'map' : 'deals');
+  } else if(isCamp) {
+    renderCampaigns();
   } else if(isToday) {
     tdSetScope(tdScope);   // restore the remembered side, then render
   } else if(isJournal) {
@@ -2118,6 +2261,7 @@ function openAddModal() {
   else if(activeAppTab === 'places') openPlaceModal();
   else if(activeAppTab === 'marketmap') openAddCompany();
   else if(activeAppTab === 'intel') openAddDeal();
+  else if(activeAppTab === 'campaigns') openCampaignModal();
   else if(activeAppTab === 'hobbies') openHobbyModal();
   else if(activeAppTab === 'ideas') openIdeaModal();
   else if(activeAppTab === 'journal') openJournalModal();
@@ -3341,7 +3485,7 @@ function renderContacts() {
         ${c.followup?`<div class="meta-row ${dueCls}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Follow-up: ${relativeDate(days)}</div>`:''}
       </div>
       ${c.howMet?`<div class="card-snippet">"${escHtml(c.howMet)}"</div>`:''}
-      <div class="card-tags">${sectorTag}${locTag(c.city,c.state)}${tags.map(t=>`<span class="tag">${escHtml(t)}</span>`).join('')}</div>
+      <div class="card-tags">${sectorTag}${locTag(c.city,c.state)}${campaignList(c).map(n=>`<span class="campaign-tag">📣 ${escHtml(n)}</span>`).join('')}${tags.map(t=>`<span class="tag">${escHtml(t)}</span>`).join('')}</div>
     </div>`;
   }).join('');
   renderRelWidgets();
@@ -3544,6 +3688,7 @@ function openContactModal(id) {
   document.getElementById('f-sector').value       = c?.sector||'';
   document.getElementById('f-tier').value         = c?.tier||'';
   document.getElementById('f-next-action').value  = c?.nextAction||'';
+  renderCampaignPicks('f-campaigns', c);
   setWarmth(c?.warmth||3);
   document.getElementById('contact-modal-overlay').classList.remove('hidden');
 }
@@ -3650,6 +3795,304 @@ function saveBulk() {
   showToast(`✓ Added ${rows.length} ${rows.length===1?'contact':'contacts'} from ${howMet}`);
 }
 
+// ═══════════════════════════════════════════════════════════════
+// CAMPAIGNS — named distribution lists that contacts and companies
+// can be tagged into. Membership lives on the record itself as a
+// comma-separated list of campaign names (same shape as tags), so it
+// round-trips through Excel as plain text and survives a campaign
+// being deleted.
+// ═══════════════════════════════════════════════════════════════
+let campaigns = JSON.parse(localStorage.getItem('campaigns_v1') || '[]');
+let editingCampaignId = null;
+let activeCampaignId = null;
+function saveCampaigns() { localStorage.setItem('campaigns_v1', JSON.stringify(campaigns)); }
+
+const campaignList = rec => String((rec && rec.campaigns) || '')
+  .split(',').map(s => s.trim()).filter(Boolean);
+const setCampaignList = (rec, names) => { rec.campaigns = names.filter(Boolean).join(', '); };
+const inCampaign = (rec, name) => campaignList(rec).some(n => n.toLowerCase() === String(name).toLowerCase());
+
+function campaignMembers(name) {
+  let cs = [], cos = [];
+  try { cs  = (contacts  || []).filter(c => inCampaign(c, name)); } catch(e) {}
+  try { cos = (companies || []).filter(c => inCampaign(c, name)); } catch(e) {}
+  return { contacts: cs, companies: cos };
+}
+
+// ── The checkbox chips inside the contact / company forms ──
+function renderCampaignPicks(containerId, rec) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  if (!campaigns.length) {
+    el.innerHTML = '<div class="campaign-pick-empty">No campaigns yet — create one on the Campaigns tab.</div>';
+    return;
+  }
+  const current = rec ? campaignList(rec).map(s => s.toLowerCase()) : [];
+  el.innerHTML = campaigns.map(cp => {
+    const on = current.indexOf(cp.name.toLowerCase()) !== -1;
+    return `<label class="campaign-pick${on ? ' on' : ''}">
+      <input type="checkbox" value="${escHtml(cp.name)}"${on ? ' checked' : ''}
+             onchange="this.parentElement.classList.toggle('on', this.checked)">
+      ${escHtml(cp.name)}
+    </label>`;
+  }).join('');
+}
+function readCampaignPicks(containerId) {
+  const el = document.getElementById(containerId);
+  if (!el) return [];
+  return Array.prototype.slice.call(el.querySelectorAll('input:checked')).map(i => i.value);
+}
+
+// ── Campaign CRUD ──
+function openCampaignModal(id) {
+  editingCampaignId = id || null;
+  const cp = id ? campaigns.find(x => x.id === id) : null;
+  document.getElementById('campaign-modal-title').textContent = cp ? 'Edit Campaign' : 'New Campaign';
+  document.getElementById('cp-name').value = cp ? cp.name : '';
+  document.getElementById('cp-desc').value = cp ? (cp.description || '') : '';
+  closeDetail();
+  document.getElementById('campaign-modal-overlay').classList.remove('hidden');
+  setTimeout(() => { try { document.getElementById('cp-name').focus(); } catch(e){} }, 250);
+}
+function closeCampaignModal() { document.getElementById('campaign-modal-overlay').classList.add('hidden'); }
+
+function saveCampaign() {
+  const name = document.getElementById('cp-name').value.trim();
+  const description = document.getElementById('cp-desc').value.trim();
+  if (!name) { alert('Give the campaign a name.'); return; }
+  const clash = campaigns.find(c => c.name.toLowerCase() === name.toLowerCase() && c.id !== editingCampaignId);
+  if (clash) { alert('A campaign with that name already exists.'); return; }
+
+  if (editingCampaignId) {
+    const cp = campaigns.find(x => x.id === editingCampaignId);
+    if (cp) {
+      // Renaming must follow through to every tagged record, since membership
+      // is stored by name.
+      if (cp.name !== name) renameCampaignEverywhere(cp.name, name);
+      cp.name = name; cp.description = description; cp.updated = new Date().toISOString();
+    }
+  } else {
+    campaigns.push({ id: genId(), name, description, added: new Date().toISOString() });
+  }
+  saveCampaigns();
+  closeCampaignModal();
+  renderCampaigns();
+}
+
+function renameCampaignEverywhere(oldName, newName) {
+  const fix = rec => {
+    const list = campaignList(rec);
+    if (!list.some(n => n.toLowerCase() === oldName.toLowerCase())) return false;
+    setCampaignList(rec, list.map(n => n.toLowerCase() === oldName.toLowerCase() ? newName : n));
+    return true;
+  };
+  let touched = false;
+  try { (contacts  || []).forEach(c => { if (fix(c)) touched = true; }); if (touched) saveContacts(); } catch(e) {}
+  touched = false;
+  try { (companies || []).forEach(c => { if (fix(c)) touched = true; }); if (touched) saveCompanies(); } catch(e) {}
+}
+
+function deleteCampaign(id) {
+  const cp = campaigns.find(x => x.id === id);
+  if (!cp) return;
+  const m = campaignMembers(cp.name);
+  const n = m.contacts.length + m.companies.length;
+  const modal = document.getElementById('delete-modal');
+  const msg = document.getElementById('delete-modal-msg');
+  msg.textContent = n
+    ? `Delete "${cp.name}"? It will be removed from ${n} record${n===1?'':'s'}. The contacts and companies themselves are not deleted.`
+    : `Delete "${cp.name}"? It has no members.`;
+  modal.style.display = 'flex';
+  const confirmBtn = document.getElementById('delete-modal-confirm');
+  const cancelBtn  = document.getElementById('delete-modal-cancel');
+  const nc = confirmBtn.cloneNode(true), nk = cancelBtn.cloneNode(true);
+  confirmBtn.replaceWith(nc); cancelBtn.replaceWith(nk);
+  nc.addEventListener('click', () => {
+    modal.style.display = 'none';
+    // strip the tag from members, then drop the campaign
+    const strip = rec => { const l = campaignList(rec); const k = l.filter(x => x.toLowerCase() !== cp.name.toLowerCase()); if (k.length !== l.length) { setCampaignList(rec, k); return true; } return false; };
+    let t = false;
+    try { (contacts  || []).forEach(c => { if (strip(c)) t = true; }); if (t) saveContacts(); } catch(e) {}
+    t = false;
+    try { (companies || []).forEach(c => { if (strip(c)) t = true; }); if (t) saveCompanies(); } catch(e) {}
+    campaigns = campaigns.filter(x => x.id !== id);
+    saveCampaigns();
+    closeDetail();
+    renderCampaigns();
+  });
+  nk.addEventListener('click', () => { modal.style.display = 'none'; });
+}
+
+// ── Campaigns tab ──
+function renderCampaigns() {
+  const grid = document.getElementById('campaigns-grid');
+  if (!grid) return;
+  const q = (document.getElementById('campaigns-search').value || '').toLowerCase();
+  const list = campaigns
+    .filter(cp => !q || (cp.name + ' ' + (cp.description||'')).toLowerCase().includes(q))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  if (!list.length) {
+    grid.innerHTML = `<div class="empty-state">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16v6H4z"/><path d="M4 14h10v6H4z"/><path d="M18 14v6"/></svg>
+      <h3>${campaigns.length ? 'No matches' : 'No campaigns yet'}</h3>
+      <p style="font-size:13px">${campaigns.length ? 'Try a different search.' : 'Tap New Campaign to create your first distribution list — e.g. "MSSP Research".'}</p>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map(cp => {
+    const m = campaignMembers(cp.name);
+    return `<div class="campaign-card" onclick="openCampaignDetail('${cp.id}')">
+      <div class="campaign-name">${escHtml(cp.name)}</div>
+      <div class="campaign-desc">${escHtml(cp.description || 'No description')}</div>
+      <div class="campaign-counts">
+        <div class="campaign-count"><div class="campaign-count-n">${m.contacts.length}</div><div class="campaign-count-l">Contacts</div></div>
+        <div class="campaign-count"><div class="campaign-count-n">${m.companies.length}</div><div class="campaign-count-l">Companies</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Campaign detail: members grouped, tap to open, remove inline ──
+function openCampaignDetail(id) {
+  const cp = campaigns.find(x => x.id === id);
+  if (!cp) return;
+  activeCampaignId = id;
+  const m = campaignMembers(cp.name);
+
+  document.getElementById('detail-header').innerHTML = `
+    <div class="detail-place-icon" style="background:#4c1d95">📣</div>
+    <div style="flex:1;min-width:0">
+      <div class="detail-name">${escHtml(cp.name)}</div>
+      <div class="detail-sub">${m.contacts.length} contact${m.contacts.length===1?'':'s'} · ${m.companies.length} compan${m.companies.length===1?'y':'ies'}</div>
+    </div>
+    <div class="detail-actions">
+      <button class="action-btn action-btn-edit" onclick="openCampaignModal('${cp.id}')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit
+      </button>
+      <button class="action-btn action-btn-delete" onclick="deleteCampaign('${cp.id}')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg> Delete
+      </button>
+    </div>`;
+
+  const contactRow = c => {
+    const d = contactDisplay(c);
+    return `<div class="member-row" onclick="closeDetail();openContactDetail('${c.id}')">
+      <div class="member-main">
+        <div class="member-name">${d.primary} ${tierBadge(c.tier)}</div>
+        <div class="member-sub">${d.orgFirst ? d.sub : (escHtml([c.role,c.org].filter(Boolean).join(' · ')) || TYPE_LABELS[c.type] || '')}</div>
+      </div>
+      <button class="member-remove" title="Remove from campaign"
+        onclick="event.stopPropagation();removeFromCampaign('contact','${c.id}','${cp.id}')">×</button>
+    </div>`;
+  };
+  const companyRow = c => `<div class="member-row" onclick="closeDetail();switchAppTab('marketmap');setTimeout(function(){ try{ miOpenDetail('${c.id}'); }catch(e){} },150)">
+      <div class="member-main">
+        <div class="member-name">${escHtml(c.name)}</div>
+        <div class="member-sub">${escHtml([c.subgroup, c.type].filter(Boolean).join(' · '))}</div>
+      </div>
+      <button class="member-remove" title="Remove from campaign"
+        onclick="event.stopPropagation();removeFromCampaign('company','${c.id}','${cp.id}')">×</button>
+    </div>`;
+
+  document.getElementById('detail-body').innerHTML = `
+    ${cp.description ? `<div class="detail-notes-text">${escHtml(cp.description)}</div>` : ''}
+    <button class="btn btn-primary" style="width:100%;height:46px;justify-content:center;font-weight:700"
+      onclick="openPicker('${cp.id}')">➕ Add contacts or companies</button>
+    <div>
+      <div class="detail-section-title">Contacts (${m.contacts.length})</div>
+      ${m.contacts.length ? m.contacts.map(contactRow).join('') : '<div class="todo-empty">None yet</div>'}
+    </div>
+    <div>
+      <div class="detail-section-title">Companies (${m.companies.length})</div>
+      ${m.companies.length ? m.companies.map(companyRow).join('') : '<div class="todo-empty">None yet</div>'}
+    </div>
+    <div style="font-size:11px;color:var(--text-muted)">Created ${formatDate((cp.added||'').slice(0,10))}</div>`;
+
+  document.getElementById('detail-footer').innerHTML = '';
+  showDetail();
+}
+
+function removeFromCampaign(kind, recId, campaignId) {
+  const cp = campaigns.find(x => x.id === campaignId);
+  if (!cp) return;
+  const pool = kind === 'contact' ? contacts : companies;
+  const rec = pool.find(x => x.id === recId);
+  if (!rec) return;
+  setCampaignList(rec, campaignList(rec).filter(n => n.toLowerCase() !== cp.name.toLowerCase()));
+  if (kind === 'contact') saveContacts(); else saveCompanies();
+  openCampaignDetail(campaignId);
+  renderCampaigns();
+}
+
+// ── Member picker: search and tick to add in bulk ──
+let pickerKind = 'contacts';
+function openPicker(campaignId) {
+  activeCampaignId = campaignId;
+  const cp = campaigns.find(x => x.id === campaignId);
+  document.getElementById('picker-title').textContent = 'Add to ' + (cp ? cp.name : 'campaign');
+  document.getElementById('picker-search').value = '';
+  setPickerKind('contacts');
+  document.getElementById('picker-modal-overlay').classList.remove('hidden');
+}
+function closePicker() {
+  document.getElementById('picker-modal-overlay').classList.add('hidden');
+  if (activeCampaignId) { openCampaignDetail(activeCampaignId); renderCampaigns(); }
+}
+function setPickerKind(k) {
+  pickerKind = k;
+  document.getElementById('picker-kind-contacts').classList.toggle('active', k === 'contacts');
+  document.getElementById('picker-kind-companies').classList.toggle('active', k === 'companies');
+  renderPicker();
+}
+function renderPicker() {
+  const cp = campaigns.find(x => x.id === activeCampaignId);
+  if (!cp) return;
+  const q = (document.getElementById('picker-search').value || '').toLowerCase();
+  const el = document.getElementById('picker-list');
+  let rows;
+  if (pickerKind === 'contacts') {
+    rows = (contacts || [])
+      .filter(c => !q || `${c.first} ${c.last} ${c.org} ${c.city} ${c.notes}`.toLowerCase().includes(q))
+      .slice(0, 150)
+      .map(c => {
+        const d = contactDisplay(c), on = inCampaign(c, cp.name);
+        return `<div class="picker-row${on?' on':''}" onclick="togglePick('contact','${c.id}',this)">
+          <div class="picker-check">${on ? '✓' : ''}</div>
+          <div class="member-main"><div class="member-name">${d.primary}</div>
+          <div class="member-sub">${d.orgFirst ? d.sub : (escHtml(c.org||'') || TYPE_LABELS[c.type] || '')}</div></div>
+        </div>`;
+      });
+  } else {
+    rows = (companies || [])
+      .filter(c => !q || `${c.name} ${c.subgroup} ${c.industry} ${c.notes}`.toLowerCase().includes(q))
+      .slice(0, 150)
+      .map(c => {
+        const on = inCampaign(c, cp.name);
+        return `<div class="picker-row${on?' on':''}" onclick="togglePick('company','${c.id}',this)">
+          <div class="picker-check">${on ? '✓' : ''}</div>
+          <div class="member-main"><div class="member-name">${escHtml(c.name)}</div>
+          <div class="member-sub">${escHtml([c.subgroup, c.type].filter(Boolean).join(' · '))}</div></div>
+        </div>`;
+      });
+  }
+  el.innerHTML = rows.length ? rows.join('') : '<div class="todo-empty">No matches</div>';
+}
+function togglePick(kind, recId, rowEl) {
+  const cp = campaigns.find(x => x.id === activeCampaignId);
+  if (!cp) return;
+  const pool = kind === 'contact' ? contacts : companies;
+  const rec = pool.find(x => x.id === recId);
+  if (!rec) return;
+  const list = campaignList(rec);
+  const on = inCampaign(rec, cp.name);
+  setCampaignList(rec, on ? list.filter(n => n.toLowerCase() !== cp.name.toLowerCase()) : list.concat(cp.name));
+  if (kind === 'contact') saveContacts(); else saveCompanies();
+  rowEl.classList.toggle('on', !on);
+  rowEl.querySelector('.picker-check').textContent = on ? '' : '✓';
+}
+
 // Lightweight confirmation that doesn't depend on the Backup panel being open.
 function showToast(msg) {
   let t = document.getElementById('app-toast');
@@ -3695,6 +4138,7 @@ function saveContact() {
     sector: document.getElementById('f-sector').value,
     tier: document.getElementById('f-tier').value,
     nextAction: document.getElementById('f-next-action').value.trim(),
+    campaigns: readCampaignPicks('f-campaigns').join(', '),
     lastContact: document.getElementById('f-last-contact').value,
     followup: document.getElementById('f-followup').value,
     warmth: selectedWarmth,
@@ -4007,6 +4451,7 @@ function exportJSON(scope) {
     ideas: (typeof ideas !== 'undefined') ? ideas : [],
     todos: (typeof todos !== 'undefined') ? todos : [],
     journal: (typeof journal !== 'undefined') ? journal : [],
+    campaigns: (typeof campaigns !== 'undefined') ? campaigns : [],
   };
   const json = JSON.stringify(payload, null, 2);
   const filename = `my-world-backup-${new Date().toISOString().slice(0,10)}.json`;
@@ -4071,6 +4516,7 @@ const SHEET_SCHEMAS = {
       { h:'Last Conversation', f:'lastContact', in: normalizeDate },
       { h:'Next Follow-up', f:'followup',    in: normalizeDate },
       { h:'Next Action',    f:'nextAction' },
+      { h:'Campaigns',      f:'campaigns' },
       { h:'Tags',           f:'tags' },
       { h:'How We Met',     f:'howMet' },
       { h:'Notes',          f:'notes' },
@@ -4105,9 +4551,21 @@ const SHEET_SCHEMAS = {
       { h:'Name',     f:'name' },
       { h:'Industry', f:'industry' },
       { h:'Subgroup', f:'subgroup' },
-      { h:'Type',     f:'type' },
-      { h:'Partners', f:'partners' },
-      { h:'Notes',    f:'notes' },
+      { h:'Type',      f:'type' },
+      { h:'Partners',  f:'partners' },
+      { h:'Campaigns', f:'campaigns' },
+      { h:'Notes',     f:'notes' },
+    ],
+  },
+  campaigns: {
+    label: 'Campaigns',
+    all:    () => campaigns,
+    commit: rows => { campaigns = rows; saveCampaigns(); try { renderCampaigns(); } catch(e){} },
+    blank:  () => ({ id: genId(), added: new Date().toISOString() }),
+    columns: [
+      { h:'ID',          f:'id', key:true },
+      { h:'Name',        f:'name' },
+      { h:'Description', f:'description' },
     ],
   },
   deals: {
@@ -4245,7 +4703,7 @@ const SHEET_SCHEMAS = {
 };
 
 // Tab order in the workbook: work first, then lifestyle.
-const WORKBOOK_TABS = ['contacts','companies','deals','places','todos','ideas','journal','golf','drinks','cooking','otherHobbies','movies'];
+const WORKBOOK_TABS = ['contacts','companies','deals','campaigns','places','todos','ideas','journal','golf','drinks','cooking','otherHobbies','movies'];
 
 function exportSheet(type) {
   const sch = SHEET_SCHEMAS[type];
@@ -5237,6 +5695,14 @@ function importJSON(event) {
         addedJournal = newJournal.length;
         saveJournal();
       }
+      if (Array.isArray(data.campaigns)) {
+        // match on name, not id — the same campaign created on two devices
+        // should merge, not duplicate
+        const have = new Set(campaigns.map(c => c.name.toLowerCase()));
+        const fresh = data.campaigns.filter(c => c && c.name && !have.has(c.name.toLowerCase()));
+        campaigns = [...campaigns, ...fresh];
+        saveCampaigns();
+      }
       if (activeAppTab === 'hobbies') renderHobbies();
       if (activeAppTab === 'ideas') renderIdeas();
       if (activeAppTab === 'journal') renderJournal();
@@ -5266,7 +5732,8 @@ function importJSON(event) {
 document.addEventListener('keydown', e => {
   if(e.key==='Escape') {
     document.getElementById('delete-modal').style.display = 'none';
-    closeContactModal(); closePlaceModal(); closeHobbyModal(); closeIdeaModal(); closeJournalModal(); closeDetail(); closeDataModal(); closeBulkModal();
+    closeContactModal(); closePlaceModal(); closeHobbyModal(); closeIdeaModal(); closeJournalModal(); closeDetail(); closeDataModal(); closeBulkModal(); closeCampaignModal();
+    document.getElementById('picker-modal-overlay').classList.add('hidden');
   }
 });
 
@@ -5323,7 +5790,7 @@ switchAppTab('today');   // land on the daily summary
 // DATA
 // ══════════════════════════════════════════
 const SUBGROUPS_DEFAULT = {
-  tech: [ 'Digital Engineering (DE)', 'Quality Engineering (QE)', 'Infrastructure', 'VAR', 'Platform Engineering', 'Managed Services', 'Data Center', 'Vertical', 'Hardware', 'Cyberrisk and IPE', 'Staffing', 'Communications' ],
+  tech: [ 'Digital Engineering (DE)', 'Data Engineering', 'Quality Engineering (QE)', 'Infrastructure', 'VAR', 'Platform Engineering', 'Managed Services', 'Data Center', 'Vertical', 'Hardware', 'Cyberrisk and IPE', 'Staffing', 'Communications' ],
   software: [ 'Data', 'Infrastructure', 'Developer / Engineering', 'Vertical Market', 'Ecommerce', 'Workflows - HR', 'Workflows - Office of CFO', 'Workflows - Sales and Other', 'ERP', 'AdTech', 'Cyber', 'Payments / Fintech', 'Education', 'Supply Chain and Infrastructure', 'HCIT', 'InsurTech', 'Real Estate / Construction', 'Media / Gaming Software', 'Physical Infrastructure & Public Safety', 'Energy & Utility', 'Tax & Legal', 'Telco', 'WealthTech', 'EdTech', 'Design / CAD' ],
   ai: [ 'Infrastructure', 'Modeling & Analytics', 'GRC', 'S&M', 'Cyber', 'Vertical' ],
   media: [ 'Production', 'Agency and Services', 'Digital Media', 'Entertainment', 'Gaming' ],
@@ -5333,8 +5800,19 @@ const SUBGROUPS_DEFAULT = {
 // Load from localStorage or fall back to defaults
 let SUBGROUPS = JSON.parse(localStorage.getItem('mi_subgroups') || 'null') || JSON.parse(JSON.stringify(SUBGROUPS_DEFAULT));
 function saveSubgroups() { localStorage.setItem('mi_subgroups', JSON.stringify(SUBGROUPS)); }
-// Backfill industries added after a user may have already saved sub-groups
-Object.keys(SUBGROUPS_DEFAULT).forEach(k => { if (!SUBGROUPS[k]) { SUBGROUPS[k] = SUBGROUPS_DEFAULT[k].slice(); saveSubgroups(); } });
+// Backfill anything added to the defaults after a user already saved their
+// sub-groups: whole industries, and individual buckets inside an industry.
+// A new bucket is inserted at the same position it holds in the defaults so
+// it lands next to its neighbours rather than at the end.
+Object.keys(SUBGROUPS_DEFAULT).forEach(k => {
+  if (!SUBGROUPS[k]) { SUBGROUPS[k] = SUBGROUPS_DEFAULT[k].slice(); saveSubgroups(); return; }
+  SUBGROUPS_DEFAULT[k].forEach((name, i) => {
+    if (SUBGROUPS[k].indexOf(name) === -1) {
+      SUBGROUPS[k].splice(Math.min(i, SUBGROUPS[k].length), 0, name);
+      saveSubgroups();
+    }
+  });
+});
 
 const IND_LABELS = { tech: 'Tech Services', software: 'Software', ai: 'AI', media: 'Media', other: 'Other' };
 const IND_CLASSES = { tech: 'tag-tech', software: 'tag-software', ai: 'tag-ai', media: 'tag-media', other: 'tag-other' };
@@ -5419,6 +5897,7 @@ function openAddCompany(prefillInd) {
   document.getElementById('c-type').value = 'Strategic';
   document.getElementById('c-partners').value = '';
   document.getElementById('c-notes').value = '';
+  renderCampaignPicks('c-campaigns', null);
   openModal('company-modal');
 }
 
@@ -5435,6 +5914,7 @@ function openEditCompany() {
   document.getElementById('c-type').value = c.type;
   document.getElementById('c-partners').value = c.partners;
   document.getElementById('c-notes').value = c.notes;
+  renderCampaignPicks('c-campaigns', c);
   miCloseDetail('company-detail');
   openModal('company-modal');
 }
@@ -5451,6 +5931,7 @@ function saveCompany() {
     type: document.getElementById('c-type').value,
     partners: document.getElementById('c-partners').value.trim(),
     notes: document.getElementById('c-notes').value.trim(),
+    campaigns: readCampaignPicks('c-campaigns').join(', '),
   };
 
   if (editingCompanyId) {
