@@ -471,6 +471,15 @@ header {
 .todo-name { font-size: 13px; font-weight: 600; }
 .todo-action { font-size: 12px; color: var(--text-dim); margin-top: 2px; line-height: 1.5; }
 .todo-meta { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+.todo-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.todo-done-btn {
+  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+  border: 2px solid #10b981; background: #064e3b; color: #34d399;
+  font-size: 18px; font-weight: 700; cursor: pointer; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-tap-highlight-color: transparent; transition: all .15s;
+}
+.todo-done-btn:active { background: #10b981; color: #fff; }
 .todo-due { font-size: 11px; font-weight: 700; flex-shrink: 0; text-align: right; }
 .todo-due.overdue { color: var(--red); }
 .todo-due.soon    { color: var(--yellow); }
@@ -1822,6 +1831,49 @@ header {
   </div>
 </div>
 
+<!-- ══ Complete To-Do Modal ═══════════════════════════════════ -->
+<div class="modal-overlay hidden" id="complete-modal-overlay" onclick="if(event.target===this)closeCompleteModal()">
+  <div class="modal scroll-hidden" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">✓ Mark Done</div>
+      <button class="modal-close" onclick="closeCompleteModal()">×</button>
+    </div>
+
+    <div id="complete-who" style="font-size:15px;font-weight:700;margin-bottom:4px"></div>
+    <div id="complete-what" style="font-size:13px;color:var(--text-dim);margin-bottom:16px;line-height:1.5"></div>
+
+    <div class="form-grid">
+      <div class="form-group form-full">
+        <label class="form-label">Last Conversation</label>
+        <input class="form-input" id="x-lastcontact" type="date">
+      </div>
+
+      <div class="form-group form-full">
+        <label class="form-label">Next Follow-up</label>
+        <div class="toolbar-row filter-chips-wrap" style="margin-bottom:8px">
+          <button class="filter-chip" id="x-chip-14"  onclick="setCompleteFollowup(14,this)">2 weeks</button>
+          <button class="filter-chip" id="x-chip-30"  onclick="setCompleteFollowup(30,this)">1 month</button>
+          <button class="filter-chip" id="x-chip-90"  onclick="setCompleteFollowup(90,this)">3 months</button>
+          <button class="filter-chip" id="x-chip-180" onclick="setCompleteFollowup(180,this)">6 months</button>
+          <button class="filter-chip" id="x-chip-0"   onclick="setCompleteFollowup(null,this)">None</button>
+        </div>
+        <input class="form-input" id="x-followup" type="date" onchange="markCompleteChipCustom()">
+      </div>
+
+      <div class="form-group form-full">
+        <label class="form-label">Next Action <span class="form-opt">(leave blank if nothing is pending)</span></label>
+        <input class="form-input" id="x-nextaction" placeholder="e.g. send pricing after their board meeting">
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeCompleteModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveComplete()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ Campaign Modal ═════════════════════════════════════════ -->
 <div class="modal-overlay hidden" id="campaign-modal-overlay" onclick="if(event.target===this)closeCampaignModal()">
   <div class="modal scroll-hidden" onclick="event.stopPropagation()">
@@ -2176,15 +2228,28 @@ function avatarColor(name) {
   let h=0; for(let i=0;i<name.length;i++) h=(h<<5)-h+name.charCodeAt(i);
   return cols[Math.abs(h)%cols.length];
 }
+// "2026-12-31" is a calendar date, not an instant. new Date() treats it as UTC
+// midnight, which lands on the previous day in any timezone behind UTC — that
+// made every date render a day early and flagged today's follow-ups as overdue.
+function parseLocalDate(ds) {
+  if (!ds) return null;
+  const m = String(ds).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const d = m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(ds);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 function daysDiff(ds) {
   if(!ds) return null;
-  const d=new Date(ds), now=new Date();
+  const d = parseLocalDate(ds);
+  if (!d) return null;
+  const now = new Date();
   now.setHours(0,0,0,0); d.setHours(0,0,0,0);
   return Math.round((d-now)/86400000);
 }
 function formatDate(ds) {
   if(!ds) return '—';
-  return new Date(ds).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  const d = parseLocalDate(ds);
+  return d ? d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
 }
 function relativeDate(days) {
   if(days===null) return '';
@@ -3557,7 +3622,11 @@ function renderActionPanel(list) {
           ${c.nextAction ? `<div class="todo-action">→ ${escHtml(c.nextAction)}</div>` : ''}
           <div class="todo-meta">Last spoke: ${c.lastContact ? formatDate(c.lastContact) : 'never'}${!disp.orgFirst && c.org ? ' · ' + escHtml(c.org) : ''}</div>
         </div>
-        <div class="todo-due ${dueCls}">${d === null ? 'no date' : relativeDate(d)}</div>
+        <div class="todo-right">
+          <div class="todo-due ${dueCls}">${d === null ? 'no date' : relativeDate(d)}</div>
+          <button class="todo-done-btn" title="Mark this done"
+            onclick="event.stopPropagation();openCompleteModal('${c.id}')">✓</button>
+        </div>
       </div>`;
     }).join('')}
   </div>`;
@@ -3793,6 +3862,69 @@ function saveBulk() {
   closeBulkModal();
   try { renderContacts(); } catch(e) {}
   showToast(`✓ Added ${rows.length} ${rows.length===1?'contact':'contacts'} from ${howMet}`);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COMPLETING A REQUIRED TO-DO
+// Ticking an item records that the conversation happened and sets up
+// what comes next, rather than just making the row vanish — a prospect
+// with no next step silently falls off the pipeline otherwise.
+// Nothing is written until Save, so a mis-tap costs nothing.
+// ═══════════════════════════════════════════════════════════════
+let completingContactId = null;
+
+function openCompleteModal(id) {
+  const c = contacts.find(x => x.id === id);
+  if (!c) return;
+  completingContactId = id;
+  const disp = contactDisplay(c);
+
+  document.getElementById('complete-who').innerHTML = `${disp.primary} ${tierBadge(c.tier)}`;
+  document.getElementById('complete-what').textContent = c.nextAction
+    ? `Completing: ${c.nextAction}`
+    : 'No action was written down — this just logs the conversation.';
+
+  document.getElementById('x-lastcontact').value = new Date().toISOString().slice(0,10);
+  document.getElementById('x-nextaction').value = '';
+  // Default to a sensible next touch rather than dropping them off the list.
+  setCompleteFollowup(30, document.getElementById('x-chip-30'));
+
+  document.getElementById('complete-modal-overlay').classList.remove('hidden');
+}
+function closeCompleteModal() {
+  completingContactId = null;
+  document.getElementById('complete-modal-overlay').classList.add('hidden');
+}
+
+function clearCompleteChips() {
+  ['x-chip-14','x-chip-30','x-chip-90','x-chip-180','x-chip-0']
+    .forEach(id => { const b = document.getElementById(id); if (b) b.classList.remove('active'); });
+}
+function setCompleteFollowup(days, btn) {
+  clearCompleteChips();
+  if (btn) btn.classList.add('active');
+  const el = document.getElementById('x-followup');
+  if (days === null) { el.value = ''; return; }
+  el.value = new Date(Date.now() + days * 86400000).toISOString().slice(0,10);
+}
+// Typing a date directly means none of the quick picks apply any more.
+function markCompleteChipCustom() { clearCompleteChips(); }
+
+function saveComplete() {
+  const c = contacts.find(x => x.id === completingContactId);
+  if (!c) { closeCompleteModal(); return; }
+  const who = contactDisplay(c).primary;
+
+  c.lastContact = document.getElementById('x-lastcontact').value || c.lastContact || '';
+  c.followup    = document.getElementById('x-followup').value;
+  c.nextAction  = document.getElementById('x-nextaction').value.trim();
+
+  saveContacts();
+  closeCompleteModal();
+  try { renderContacts(); } catch(e) {}
+
+  const next = c.followup ? ` Next follow-up ${formatDate(c.followup)}.` : ' No follow-up scheduled.';
+  showToast(`✓ Logged for ${String(who).replace(/<[^>]*>/g,'')}.${next}`);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -5732,7 +5864,7 @@ function importJSON(event) {
 document.addEventListener('keydown', e => {
   if(e.key==='Escape') {
     document.getElementById('delete-modal').style.display = 'none';
-    closeContactModal(); closePlaceModal(); closeHobbyModal(); closeIdeaModal(); closeJournalModal(); closeDetail(); closeDataModal(); closeBulkModal(); closeCampaignModal();
+    closeContactModal(); closePlaceModal(); closeHobbyModal(); closeIdeaModal(); closeJournalModal(); closeDetail(); closeDataModal(); closeBulkModal(); closeCampaignModal(); closeCompleteModal();
     document.getElementById('picker-modal-overlay').classList.add('hidden');
   }
 });
