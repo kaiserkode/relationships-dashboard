@@ -4560,9 +4560,13 @@ function showDataStatus(msg, ok) {
 function updateLastBackupInfo() {
   const ts = localStorage.getItem('last_backup_ts');
   const el = document.getElementById('last-backup-info');
-  el.textContent = ts
+  const when = ts
     ? `Last backup: ${new Date(ts).toLocaleString()}`
     : 'No backup made yet — export one now to protect your data.';
+  // Your data is stored per web address, so knowing which copy this is matters
+  // before changing hosts: data saved on one address is not visible on another.
+  const host = (location.protocol === 'file:') ? 'a local file' : location.host;
+  el.innerHTML = `${escHtml(when)}<br><span style="opacity:.75">This copy is loaded from <strong>${escHtml(host)}</strong> — your data is saved against that address.</span>`;
 }
 
 // ── Export ────────────────────────────────────────────────────
