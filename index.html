@@ -4628,6 +4628,7 @@ const SHEET_SCHEMAS = {
     all:    () => contacts,
     commit: rows => { contacts = rows; saveContacts(); try { renderContacts(); } catch(e){} },
     blank:  () => ({ id: genId(), added: new Date().toISOString(), type: 'professional', warmth: 0 }),
+    dupKey: r => [r.first, r.last, r.city].join('|'),
     columns: [
       { h:'ID',             f:'id', key:true },
       { h:'First Name',     f:'first' },
@@ -4659,6 +4660,7 @@ const SHEET_SCHEMAS = {
     all:    () => places,
     commit: rows => { places = rows; savePlaces(); try { renderPlaces(); } catch(e){} },
     blank:  () => ({ id: genId(), added: new Date().toISOString(), category: 'other', rating: 0, visited: false }),
+    dupKey: r => [r.name, r.city].join('|'),
     columns: [
       { h:'ID',        f:'id', key:true },
       { h:'Name',      f:'name' },
@@ -4678,6 +4680,7 @@ const SHEET_SCHEMAS = {
     all:    () => companies,
     commit: rows => { companies = rows; saveCompanies(); try { renderAll(); } catch(e){} },
     blank:  () => ({ id: genId(), createdAt: Date.now(), comments: [] }),
+    dupKey: r => String(r.name || ''),
     columns: [
       { h:'ID',       f:'id', key:true },
       { h:'Name',     f:'name' },
@@ -5447,7 +5450,13 @@ function importWorkbook(event) {
         let list = [];
         try { list = sch.all() || []; } catch(err) { list = []; }
         const byId = new Map(list.map(r => [String(r.id), r]));
-        const updates = [], adds = [], deletes = [];
+        const normKey = s => String(s == null ? '' : s).trim().toLowerCase().replace(/\s+/g,' ');
+        const dupIndex = new Map();
+        if (sch.dupKey) list.forEach(r => {
+          const dk = normKey(sch.dupKey(r));
+          if (dk.replace(/\|/g,'').trim()) dupIndex.set(dk, r);
+        });
+        const updates = [], adds = [], deletes = [], dupes = [];
         let fields = 0;
 
         for (let i = 1; i < rows.length; i++) {
@@ -5478,11 +5487,17 @@ function importWorkbook(event) {
               rec[c.f] = c.in ? c.in(raw) : raw;
               any = true;
             }
-            if (any) adds.push(rec);
+            if (!any) continue;
+            if (sch.dupKey) {
+              const dk = normKey(sch.dupKey(rec));
+              if (dk.replace(/\|/g,'').trim() && dupIndex.get(dk)) { dupes.push(rec); continue; }
+              dupIndex.set(dk, rec);
+            }
+            adds.push(rec);
           }
         }
-        if (updates.length || adds.length || deletes.length) {
-          plans.push({ key, label: sch.label, updates, adds, deletes, fields });
+        if (updates.length || adds.length || deletes.length || dupes.length) {
+          plans.push({ key, label: sch.label, updates, adds, deletes, fields, dupes });
         }
       });
 
@@ -5509,7 +5524,7 @@ function showWorkbookPlan(plans) {
   el.innerHTML = `
     <div style="font-weight:700;margin-bottom:8px">⚠️ Not saved yet — tap Apply below</div>
     <div style="font-size:13px;line-height:1.8;margin-bottom:10px">
-      ${plans.map(p => `<strong>${p.label}</strong> — ${p.updates.length} updated, ${p.adds.length} added, ${p.deletes.length} deleted`).join('<br>')}
+      ${plans.map(p => `<strong>${p.label}</strong> — ${p.updates.length} updated, ${p.adds.length} added, ${p.deletes.length} deleted${(p.dupes&&p.dupes.length)?`, ${p.dupes.length} skipped as already here`:''}`).join('<br>')}
     </div>
     <div style="font-size:13px;font-weight:700;margin-bottom:12px">Total: ${u} updated · ${a} added · ${d} deleted</div>
     <div style="display:flex;gap:8px">
@@ -5587,7 +5602,16 @@ function importSheet(event, type) {
 
       const current = sch.all() || [];
       const byId = new Map(current.map(r => [String(r.id), r]));
-      const updates = [], adds = [], deletes = [];
+      // A row with no ID is normally a new record — but if it matches something
+      // already here by name, it's the same thing arriving from a list built
+      // against older data. Skip it rather than creating a twin.
+      const normKey = s => String(s == null ? '' : s).trim().toLowerCase().replace(/\s+/g,' ');
+      const dupIndex = new Map();
+      if (sch.dupKey) current.forEach(r => {
+        const k = normKey(sch.dupKey(r));
+        if (k.replace(/\|/g,'').trim()) dupIndex.set(k, r);
+      });
+      const updates = [], adds = [], deletes = [], dupes = [];
       let fieldCount = 0;
 
       for (let i = 1; i < rows.length; i++) {
@@ -5619,12 +5643,19 @@ function importSheet(event, type) {
             rec[c.f] = c.in ? c.in(raw) : raw;
             any = true;
           }
-          if (any) adds.push(rec);
+          if (!any) continue;
+          if (sch.dupKey) {
+            const k = normKey(sch.dupKey(rec));
+            const hit = k.replace(/\|/g,'').trim() ? dupIndex.get(k) : null;
+            if (hit) { dupes.push(rec); continue; }
+            dupIndex.set(k, rec);   // also catch duplicates within the file itself
+          }
+          adds.push(rec);
         }
       }
 
       pendingSheetPlan = { type, updates, adds, deletes };
-      showSheetPlan(sch, updates.length, fieldCount, adds.length, deletes.length, autoSwitched);
+      showSheetPlan(sch, updates.length, fieldCount, adds.length, deletes.length, autoSwitched, dupes);
     } catch(err) {
       showDataStatus('❌ Could not read that file. Make sure it is a CSV exported from this app.', false);
     }
@@ -5633,7 +5664,14 @@ function importSheet(event, type) {
   reader.readAsText(file);
 }
 
-function showSheetPlan(sch, nUpd, nFields, nAdd, nDel, autoSwitched) {
+function showSheetPlan(sch, nUpd, nFields, nAdd, nDel, autoSwitched, dupes) {
+  dupes = dupes || [];
+  if (!nUpd && !nAdd && !nDel && dupes.length) {
+    pendingSheetPlan = null;
+    const names = dupes.map(r => r.name || `${r.first||''} ${r.last||''}`.trim()).filter(Boolean);
+    showDataStatus(`Nothing to add — all ${dupes.length} already exist here (${names.slice(0,6).join(', ')}${names.length>6?`, +${names.length-6} more`:''}).`, true);
+    return;
+  }
   if (!nUpd && !nAdd && !nDel) {
     pendingSheetPlan = null;
     showDataStatus(`No changes found — that sheet already matches your ${sch.label.toLowerCase()}.`, true);
@@ -5652,7 +5690,11 @@ function showSheetPlan(sch, nUpd, nFields, nAdd, nDel, autoSwitched) {
       ✏️ <strong>${nUpd}</strong> record${nUpd===1?'':'s'} updated <span style="opacity:.75">(${nFields} field${nFields===1?'':'s'} changed)</span><br>
       ➕ <strong>${nAdd}</strong> new record${nAdd===1?'':'s'} added<br>
       🗑️ <strong>${nDel}</strong> record${nDel===1?'':'s'} deleted
+      ${dupes.length ? `<br>⏭️ <strong>${dupes.length}</strong> skipped — already here` : ''}
     </div>
+    ${dupes.length ? `<div style="font-size:11px;background:#1e293b;border-radius:6px;padding:8px 10px;margin-bottom:10px;line-height:1.6;opacity:.9">
+      Already in your list, so not added again:<br>${escHtml(dupes.map(r => r.name || `${r.first||''} ${r.last||''}`.trim()).filter(Boolean).join(', '))}
+    </div>` : ''}
     <div style="display:flex;gap:8px">
       <button class="btn btn-ghost" style="flex:1;height:44px;justify-content:center" onclick="cancelSheetPlan()">Cancel</button>
       <button class="btn btn-primary" style="flex:2;height:52px;justify-content:center;font-size:16px;font-weight:700" onclick="applySheetPlan()">Apply Changes</button>
