@@ -2264,6 +2264,20 @@ function warmthDots(w) {
 function starRow(r, size='sm') {
   return '<div class="star-row">'+[1,2,3,4,5].map(i=>`<span class="star${i<=r?' filled':''}">★</span>`).join('')+'</div>';
 }
+// Search that ignores case, spaces and punctuation, so typing "Bring IT" finds
+// a company stored as "BringIT", and "ATT" finds "AT&T". Multi-word queries also
+// match when the words live in different fields, e.g. "omar bring".
+function searchMatch(query, ...fields) {
+  const q = String(query == null ? '' : query).trim();
+  if (!q) return true;
+  const tight = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '');
+  const hay = tight(fields.map(f => (f == null ? '' : f)).join(' '));
+  if (!hay) return false;
+  if (hay.includes(tight(q))) return true;                       // whole phrase, separators ignored
+  const terms = q.split(/\s+/).filter(Boolean).map(tight).filter(Boolean);
+  return terms.length > 0 && terms.every(t => hay.includes(t));  // every word somewhere
+}
+
 function escHtml(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
@@ -2510,10 +2524,7 @@ function renderHobbies() {
   let list = arr.filter(item => {
     if(statusFilter!=='all' && item.status!==statusFilter) return false;
     if(kind==='alcohol' && activeDrinkCategory!=='all' && item.category!==activeDrinkCategory) return false;
-    if(q) {
-      const s = `${item.name} ${item.city||''} ${item.state||''} ${meta.hasCategory?(DRINK_LABELS[item.category]||''):''} ${item.tags||''} ${item.notes||''}`.toLowerCase();
-      if(!s.includes(q)) return false;
-    }
+    if(!searchMatch(q, item.name, item.city, item.state, meta.hasCategory?(DRINK_LABELS[item.category]||''):'', item.tags, item.notes)) return false;
     return true;
   });
   list.sort((a,b) => (a.name||'').localeCompare(b.name||''));
@@ -2695,7 +2706,7 @@ function renderIdeas() {
 
   let list = ideas.filter(i => {
     if(activeIdeaStatus!=='all' && i.status!==activeIdeaStatus) return false;
-    if(q) { const s = `${i.title} ${i.tags} ${i.notes}`.toLowerCase(); if(!s.includes(q)) return false; }
+    if(!searchMatch(q, i.title, i.tags, i.notes)) return false;
     return true;
   });
 
@@ -2827,10 +2838,7 @@ function renderJournal() {
   const grid = document.getElementById('journal-grid');
 
   let list = journal.filter(e => {
-    if(q) {
-      const s = `${e.date} ${journalDateLabel(e.date)} ${e.body}`.toLowerCase();
-      if(!s.includes(q)) return false;
-    }
+    if(!searchMatch(q, e.date, journalDateLabel(e.date), e.body)) return false;
     return true;
   });
 
@@ -3488,10 +3496,7 @@ function renderContacts() {
     if(showInvestorBar && activeInvestorSector !== 'all' && getInvestorSector(c) !== activeInvestorSector) return false;
     if(cf && (c.city||'').toLowerCase() !== cf.toLowerCase()) return false;
     if(sf && (c.state||'').toLowerCase() !== sf.toLowerCase()) return false;
-    if(q) {
-      const s = `${c.first} ${c.last} ${c.org} ${c.role} ${c.city} ${c.state} ${c.tags} ${c.howMet} ${c.notes}`.toLowerCase();
-      if(!s.includes(q)) return false;
-    }
+    if(!searchMatch(q, c.first, c.last, c.org, c.role, c.city, c.state, c.tags, c.howMet, c.notes, c.email, c.nextAction, c.campaigns)) return false;
     return true;
   });
 
@@ -3675,10 +3680,7 @@ function renderPlaces() {
     if(activePlaceFilter !== 'all' && p.category !== activePlaceFilter) return false;
     if(cf && (p.city||'').toLowerCase() !== cf.toLowerCase()) return false;
     if(sf && (p.state||'').toLowerCase() !== sf.toLowerCase()) return false;
-    if(q) {
-      const s = `${p.name} ${p.city} ${p.state} ${p.tags} ${p.notes} ${p.address}`.toLowerCase();
-      if(!s.includes(q)) return false;
-    }
+    if(!searchMatch(q, p.name, p.city, p.state, p.tags, p.notes, p.address, p.website)) return false;
     return true;
   });
 
@@ -4061,7 +4063,7 @@ function renderCampaigns() {
   if (!grid) return;
   const q = (document.getElementById('campaigns-search').value || '').toLowerCase();
   const list = campaigns
-    .filter(cp => !q || (cp.name + ' ' + (cp.description||'')).toLowerCase().includes(q))
+    .filter(cp => searchMatch(q, cp.name, cp.description))
     .sort((a, b) => a.name.localeCompare(b.name));
 
   if (!list.length) {
@@ -4186,7 +4188,7 @@ function renderPicker() {
   let rows;
   if (pickerKind === 'contacts') {
     rows = (contacts || [])
-      .filter(c => !q || `${c.first} ${c.last} ${c.org} ${c.city} ${c.notes}`.toLowerCase().includes(q))
+      .filter(c => searchMatch(q, c.first, c.last, c.org, c.role, c.city, c.notes, c.tags, c.email))
       .slice(0, 150)
       .map(c => {
         const d = contactDisplay(c), on = inCampaign(c, cp.name);
@@ -4198,7 +4200,7 @@ function renderPicker() {
       });
   } else {
     rows = (companies || [])
-      .filter(c => !q || `${c.name} ${c.subgroup} ${c.industry} ${c.notes}`.toLowerCase().includes(q))
+      .filter(c => searchMatch(q, c.name, c.subgroup, c.industry, c.type, c.partners, c.notes))
       .slice(0, 150)
       .map(c => {
         const on = inCampaign(c, cp.name);
@@ -6356,13 +6358,7 @@ function renderMap(q = '') {
   list.innerHTML = '';
 
   const filtered = q
-    ? companies.filter(c =>
-        c.name.toLowerCase().includes(q) ||
-        c.partners.toLowerCase().includes(q) ||
-        c.notes.toLowerCase().includes(q) ||
-        (c.subgroup || '').toLowerCase().includes(q) ||
-        IND_LABELS[c.industry].toLowerCase().includes(q)
-      )
+    ? companies.filter(c => searchMatch(q, c.name, c.partners, c.notes, c.subgroup, c.type, c.campaigns, IND_LABELS[c.industry]))
     : companies;
 
   let anyShown = false;
@@ -6550,14 +6546,7 @@ function renderDeals(q = '') {
   if (dealFilterType) filtered = filtered.filter(d => d.type === dealFilterType);
   if (q) {
     filtered = filtered.filter(d =>
-      d.name.toLowerCase().includes(q) ||
-      (d.parties || '').toLowerCase().includes(q) ||
-      (d.notes || '').toLowerCase().includes(q) ||
-      d.type.toLowerCase().includes(q) ||
-      (d.subgroup || '').toLowerCase().includes(q) ||
-      IND_LABELS[d.industry].toLowerCase().includes(q) ||
-      (d.source || '').toLowerCase().includes(q)
-    );
+      searchMatch(q, d.name, d.parties, d.notes, d.type, d.subgroup, d.source, d.size, IND_LABELS[d.industry]));
   }
 
   filtered.sort((a, b) => b.createdAt - a.createdAt);
