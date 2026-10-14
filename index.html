@@ -4559,6 +4559,9 @@ function showDataStatus(msg, ok) {
   el.style.border = `1px solid ${ok ? '#10b981' : '#ef4444'}`;
 }
 
+// Bump when deploying so the Backup panel can show what this device is running.
+const APP_BUILD = '2026-10-14.1';
+
 function updateLastBackupInfo() {
   const ts = localStorage.getItem('last_backup_ts');
   const el = document.getElementById('last-backup-info');
@@ -4568,7 +4571,27 @@ function updateLastBackupInfo() {
   // Your data is stored per web address, so knowing which copy this is matters
   // before changing hosts: data saved on one address is not visible on another.
   const host = (location.protocol === 'file:') ? 'a local file' : location.host;
-  el.innerHTML = `${escHtml(when)}<br><span style="opacity:.75">This copy is loaded from <strong>${escHtml(host)}</strong> — your data is saved against that address.</span>`;
+  el.innerHTML = `${escHtml(when)}`
+    + `<br><span style="opacity:.75">Loaded from <strong>${escHtml(host)}</strong> · version <strong>${escHtml(APP_BUILD)}</strong></span>`
+    + `<br><button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="forceUpdate()">↻ Get the latest version</button>`;
+}
+
+// Phones hold on to an old copy of the app long after a new one ships. This
+// drops the cached copy and reloads from the network. It only clears the
+// app's cached files — contacts, companies and places are untouched.
+async function forceUpdate() {
+  showToast('Fetching the latest version…');
+  try {
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+    }
+    if (window.caches) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+  } catch (e) { /* fall through to the reload regardless */ }
+  location.replace(location.pathname + '?v=' + Date.now());
 }
 
 // ── Export ────────────────────────────────────────────────────
