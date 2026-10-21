@@ -371,6 +371,32 @@ header {
 }
 .detail-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 
+/* ── Recent / activity timeline ─────────────────────────────── */
+.recent-day {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--accent-light); margin: 16px 0 8px; display: flex; align-items: center; gap: 8px;
+}
+.recent-day:first-child { margin-top: 0; }
+.recent-day::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.recent-row {
+  display: flex; align-items: flex-start; gap: 11px; padding: 10px 12px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); margin-bottom: 6px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; transition: border-color .15s;
+}
+.recent-row:active { border-color: var(--accent); }
+.recent-icon {
+  width: 34px; height: 34px; border-radius: var(--radius-sm); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+}
+.recent-main { flex: 1; min-width: 0; }
+.recent-name { font-size: 13px; font-weight: 600; }
+.recent-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; line-height: 1.5; }
+.recent-kind {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+  padding: 2px 7px; border-radius: 4px; flex-shrink: 0;
+}
+
 /* ── Campaigns ──────────────────────────────────────────────── */
 .campaign-picks { display: flex; flex-wrap: wrap; gap: 6px; min-height: 30px; }
 .campaign-pick {
@@ -944,6 +970,7 @@ header {
       <button class="app-tab" id="apptab-marketmap" onclick="switchAppTab('marketmap')">Market</button>
       <button class="app-tab" id="apptab-intel" onclick="switchAppTab('intel')">Intel</button>
       <button class="app-tab" id="apptab-campaigns" onclick="switchAppTab('campaigns')">Campaigns</button>
+      <button class="app-tab" id="apptab-recent" onclick="switchAppTab('recent')">Recent</button>
       <button class="app-tab" id="apptab-hobbies" onclick="switchAppTab('hobbies')">Hobbies</button>
       <button class="app-tab" id="apptab-ideas" onclick="switchAppTab('ideas')">Ideas</button>
       <button class="app-tab" id="apptab-journal" onclick="switchAppTab('journal')">Journal</button>
@@ -1190,6 +1217,42 @@ header {
       </div>
       <div class="card-area scroll-hidden">
         <div class="cards-grid" id="ideas-grid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Recent Screen ═════════════════════════════════════════ -->
+<div class="screen hidden" id="screen-recent">
+  <div class="screen-inner">
+    <div class="content">
+      <div class="toolbar">
+        <div class="toolbar-row">
+          <div class="search-wrap">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input class="search-input" id="recent-search" placeholder="Search everything you've added…" oninput="renderRecent()">
+          </div>
+          <select class="sort-select" id="recent-range" onchange="renderRecent()">
+            <option value="30">Last 30 days</option>
+            <option value="7">Last 7 days</option>
+            <option value="90">Last 90 days</option>
+            <option value="365">Last year</option>
+            <option value="0">All time</option>
+          </select>
+        </div>
+        <div class="toolbar-row filter-chips-wrap" id="recent-kind-bar">
+          <button class="filter-chip active" data-rk="all" onclick="setRecentKind('all',this)">All</button>
+          <button class="filter-chip" data-rk="contact" onclick="setRecentKind('contact',this)">Contacts</button>
+          <button class="filter-chip" data-rk="company" onclick="setRecentKind('company',this)">Market</button>
+          <button class="filter-chip" data-rk="deal" onclick="setRecentKind('deal',this)">Intel</button>
+          <button class="filter-chip" data-rk="comment" onclick="setRecentKind('comment',this)">Notes added</button>
+          <button class="filter-chip" data-rk="place" onclick="setRecentKind('place',this)">Places</button>
+          <button class="filter-chip" data-rk="other" onclick="setRecentKind('other',this)">Other</button>
+        </div>
+        <div id="recent-summary" style="font-size:12px;color:var(--text-muted)"></div>
+      </div>
+      <div class="card-area scroll-hidden">
+        <div id="recent-list"></div>
       </div>
     </div>
   </div>
@@ -1444,9 +1507,10 @@ header {
         </div>
 
         <div class="detail-section" id="cd-notes-sec">
-          <div class="detail-section-label">Notes</div>
+          <div class="detail-section-label">Notes <span id="cd-notes-date" style="font-weight:400;text-transform:none;letter-spacing:0;opacity:.7"></span></div>
           <div class="detail-value" id="cd-notes"></div>
         </div>
+        <div class="detail-section"><div class="detail-value" id="cd-added" style="font-size:11px;opacity:.7"></div></div>
 
         <div class="detail-section">
           <div class="detail-section-label" style="margin-bottom:8px;">Comments & Add-Ons</div>
@@ -1499,9 +1563,10 @@ header {
         </div>
 
         <div class="detail-section" id="dd-notes-sec">
-          <div class="detail-section-label">Intelligence Notes</div>
+          <div class="detail-section-label">Intelligence Notes <span id="dd-notes-date" style="font-weight:400;text-transform:none;letter-spacing:0;opacity:.7"></span></div>
           <div class="detail-value" id="dd-notes"></div>
         </div>
+        <div class="detail-section"><div class="detail-value" id="dd-added" style="font-size:11px;opacity:.7"></div></div>
       </div>
       <div class="detail-actions">
         <button class="btn btn-ghost" onclick="openEditDeal()">
@@ -2374,7 +2439,7 @@ function locTag(city, state) {
 function switchAppTab(tab) {
   activeAppTab = tab;
   const isRel = tab === 'relationships', isPl = tab === 'places', isHob = tab === 'hobbies', isIdeas = tab === 'ideas';
-  const isToday = tab === 'today', isJournal = tab === 'journal', isCamp = tab === 'campaigns';
+  const isToday = tab === 'today', isJournal = tab === 'journal', isCamp = tab === 'campaigns', isRecent = tab === 'recent';
   const isMM = tab === 'marketmap', isIntel = tab === 'intel';
   const isMI = isMM || isIntel;
   document.getElementById('screen-relationships').classList.toggle('hidden', !isRel);
@@ -2384,23 +2449,26 @@ function switchAppTab(tab) {
   document.getElementById('screen-today').classList.toggle('hidden', !isToday);
   document.getElementById('screen-journal').classList.toggle('hidden', !isJournal);
   document.getElementById('screen-campaigns').classList.toggle('hidden', !isCamp);
+  document.getElementById('screen-recent').classList.toggle('hidden', !isRecent);
   document.getElementById('mi-app').classList.toggle('hidden', !isMI);
-  ['today','relationships','places','marketmap','intel','campaigns','hobbies','ideas','journal'].forEach(t => {
+  ['today','relationships','places','marketmap','intel','campaigns','recent','hobbies','ideas','journal'].forEach(t => {
     const b = document.getElementById('apptab-' + t);
     if(b) b.classList.toggle('active', t === tab);
   });
-  const labels = { today:'Add Reminder', relationships:'Add Contact', places:'Add Place', marketmap:'Add Company', intel:'Add Deal', campaigns:'New Campaign', hobbies: 'Add ' + (HOBBY_META[activeHobbyKind] ? HOBBY_META[activeHobbyKind].singular : ''), ideas:'Add Idea', journal:'Add Entry' };
+  const labels = { today:'Add Reminder', relationships:'Add Contact', places:'Add Place', marketmap:'Add Company', intel:'Add Deal', campaigns:'New Campaign', recent:'Add', hobbies: 'Add ' + (HOBBY_META[activeHobbyKind] ? HOBBY_META[activeHobbyKind].singular : ''), ideas:'Add Idea', journal:'Add Entry' };
   document.getElementById('header-add-label').textContent = labels[tab] || 'Add';
   // MI settings gear only on Market Intelligence tabs
   const gear = document.getElementById('mi-settings-btn');
   if(gear) gear.style.display = isMI ? '' : 'none';
   // hide the relationship bottom-nav while in Market Intelligence, Hobbies, or Ideas
   const bn = document.querySelector('.bottom-nav');
-  if(bn) bn.style.display = (isMI || isHob || isIdeas || isToday || isJournal || isCamp) ? 'none' : '';
+  if(bn) bn.style.display = (isMI || isHob || isIdeas || isToday || isJournal || isCamp || isRecent) ? 'none' : '';
   if(isMI) {
     miSwitchPanel(isMM ? 'map' : 'deals');
   } else if(isCamp) {
     renderCampaigns();
+  } else if(isRecent) {
+    renderRecent();
   } else if(isToday) {
     tdSetScope(tdScope);   // restore the remembered side, then render
   } else if(isJournal) {
@@ -2755,7 +2823,7 @@ function openHobbyDetail(kind, id) {
     </div>`;
 
   document.getElementById('detail-body').innerHTML = `
-    ${item.notes?`<div><div class="detail-section-title">Notes</div><div class="detail-notes-text">${escHtml(item.notes).replace(/\n/g,'<br>')}</div></div>`:''}
+    ${item.notes?`<div><div class="detail-section-title">Notes${noteDateSuffix(item)}</div><div class="detail-notes-text">${escHtml(item.notes).replace(/\n/g,'<br>')}</div></div>`:''}
     ${tags.length?`<div><div class="detail-section-title">Tags</div><div class="detail-tags">${tags.map(t=>`<span class="tag">${escHtml(t)}</span>`).join('')}</div></div>`:''}
     <div style="font-size:11px;color:var(--text-muted)">Added ${formatDate(item.added?.slice(0,10))}</div>`;
 
@@ -2882,7 +2950,7 @@ function openIdeaDetail(id) {
     </div>`;
 
   document.getElementById('detail-body').innerHTML = `
-    ${i.notes?`<div><div class="detail-section-title">Details</div><div class="detail-notes-text">${escHtml(i.notes).replace(/\n/g,'<br>')}</div></div>`:''}
+    ${i.notes?`<div><div class="detail-section-title">Details${noteDateSuffix(i)}</div><div class="detail-notes-text">${escHtml(i.notes).replace(/\n/g,'<br>')}</div></div>`:''}
     ${tags.length?`<div><div class="detail-section-title">Tags</div><div class="detail-tags">${tags.map(t=>`<span class="tag">${escHtml(t)}</span>`).join('')}</div></div>`:''}
     <div style="font-size:11px;color:var(--text-muted)">Added ${formatDate(i.added?.slice(0,10))}</div>`;
 
@@ -3511,7 +3579,7 @@ function tdOpenDetail(id) {
     </div>`;
 
   document.getElementById('detail-body').innerHTML = `
-    ${t.notes ? `<div><div class="detail-section-title">Notes</div><div class="detail-notes-text">${escHtml(t.notes).replace(/\n/g,'<br>')}</div></div>` : ''}
+    ${t.notes ? `<div><div class="detail-section-title">Notes${noteDateSuffix(t)}</div><div class="detail-notes-text">${escHtml(t.notes).replace(/\n/g,'<br>')}</div></div>` : ''}
     <div><div class="detail-section-title">Schedule</div>
       <div style="font-size:13px;color:var(--text-dim)">Due ${formatDate(t.due)}${rep ? ` · ${rep.replace('↻ ','')}` : ' · one-off'}</div>
     </div>
@@ -4472,7 +4540,7 @@ function openContactDetail(id) {
       ${c.email?`<div class="detail-field" style="margin-bottom:6px"><div class="detail-field-label">Email</div><a href="mailto:${escHtml(c.email)}" style="color:var(--accent-light);font-size:14px">${escHtml(c.email)}</a></div>`:''}
       ${c.phone?`<div class="detail-field"><div class="detail-field-label">Phone</div><a href="tel:${escHtml(c.phone)}" style="color:var(--accent-light);font-size:14px">${escHtml(c.phone)}</a></div>`:''}
     </div>`:''}
-    ${c.notes?`<div><div class="detail-section-title">Additional Notes</div><div class="detail-notes-text">${escHtml(c.notes).replace(/\n/g,'<br>')}</div></div>`:''}
+    ${c.notes?`<div><div class="detail-section-title">Additional Notes${noteDateSuffix(c)}</div><div class="detail-notes-text">${escHtml(c.notes).replace(/\n/g,'<br>')}</div></div>`:''}
     ${tags.length?`<div><div class="detail-section-title">Tags</div><div class="detail-tags">${tags.map(t=>`<span class="tag">${escHtml(t)}</span>`).join('')}</div></div>`:''}
     ${marketMapLinkBlock(c)}
     <div style="font-size:11px;color:var(--text-muted)">Added ${formatDate(c.added?.slice(0,10))}</div>`;
@@ -4482,10 +4550,165 @@ function openContactDetail(id) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// RECENT — one timeline across everything, so you can retrace what
+// you added and when. Reads the timestamps already on each record;
+// nothing new is stored.
+// ═══════════════════════════════════════════════════════════════
+let activeRecentKind = 'all';
+
+const RECENT_STYLE = {
+  contact:  { icon:'👤', label:'Contact',  bg:'#1e3a5f', fg:'#60a5fa' },
+  company:  { icon:'🏢', label:'Market',   bg:'#422006', fg:'#fbbf24' },
+  deal:     { icon:'📊', label:'Intel',    bg:'#064e3b', fg:'#34d399' },
+  comment:  { icon:'💬', label:'Note',     bg:'#4c1d95', fg:'#c084fc' },
+  place:    { icon:'📍', label:'Place',    bg:'#431407', fg:'#fb923c' },
+  campaign: { icon:'📣', label:'Campaign', bg:'#4c1d95', fg:'#e9d5ff' },
+  todo:     { icon:'✓',  label:'Reminder', bg:'#1e293b', fg:'#94a3b8' },
+  idea:     { icon:'💡', label:'Idea',     bg:'#422006', fg:'#fbbf24' },
+  journal:  { icon:'📔', label:'Journal',  bg:'#042f2e', fg:'#5eead4' },
+  hobby:    { icon:'⛳', label:'Hobby',    bg:'#1e293b', fg:'#94a3b8' },
+};
+
+function toMillis(v) {
+  if (v == null || v === '') return 0;
+  if (typeof v === 'number') return v;
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? 0 : d.getTime();
+}
+
+// Every timestamped thing, newest first.
+function collectRecent() {
+  const out = [];
+  const push = (kind, ts, name, sub, open) => {
+    const t = toMillis(ts);
+    if (!t) return;
+    out.push({ kind, ts: t, name: name || '(untitled)', sub: sub || '', open });
+  };
+  const safe = (fn) => { try { fn(); } catch(e) {} };
+
+  safe(() => (contacts||[]).forEach(c => {
+    const d = contactDisplay(c);
+    push('contact', c.added, String(d.primary).replace(/<[^>]*>/g,''),
+      [TYPE_LABELS[c.type], d.orgFirst ? String(d.sub).replace(/<[^>]*>/g,'') : c.org].filter(Boolean).join(' · '),
+      `openContactDetail('${c.id}')`);
+  }));
+  safe(() => (companies||[]).forEach(c => {
+    push('company', c.createdAt, c.name,
+      [IND_LABELS[c.industry], c.subgroup, c.type].filter(Boolean).join(' · '),
+      `openMarketRecord('${c.id}')`);
+    // comments carry their own timestamp - that's the trail of what you learned
+    (c.comments||[]).forEach(cm => push('comment', cm.ts, c.name,
+      String(cm.text||'').slice(0,120), `openMarketRecord('${c.id}')`));
+  }));
+  safe(() => (deals||[]).forEach(d => push('deal', d.createdAt, d.name,
+    [IND_LABELS[d.industry], d.subgroup, d.type].filter(Boolean).join(' · '),
+    `openIntelRecord('${d.id}')`)));
+  safe(() => (places||[]).forEach(p => push('place', p.added, p.name,
+    [CAT_LABELS[p.category], [p.city,p.state].filter(Boolean).join(', ')].filter(Boolean).join(' · '),
+    `openPlaceDetail('${p.id}')`)));
+  safe(() => (campaigns||[]).forEach(c => push('campaign', c.added, c.name, c.description, `openCampaignDetail('${c.id}')`)));
+  safe(() => (todos||[]).forEach(t => push('todo', t.added, t.title, [t.scope, t.folder].filter(Boolean).join(' · '), '')));
+  safe(() => (ideas||[]).forEach(i => push('idea', i.added, i.title, i.tags, '')));
+  safe(() => (journal||[]).forEach(j => push('journal', j.added, journalDateLabel(j.date), String(j.body||'').slice(0,120), '')));
+  [['golf',golf],['drinks',drinks],['cooking',cooking],['otherHobbies',otherHobbies],['movies',movies]]
+    .forEach(([k, arr]) => safe(() => (arr||[]).forEach(h => push('hobby', h.added, h.name, k, ''))));
+
+  return out.sort((a,b) => b.ts - a.ts);
+}
+
+// Jumping to a record on another tab needs the tab switched first.
+function openMarketRecord(id) {
+  switchAppTab('marketmap');
+  setTimeout(() => { try { showCompanyDetail(id); } catch(e) {} }, 180);
+}
+function openIntelRecord(id) {
+  switchAppTab('intel');
+  setTimeout(() => { try { showDealDetail(id); } catch(e) {} }, 180);
+}
+
+function setRecentKind(k, btn) {
+  activeRecentKind = k;
+  document.querySelectorAll('#recent-kind-bar .filter-chip').forEach(c => c.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderRecent();
+}
+
+const OTHER_KINDS = ['campaign','todo','idea','journal','hobby'];
+
+function renderRecent() {
+  const el = document.getElementById('recent-list');
+  if (!el) return;
+  const q = document.getElementById('recent-search').value || '';
+  const days = parseInt(document.getElementById('recent-range').value, 10);
+  const cutoff = days > 0 ? Date.now() - days * 86400000 : 0;
+
+  let items = collectRecent().filter(it => it.ts >= cutoff);
+  if (activeRecentKind !== 'all') {
+    items = (activeRecentKind === 'other')
+      ? items.filter(it => OTHER_KINDS.indexOf(it.kind) !== -1)
+      : items.filter(it => it.kind === activeRecentKind);
+  }
+  if (q) items = items.filter(it => searchMatch(q, it.name, it.sub, RECENT_STYLE[it.kind].label));
+
+  document.getElementById('recent-summary').textContent =
+    items.length ? `${items.length} item${items.length===1?'':'s'}` : '';
+
+  if (!items.length) {
+    el.innerHTML = `<div class="empty-state">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <h3>Nothing in this window</h3>
+      <p style="font-size:13px">Try a wider date range or a different filter.</p></div>`;
+    return;
+  }
+
+  // group by calendar day
+  const groups = [];
+  let cur = null;
+  items.forEach(it => {
+    const key = new Date(it.ts).toDateString();
+    if (!cur || cur.key !== key) { cur = { key, ts: it.ts, rows: [] }; groups.push(cur); }
+    cur.rows.push(it);
+  });
+
+  const today = new Date().toDateString();
+  const yday = new Date(Date.now() - 86400000).toDateString();
+  const dayLabel = (key, ts) => key === today ? 'Today'
+    : key === yday ? 'Yesterday'
+    : new Date(ts).toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric' });
+
+  el.innerHTML = groups.map(g => `
+    <div class="recent-day">${escHtml(dayLabel(g.key, g.ts))}<span style="opacity:.6;font-weight:400">${g.rows.length}</span></div>
+    ${g.rows.map(it => {
+      const s = RECENT_STYLE[it.kind];
+      return `<div class="recent-row"${it.open ? ` onclick="${it.open}"` : ''}>
+        <div class="recent-icon" style="background:${s.bg};color:${s.fg}">${s.icon}</div>
+        <div class="recent-main">
+          <div class="recent-name">${escHtml(it.name)}</div>
+          ${it.sub ? `<div class="recent-sub">${escHtml(it.sub)}</div>` : ''}
+        </div>
+        <span class="recent-kind" style="background:${s.bg};color:${s.fg}">${s.label}</span>
+      </div>`;
+    }).join('')}`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
 // CROSS-POSTING BETWEEN CONTACTS AND THE MARKET MAP
 // A good prospect often belongs in both. These push a record across
 // and keep the two in step by company name.
 // ═══════════════════════════════════════════════════════════════
+// Small "· added 5 Jun" tag for a Notes heading, so a note is never read
+// without knowing how old it is.
+function noteDateSuffix(rec) {
+  const stamp = rec && (rec.added || rec.createdAt);
+  if (!stamp) return '';
+  const iso = (typeof stamp === 'number') ? new Date(stamp).toISOString().slice(0,10) : String(stamp).slice(0,10);
+  const d = formatDate(iso);
+  if (d === '—') return '';
+  const upd = rec.updated ? String(rec.updated).slice(0,10) : '';
+  const extra = (upd && upd !== iso) ? ` · updated ${formatDate(upd)}` : '';
+  return ` <span style="font-weight:400;text-transform:none;letter-spacing:0;opacity:.7">· added ${d}${extra}</span>`;
+}
+
 const companyKey = s => String(s == null ? '' : s).trim().toLowerCase().replace(/[^a-z0-9]+/g, '');
 
 function findCompanyByName(name) {
@@ -4667,7 +4890,7 @@ function openPlaceDetail(id) {
   document.getElementById('detail-body').innerHTML = `
     ${p.address?`<div><div class="detail-section-title">Address</div><div class="detail-field-value">${escHtml(p.address)}</div></div>`:''}
     ${p.website?`<div><div class="detail-section-title">Website</div><a href="https://${escHtml(p.website.replace(/^https?:\/\//,''))}" target="_blank" style="color:var(--accent-light);font-size:14px">${escHtml(p.website)}</a></div>`:''}
-    ${p.notes?`<div><div class="detail-section-title">Notes</div><div class="detail-notes-text">${escHtml(p.notes).replace(/\n/g,'<br>')}</div></div>`:''}
+    ${p.notes?`<div><div class="detail-section-title">Notes${noteDateSuffix(p)}</div><div class="detail-notes-text">${escHtml(p.notes).replace(/\n/g,'<br>')}</div></div>`:''}
     ${tags.length?`<div><div class="detail-section-title">Tags</div><div class="detail-tags">${tags.map(t=>`<span class="tag">${escHtml(t)}</span>`).join('')}</div></div>`:''}
     <div style="font-size:11px;color:var(--text-muted)">Added ${formatDate(p.added?.slice(0,10))}</div>`;
 
@@ -4800,7 +5023,7 @@ function showDataStatus(msg, ok) {
 }
 
 // Bump when deploying so the Backup panel can show what this device is running.
-const APP_BUILD = '2026-10-16.1';
+const APP_BUILD = '2026-10-21.1';
 
 function updateLastBackupInfo() {
   const ts = localStorage.getItem('last_backup_ts');
@@ -6492,8 +6715,11 @@ function showCompanyDetail(id) {
   const nSec = document.getElementById('cd-notes-sec');
   if (c.notes) {
     document.getElementById('cd-notes').textContent = c.notes;
+    document.getElementById('cd-notes-date').textContent = c.createdAt ? `· added ${formatDate(new Date(c.createdAt).toISOString().slice(0,10))}` : '';
     nSec.style.display = '';
   } else { nSec.style.display = 'none'; }
+  document.getElementById('cd-added').textContent =
+    c.createdAt ? `Added to Market Map ${formatDate(new Date(c.createdAt).toISOString().slice(0,10))}` : '';
 
   renderComments(c);
 
@@ -6554,8 +6780,13 @@ function showDealDetail(id) {
   else { sSec.style.display = 'none'; }
 
   const nSec = document.getElementById('dd-notes-sec');
-  if (d.notes) { document.getElementById('dd-notes').textContent = d.notes; nSec.style.display = ''; }
-  else { nSec.style.display = 'none'; }
+  if (d.notes) {
+    document.getElementById('dd-notes').textContent = d.notes;
+    document.getElementById('dd-notes-date').textContent = d.createdAt ? `· added ${formatDate(new Date(d.createdAt).toISOString().slice(0,10))}` : '';
+    nSec.style.display = '';
+  } else { nSec.style.display = 'none'; }
+  document.getElementById('dd-added').textContent =
+    d.createdAt ? `Logged ${formatDate(new Date(d.createdAt).toISOString().slice(0,10))}` : '';
 
   miOpenDetail('deal-detail');
 }
